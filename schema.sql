@@ -1,80 +1,69 @@
 CREATE TABLE positions (
-    position_id INT AUTO_INCREMENT PRIMARY KEY,
+    position_id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL
 );
 
 CREATE TABLE subpositions (
-    subposition_id INT AUTO_INCREMENT PRIMARY KEY,
+    subposition_id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    position_id INT NOT NULL,
-    FOREIGN KEY (position_id) REFERENCES positions(position_id)
+    position_id INT NOT NULL REFERENCES positions(position_id)
 );
 
 CREATE TABLE countries (
-    country_id INT AUTO_INCREMENT PRIMARY KEY,
+    country_id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     continent VARCHAR(100)
 );
 
 CREATE TABLE competitions (
-    competition_id INT AUTO_INCREMENT PRIMARY KEY,
+    competition_id SERIAL PRIMARY KEY,
     name VARCHAR(150) NOT NULL,
-    country_id INT,
+    country_id INT REFERENCES countries(country_id),
     is_major_league BOOLEAN DEFAULT FALSE,
-    url TEXT,
-    FOREIGN KEY (country_id) REFERENCES countries(country_id)
+    url TEXT
 );
 
 CREATE TABLE clubs (
-    club_id INT AUTO_INCREMENT PRIMARY KEY,
+    club_id SERIAL PRIMARY KEY,
     name VARCHAR(150) NOT NULL,
-    domestic_comp_id INT,
+    domestic_comp_id INT REFERENCES competitions(competition_id),
     stadium_name VARCHAR(150),
     stadium_capacity INT,
     squad_size INT,
     average_age DECIMAL(4,2),
     foreign_number INT,
-    national_number INT,
-    FOREIGN KEY (domestic_comp_id) REFERENCES competitions(competition_id)
+    national_number INT
 );
 
 CREATE TABLE players (
-    player_id INT AUTO_INCREMENT PRIMARY KEY,
+    player_id SERIAL PRIMARY KEY,
     name VARCHAR(150) NOT NULL,
     birthdate DATE,
-    subposition_id INT,
+    subposition_id INT REFERENCES subpositions(subposition_id),
     height INT,
     foot VARCHAR(10),
-    current_club_id INT,
-    FOREIGN KEY (subposition_id) REFERENCES subpositions(subposition_id),
-    FOREIGN KEY (current_club_id) REFERENCES clubs(club_id)
+    current_club_id INT REFERENCES clubs(club_id)
 );
 
 CREATE TABLE games (
-    game_id INT AUTO_INCREMENT PRIMARY KEY,
-    home_club_id INT,
-    away_club_id INT,
-    competition_id INT,
+    game_id SERIAL PRIMARY KEY,
+    home_club_id INT REFERENCES clubs(club_id),
+    away_club_id INT REFERENCES clubs(club_id),
+    competition_id INT REFERENCES competitions(competition_id),
     home_goals INT,
     away_goals INT,
     game_date DATE,
     home_club_pos INT,
     away_club_pos INT,
-    season VARCHAR(20),
-    FOREIGN KEY (home_club_id) REFERENCES clubs(club_id),
-    FOREIGN KEY (away_club_id) REFERENCES clubs(club_id),
-    FOREIGN KEY (competition_id) REFERENCES competitions(competition_id)
+    season VARCHAR(20)
 );
 
 CREATE TABLE transfers (
-    transfer_id INT AUTO_INCREMENT PRIMARY KEY,
-    player_id INT,
-    from_club_id INT,
-    to_club_id INT,
+    transfer_id SERIAL PRIMARY KEY,
+    player_id INT REFERENCES players(player_id),
+    from_club_id INT REFERENCES clubs(club_id),
+    to_club_id INT REFERENCES clubs(club_id),
     transfer_date DATE,
     season VARCHAR(20),
-    fee DECIMAL(15,2),
-    FOREIGN KEY (player_id) REFERENCES players(player_id),
-    FOREIGN KEY (from_club_id) REFERENCES clubs(club_id),
-    FOREIGN KEY (to_club_id) REFERENCES clubs(club_id)
+    fee DECIMAL(15,2)
 );
