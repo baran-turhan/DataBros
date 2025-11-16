@@ -1,4 +1,5 @@
 from flask import render_template, current_app
+import database
 
 def base_page():
     return render_template('base.html')
@@ -16,4 +17,6 @@ def competitions_page():
     return render_template('competitions.html')
 
 def clubs_page():
-    return render_template('clubs.html')
+    """Kulüpler sayfasını render eder ve veritabanından kulüp verilerini çeker."""
+    clubs = database.get_all_clubs()
+    return render_template('clubs.html', clubs=clubs)

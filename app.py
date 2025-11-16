@@ -1,12 +1,7 @@
 from flask import Flask, jsonify, render_template
-# import psycopg2  #PostgreSQL bağlantısı yapılınca aç
 import os
 import views
-
-# def get_conn():
-#     #PostgreSQL bağlantısını oluşturur.
-#     DB_URL = os.getenv("DATABASE_URL")
-#     return psycopg2.connect(DB_URL)      #PostgreSQL bağlantısı yapılınca aç
+import database
 
 
 def create_app():
@@ -21,7 +16,7 @@ def create_app():
     app.add_url_rule("/clubs", view_func=views.clubs_page)
     app.add_url_rule("/competitions", view_func=views.competitions_page)
 
-
+    
 #    @app.route("/api/transfers")
 #    def get_transfers():
 #        try:
