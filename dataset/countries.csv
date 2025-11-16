@@ -1,15 +1,186 @@
-country_id,country_name
--1,
-19,Belgium
-39,Denmark
-40,Germany
-56,Greece
-75,Italy
-122,Netherlands
-136,Portugal
-141,Russia
-157,Spain
-174,Turkey
-177,Ukraine
-189,England
-190,Scotland
+name
+Germany
+Bulgaria
+Brazil
+Czech Republic
+Paraguay
+Hungary
+Denmark
+Georgia
+North Macedonia
+Peru
+Austria
+Belarus
+Croatia
+Turkey
+Ukraine
+Canada
+Argentina
+United States
+France
+Cote d'Ivoire
+England
+Belgium
+Morocco
+Switzerland
+Montenegro
+"Korea, South"
+Bosnia-Herzegovina
+Cameroon
+Angola
+Tunisia
+Mexico
+Scotland
+Sweden
+Romania
+Ireland
+Italy
+Spain
+Iceland
+Greece
+Norway
+DR Congo
+Nigeria
+Wales
+Australia
+Chile
+Serbia
+Portugal
+Israel
+Netherlands
+Slovakia
+Northern Ireland
+Grenada
+Finland
+Senegal
+Guinea
+Tahiti
+Russia
+""
+South Africa
+Ghana
+Moldova
+Mali
+Colombia
+Saint-Martin
+Martinique
+Algeria
+French Guiana
+Réunion
+Uruguay
+Lithuania
+Albania
+Eritrea
+Egypt
+Cape Verde
+Equatorial Guinea
+Togo
+Uzbekistan
+Jamaica
+Poland
+Trinidad and Tobago
+Guadeloupe
+Qatar
+Rwanda
+Iran
+Antigua and Barbuda
+The Gambia
+Slovenia
+Latvia
+Burkina Faso
+Armenia
+Estonia
+Mozambique
+Burundi
+Chinese Taipei
+Barbados
+Syria
+Philippines
+Gabon
+Sierra Leone
+Curacao
+Pakistan
+Faroe Islands
+Madagascar
+Zambia
+Kazakhstan
+Venezuela
+Oman
+Cyprus
+Azerbaijan
+Japan
+Kosovo
+New Zealand
+Guinea-Bissau
+Congo
+Central African Republic
+Ecuador
+Türkiye
+Haiti
+Benin
+Costa Rica
+Kenya
+Suriname
+Luxembourg
+Ethiopia
+Seychelles
+Dominican Republic
+El Salvador
+Zimbabwe
+Malta
+Honduras
+Uganda
+Comoros
+Guyana
+Malaysia
+Palestine
+Aruba
+Malawi
+Iraq
+India
+Tajikistan
+Thailand
+Liechtenstein
+Mauritania
+Niger
+Guatemala
+Bolivia
+Liberia
+Lebanon
+Chad
+Indonesia
+Saudi Arabia
+Libya
+Sao Tome and Principe
+Montserrat
+Turkmenistan
+United Arab Emirates
+Cuba
+St. Kitts & Nevis
+Panama
+China
+Laos
+Mauritius
+Neukaledonien
+St. Lucia
+Afghanistan
+Jordan
+Bermuda
+Tanzania
+Kyrgyzstan
+Papua New Guinea
+Macao
+Somalia
+Nicaragua
+Monaco
+Bonaire
+Brunei Darussalam
+San Marino
+Vietnam
+"Korea, North"
+Sint Maarten
+Bahrain
+Andorra
+Singapore
+Southern Sudan
+Europa
