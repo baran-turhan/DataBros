@@ -14,7 +14,9 @@ def games_page():
     return render_template('games.html')
 
 def competitions_page():
-    return render_template('competitions.html')
+    """Mücadeleler sayfasını render eder ve veritabanından mücadele verilerini çeker."""
+    competitions = database.get_all_competitions()
+    return render_template('competitions.html', competitions=competitions)
 
 def clubs_page():
     """Kulüpler sayfasını render eder ve veritabanından kulüp verilerini çeker."""

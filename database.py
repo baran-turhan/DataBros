@@ -41,3 +41,33 @@ def get_all_clubs():
         if conn:
             conn.close()
 
+def get_all_competitions():
+    """Tüm mücadeleleri veritabanından çeker."""
+    conn = None
+    try:
+        conn = get_conn()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        query = """
+            SELECT 
+                c.competition_id,
+                c.name,
+                c.is_major_league,
+                c.url,
+                co.name AS country_name
+            FROM competitions c
+            LEFT JOIN countries co ON c.country_id = co.country_id
+            ORDER BY c.name ASC
+        """
+        
+        cur.execute(query)
+        competitions = cur.fetchall()
+        cur.close()
+        return competitions
+    except Exception as e:
+        print(f"Database error: {e}")
+        return []
+    finally:
+        if conn:
+            conn.close()
+

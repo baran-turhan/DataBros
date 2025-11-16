@@ -1,5 +1,92 @@
 {% extends 'layout.html' %}
 
-{% block title %}Competitions{% endblock %}
+{% block title %}Mücadeleler{% endblock %}
 
-{% block content %}{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="header">
+        <h1>🏆 Mücadeleler</h1>
+        <p>Dünya futbolundaki tüm ligler, kupalar ve özel turnuvalar</p>
+    </div>
+
+    <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Mücadele ara...">
+    </div>
+
+    <div id="competitionsContainer" class="players-grid">
+        {% if competitions %}
+            {% for comp in competitions %}
+            <div class="player-card fade-in" 
+                 data-competition-name="{{ comp.name|default('bilinmeyen')|lower }}">
+
+                <!-- Avatar + Başlık -->
+                <div class="player-header">
+                    <div class="player-avatar">
+                        {{ comp.name[0]|upper if comp.name else '🏆' }}
+                    </div>
+                    <h2 class="player-name">
+                        {{ comp.name or 'Bilinmeyen Mücadele' }}
+                    </h2>
+                </div>
+
+                <!-- Bilgi alanı 1 -->
+                <div class="player-info">
+                    <div class="info-item">
+                        <span class="info-label">🌍 Ülke</span>
+                        <span class="info-value">{{ comp.country_name or 'N/A' }}</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">🏷️ Mücadele ID</span>
+                        <span class="info-value">{{ comp.competition_id or 'N/A' }}</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">📌 Major League mi?</span>
+                        <span class="info-value">
+                            {% if comp.is_major_league %}
+                                <span class="value-highlight">Evet</span>
+                            {% else %}
+                                Hayır
+                            {% endif %}
+                        </span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">🔗 URL</span>
+                        <span class="info-value">
+                            {% if comp.url %}
+                                <a href="{{ comp.url }}" target="_blank" style="color:#2a5298; font-weight:700;">
+                                    Ziyaret Et
+                                </a>
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="no-results">
+                <p>Henüz mücadele verisi bulunmamaktadır.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+const searchInput = document.getElementById('searchInput');
+const compCards = document.querySelectorAll('.player-card');
+
+searchInput.addEventListener('input', function (e) {
+    const searchTerm = e.target.value.toLowerCase().trim();
+    compCards.forEach(card => {
+        const value = card.getAttribute('data-competition-name');
+        card.style.display = value.includes(searchTerm) ? 'block' : 'none';
+    });
+});
+</script>
+
+{% endblock %}
