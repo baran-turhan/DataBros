@@ -23,7 +23,6 @@
                     </div>
                     <h2 class="player-name">{{ player.name or 'Bilinmeyen Oyuncu' }}</h2>
                 </div>
-
                 <div class="player-info">
                     <div class="info-item">
                         <span class="info-label">📅 Doğum Tarihi</span>
@@ -47,8 +46,11 @@
                             {% endif %}
                         </span>
                     </div>
+                    <div class="info-item">
+                        <span class="info-label">🌍 Uyruk</span>
+                        <span class="info-value">{{ player.country_of_citizenship or 'N/A' }}</span>
+                    </div>
                 </div>
-
                 <div class="player-info" style="margin-top:25px;">
                     <div class="info-item">
                         <span class="info-label">🏟️ Kulüp ID</span>
