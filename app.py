@@ -1,35 +1,18 @@
-from flask import Flask, jsonify, render_template
-import os
-import views
-import database
+from flask import Flask
+from utils import router as router
 
 
 def create_app():
     app = Flask(__name__)
-    app.config.from_object("settings")
+    app.config.from_object("utils.settings")
 
     
-    app.add_url_rule("/", view_func=views.base_page)
-    app.add_url_rule("/players", view_func=views.players_page)
-    app.add_url_rule("/transfers", view_func=views.transfers_page)
-    app.add_url_rule("/games", view_func=views.games_page)
-    app.add_url_rule("/clubs", view_func=views.clubs_page)
-    app.add_url_rule("/competitions", view_func=views.competitions_page)
-
-    
-#    @app.route("/api/transfers")
-#    def get_transfers():
-#        try:
-#            conn = get_conn()     
-#            cur = conn.cursor()
-#            cur.execute("SELECT * FROM transfers ORDER BY id ASC LIMIT 3;")
-#            rows = cur.fetchall()
-#            cur.close()
-#            conn.close()
-#            output = [list(map(str, row)) for row in rows]
-#            return jsonify(output)
-#        except Exception as e:
-#            return jsonify({"error": str(e)}), 500
+    app.add_url_rule("/", view_func=router.base_page)
+    app.add_url_rule("/players", view_func=router.players_page)
+    app.add_url_rule("/transfers", view_func=router.transfers_page)
+    app.add_url_rule("/games", view_func=router.games_page)
+    app.add_url_rule("/clubs", view_func=router.clubs_page)
+    app.add_url_rule("/competitions", view_func=router.competitions_page)
 
     return app
 
