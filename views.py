@@ -1,4 +1,5 @@
-from flask import render_template, current_app
+from datetime import datetime
+from flask import render_template, request
 import database
 
 def base_page():
@@ -11,7 +12,21 @@ def players_page():
     return render_template('players.html')
 
 def games_page():
-    return render_template('games.html')
+    current_year = datetime.now().year
+    years = list(range(current_year, 2011, -1))
+    
+    selected_year = request.args.get("year", type=int)
+    games = []
+
+    if selected_year and 1900 <= selected_year <= current_year:
+        games = database.get_games_by_year(selected_year)
+
+    return render_template(
+        'games.html',
+        years=years,
+        selected_year=selected_year,
+        games=games,
+    )
 
 def competitions_page():
     """Mücadeleler sayfasını render eder ve veritabanından mücadele verilerini çeker."""

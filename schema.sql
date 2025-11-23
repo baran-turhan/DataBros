@@ -49,12 +49,12 @@ CREATE TABLE games (
     game_id SERIAL PRIMARY KEY,
     home_club_id INT REFERENCES clubs(club_id),
     away_club_id INT REFERENCES clubs(club_id),
-    competition_id INT REFERENCES competitions(competition_id),
-    home_goals INT,
-    away_goals INT,
-    game_date DATE,
-    home_club_pos INT,
-    away_club_pos INT,
+    competition_id TEXT,
+    home_club_goals INT,
+    away_club_goals INT,
+    date DATE,
+    home_club_position INT,
+    away_club_position INT,
     season VARCHAR(20)
 );
 
