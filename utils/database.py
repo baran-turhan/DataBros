@@ -41,8 +41,8 @@ def get_all_clubs():
         if conn:
             conn.close()
 
-def get_all_competitions():
-    """Tüm mücadeleleri veritabanından çeker."""
+def get_all_competitions(country_name=None):
+    """Tüm mücadeleleri veritabanından çeker. İsteğe bağlı olarak ülke adına göre filtreler."""
     conn = None
     try:
         conn = get_conn()
@@ -52,18 +52,49 @@ def get_all_competitions():
             SELECT 
                 c.competition_id,
                 c.name,
-                c.is_major_league,
+                c.is_major_national_league AS is_major_league,
                 c.url,
-                co.name AS country_name
+                c.country_name
             FROM competitions c
-            LEFT JOIN countries co ON c.country_id = co.country_id
-            ORDER BY c.name ASC
+            WHERE 1=1
         """
+        params = []
         
-        cur.execute(query)
+        if country_name:
+            query += " AND c.country_name = %s"
+            params.append(country_name)
+        
+        query += " ORDER BY c.name ASC"
+        
+        cur.execute(query, params)
         competitions = cur.fetchall()
         cur.close()
         return competitions
+    except Exception as e:
+        print(f"Database error: {e}")
+        return []
+    finally:
+        if conn:
+            conn.close()
+
+def get_all_countries():
+    """Tüm ülkeleri veritabanından çeker (mücadeleleri olan ülkeler)."""
+    conn = None
+    try:
+        conn = get_conn()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        query = """
+            SELECT DISTINCT c.country_name
+            FROM competitions c
+            WHERE c.country_name IS NOT NULL
+            ORDER BY c.country_name ASC
+        """
+        
+        cur.execute(query)
+        countries = cur.fetchall()
+        cur.close()
+        return [row['country_name'] for row in countries]
     except Exception as e:
         print(f"Database error: {e}")
         return []

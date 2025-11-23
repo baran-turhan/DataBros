@@ -77,8 +77,19 @@ def games_page():
 
 def competitions_page():
     """Mücadeleler sayfasını render eder ve veritabanından mücadele verilerini çeker."""
-    competitions = database.get_all_competitions()
-    return render_template('competitions.html', competitions=competitions)
+    selected_country = request.args.get("country")
+    countries = database.get_all_countries()
+    competitions = []
+    
+    if selected_country:
+        competitions = database.get_all_competitions(country_name=selected_country)
+    
+    return render_template(
+        'competitions.html',
+        competitions=competitions,
+        countries=countries,
+        selected_country=selected_country,
+    )
 
 def clubs_page():
     """Kulüpler sayfasını render eder ve veritabanından kulüp verilerini çeker."""
