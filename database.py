@@ -71,3 +71,36 @@ def get_all_competitions():
         if conn:
             conn.close()
 
+
+# database.py dosyasının en altına ekle:
+
+def get_all_players():
+    conn = None
+    try:
+        conn = get_conn()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        query = """
+            SELECT 
+                p.name,
+                p.date_of_birth,
+                p.sub_position,
+                p.foot,
+                p.height_in_cm,
+                p.country_of_citizenship,
+                c.name AS club_name
+            FROM players p
+            LEFT JOIN clubs c ON p.current_club_id = c.club_id
+            ORDER BY p.name ASC
+        """
+        
+        cur.execute(query)
+        players = cur.fetchall()
+        cur.close()
+        return players
+    except Exception as e:
+        print(f"Database error (get_all_players): {e}")
+        return []
+    finally:
+        if conn:
+            conn.close()

@@ -8,7 +8,8 @@ def transfers_page():
     return render_template('transfers.html')
 
 def players_page():
-    return render_template('players.html')
+    players = database.get_all_players()
+    return render_template('players.html', players=players)
 
 def games_page():
     return render_template('games.html')

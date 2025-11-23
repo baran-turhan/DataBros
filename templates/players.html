@@ -15,54 +15,49 @@
 
     <div id="playersContainer" class="players-grid">
         {% if players %}
-            {% for player in players %}
-            <div class="player-card fade-in" data-player-name="{{ player.name|default('bilinmeyen')|lower }}">
-                <div class="player-header">
-                    <div class="player-avatar">
-                        {{ player.name[0]|upper if player.name else '⚽' }}
-                    </div>
-                    <h2 class="player-name">{{ player.name or 'Bilinmeyen Oyuncu' }}</h2>
+        {% for player in players %}
+        <div class="player-card fade-in" data-player-name="{{ player.name|default('bilinmeyen')|lower }}">
+            <div class="player-header">
+                <div class="player-avatar">
+                    {{ player.name[0]|upper if player.name else '⚽' }}
                 </div>
-                <div class="player-info">
-                    <div class="info-item">
-                        <span class="info-label">📅 Doğum Tarihi</span>
-                        <span class="info-value">{{ player.date_of_birth or 'N/A' }}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">🦶 Ayak</span>
-                        <span class="info-value">{{ player.foot or 'N/A' }}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">📏 Boy</span>
-                        <span class="info-value">{{ player.height_in_cm or 'N/A' }} cm</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">💰 Değer</span>
-                        <span class="info-value value-highlight">
-                            {% if player.market_value_in_eur %}
-                                €{{ "{:,}".format(player.market_value_in_eur) }}
-                            {% else %}
-                                N/A
-                            {% endif %}
-                        </span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">🌍 Uyruk</span>
-                        <span class="info-value">{{ player.country_of_citizenship or 'N/A' }}</span>
-                    </div>
+                <h2 class="player-name">{{ player.name or 'Bilinmeyen Oyuncu' }}</h2>
+            </div>
+            <div class="player-info">
+                <div class="info-item">
+                    <span class="info-label">📅 Doğum Tarihi</span>
+                    <span class="info-value">{{ player.date_of_birth or 'N/A' }}</span>
                 </div>
-                <div class="player-info" style="margin-top:25px;">
-                    <div class="info-item">
-                        <span class="info-label">🏟️ Kulüp ID</span>
-                        <span class="info-value">{{ player.current_club_id or 'N/A' }}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">🎯 Pozisyon ID</span>
-                        <span class="info-value">{{ player.sub_position_id or 'N/A' }}</span>
-                    </div>
+                <div class="info-item">
+                    <span class="info-label">🦶 Ayak</span>
+                    <span class="info-value">{{ player.foot|title or 'N/A' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">📏 Boy</span>
+                    <span class="info-value">{{ player.height_in_cm or 'N/A' }} cm</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">🎯 Pozisyon</span>
+                    <span class="info-value value-highlight">
+                        {{ player.sub_position or 'N/A' }}
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">🌍 Uyruk</span>
+                    <span class="info-value">{{ player.country_of_citizenship or 'N/A' }}</span>
                 </div>
             </div>
-            {% endfor %}
+            
+            <div class="player-info" style="margin-top:25px;">
+                <div class="info-item" style="width: 100%;">
+                    <span class="info-label">🏟️ Kulüp</span>
+                    <span class="info-value" style="font-size: 1.4rem; color: #1e3c72;">
+                        {{ player.club_name or 'Kulüpsüz' }}
+                    </span>
+                </div>
+                </div>
+        </div>
+        {% endfor %}
         {% else %}
             <div class="no-results">
                 <p>Henüz oyuncu verisi bulunmamaktadır.</p>
