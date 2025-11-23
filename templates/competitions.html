@@ -1,6 +1,6 @@
 {% extends 'layout.html' %}
 
-{% block title %}Mücadeleler{% endblock %}
+{% block title %}Ligler{% endblock %}
 
 {% block extra_head %}
 <style>
@@ -70,7 +70,7 @@
 {% block content %}
 <div class="container">
     <div class="header">
-        <h1>🏆 Mücadeleler</h1>
+        <h1>🏆 Ligler</h1>
         <p>Dünya futbolundaki tüm ligler, kupalar ve özel turnuvalar</p>
     </div>
 
@@ -96,7 +96,7 @@
                             {{ comp.name[0]|upper if comp.name else '🏆' }}
                         </div>
                         <h2 class="player-name">
-                            {{ comp.name or 'Bilinmeyen Mücadele' }}
+                            {{ comp.name or 'Bilinmeyen Lig' }}
                         </h2>
                     </div>
 
@@ -108,7 +108,7 @@
                         </div>
 
                         <div class="info-item">
-                            <span class="info-label">🏷️ Mücadele ID</span>
+                            <span class="info-label">🏷️ Lig ID</span>
                             <span class="info-value">{{ comp.competition_id or 'N/A' }}</span>
                         </div>
 
@@ -140,7 +140,7 @@
                 {% endfor %}
             </div>
         {% else %}
-            <div class="no-results">Seçilen ülkede mücadele bulunamadı.</div>
+            <div class="no-results">Seçilen ülkede lig bulunamadı.</div>
         {% endif %}
     {% else %}
         <div class="info-banner">Ülke seçip "Uygula" butonuna basarak o ülkenin liglerini listeleyebilirsin.</div>
