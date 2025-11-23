@@ -2,4 +2,113 @@
 
 {% block title %}Transfers{% endblock %}
 
-{% block content %}{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/transfers.css') }}">
+<script defer src="{{ url_for('static', filename='js/transfers.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="header">
+        <h1>💸 Transferler</h1>
+        <p>Sezon ve ücret filtreleri ile transferleri listeleyin, tarih ya da ücrete göre sıralayın.</p>
+    </div>
+
+    <form class="filter-bar" method="get" action="{{ url_for('transfers_page') }}">
+        <input type="hidden" name="submitted" value="1">
+        <div class="filter-group">
+            <label for="season">Sezon</label>
+            <select id="season" name="season">
+                <option value="">Sezon seçin</option>
+                {% for s in seasons %}
+                    <option value="{{ s }}" {% if filters.season == s %}selected{% endif %}>{{ s }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="min_fee">Min Ücret (€)</label>
+            <input id="min_fee" name="min_fee" inputmode="numeric" value="{{ filters.min_fee }}">
+        </div>
+        <div class="filter-group">
+            <label for="max_fee">Max Ücret (€)</label>
+            <input id="max_fee" name="max_fee" inputmode="numeric" value="{{ filters.max_fee }}">
+        </div>
+        <div class="filter-group">
+            <label for="sort">Sıralama</label>
+            <select id="sort" name="sort">
+                <option value="" {% if not filters.sort %}selected{% endif %}>Tarih (Yeni → Eski)</option>
+                <option value="date_asc" {% if filters.sort == 'date_asc' %}selected{% endif %}>Tarih (Eski → Yeni)</option>
+                <option value="fee_desc" {% if filters.sort == 'fee_desc' %}selected{% endif %}>Ücret (Yüksek → Düşük)</option>
+                <option value="fee_asc" {% if filters.sort == 'fee_asc' %}selected{% endif %}>Ücret (Düşük → Yüksek)</option>
+            </select>
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="filter-button">Filtreyi Uygula</button>
+            <a class="reset-link" href="{{ url_for('transfers_page') }}">Temizle</a>
+        </div>
+    </form>
+
+    {% if filter_applied %}
+        {% if transfers %}
+        <div class="transfer-grid">
+            {% for transfer in transfers %}
+            <div class="player-card fade-in">
+                <div class="player-header">
+                    <div class="player-avatar">
+                        {{ transfer.player_name[0]|upper if transfer.player_name else '💸' }}
+                    </div>
+                    <div>
+                        <h2 class="player-name">{{ transfer.player_name or 'Bilinmeyen Oyuncu' }}</h2>
+                        <div class="transfer-flow">
+                            {{ transfer.from_club or 'N/A' }} → {{ transfer.to_club or 'N/A' }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="transfer-meta">
+                    <div>
+                        <div class="info-label">Transfer Tarihi</div>
+                        <div class="info-value">
+                            {% if transfer.transfer_date %}
+                                {{ transfer.transfer_date.strftime('%Y-%m-%d') }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div>
+                        <div class="info-label">Sezon</div>
+                        <div class="info-value">{{ transfer.transfer_season or 'N/A' }}</div>
+                    </div>
+                    <div>
+                        <div class="info-label">Ücret</div>
+                        <div class="fee-tag">
+                            {% if transfer.transfer_fee_value is not none %}
+                                {% set fee_str = "{:,.2f}".format(transfer.transfer_fee_value) %}
+                                {% set fee_tr = fee_str.replace(",", "X").replace(".", ",").replace("X", ".") %}
+                                €{{ fee_tr }}
+                            {% else %}
+                                Belirtilmemiş
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div>
+                        <div class="info-label">Transfer ID</div>
+                        <div class="info-value">{{ transfer.transfer_id }}</div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="no-results">
+            <p>Filtrelere uyan transfer bulunamadı.</p>
+        </div>
+        {% endif %}
+    {% else %}
+        <div class="helper-box">
+            Filtreleri doldurup <strong>Filtreyi Uygula</strong> butonuna bastığınızda transferler listelenir.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

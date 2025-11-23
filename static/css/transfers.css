@@ -1,0 +1,133 @@
+/* Transfers page styling */
+.filter-bar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 18px 22px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+    margin-bottom: 24px;
+    align-items: end;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.filter-group label {
+    font-size: 0.9rem;
+    color: #1e3c72;
+    font-weight: 600;
+}
+
+.filter-group input,
+.filter-group select {
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid #dbe2ef;
+    font-size: 1rem;
+    outline: none;
+    transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+    border-color: #2a5298;
+    box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.15);
+}
+
+.filter-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.filter-button {
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(30, 60, 114, 0.25);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    width: 100%;
+}
+
+.filter-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 26px rgba(30, 60, 114, 0.28);
+}
+
+.reset-link {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    padding: 12px 16px;
+    background: #fff;
+    color: #1e3c72;
+    border: 1px solid #dbe2ef;
+    border-radius: 10px;
+    font-weight: 600;
+    text-decoration: none;
+    width: 100%;
+    text-align: center;
+}
+
+.transfer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 22px;
+}
+
+.transfer-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.transfer-flow {
+    font-weight: 700;
+    color: #1e3c72;
+    font-size: 1rem;
+}
+
+.fee-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 10px;
+    background: rgba(42, 82, 152, 0.08);
+    color: #1e3c72;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.info-label {
+    font-size: 0.8rem;
+    color: #718096;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.info-value {
+    font-size: 1.1rem;
+    color: #2d3748;
+    font-weight: 700;
+}
+
+.helper-box {
+    text-align: center;
+    color: white;
+    font-size: 1.1rem;
+    padding: 50px 24px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
