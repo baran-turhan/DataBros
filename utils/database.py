@@ -21,11 +21,11 @@ def get_all_clubs():
                 club_id,
                 name,
                 stadium_name,
-                stadium_capacity,
+                stadium_seats AS stadium_capacity,
                 squad_size,
                 average_age,
-                foreign_number,
-                national_number
+                foreigners_number AS foreign_number,
+                national_team_players AS national_number
             FROM clubs
             ORDER BY name ASC
         """
