@@ -1,57 +1,60 @@
-    <!DOCTYPE html>
-    <html lang="tr">
-    <head>
-        <meta charset="utf-8"/>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>DataBros - {% block title %}{% endblock %}</title>
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
-        {% block extra_head %}{% endblock %}
-        <style>
-            /* Üst beyaz navbar */
-            .navbar {
-                display: grid;
-                grid-template-columns: repeat(6, 1fr);
-                background-color: #fff;          /* Şerit beyaz */
-                height: 70px;
-                align-items: center;
-                text-align: center;
-                box-shadow: 0 4px 8px rgba(0,0,0,0.08);
-            }
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DataBros - {% block title %}{% endblock %}</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/pages.css') }}"
+    />
+    {% block extra_head %}{% endblock %}
+    <style>
+      /* Üst beyaz navbar */
+      .navbar {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        background-color: #fff; /* Şerit beyaz */
+        height: 70px;
+        align-items: center;
+        text-align: center;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+      }
 
-            .navbar a {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                height: 100%;
-                text-decoration: none;
-                background: #fff;                 /* Sekme zemini beyaz */
-                color: #1e3c72;                   /* Yazı rengi: arka plan paleti */
-                font-size: 1.1rem;
-                font-weight: 500;                 /* normal (kalın değil) */
-                transition: background 0.2s ease, color 0.2s ease;
-            }
+      .navbar a {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        text-decoration: none;
+        background: #fff; /* Sekme zemini beyaz */
+        color: #1e3c72; /* Yazı rengi: arka plan paleti */
+        font-size: 1.1rem;
+        font-weight: 500; /* normal (kalın değil) */
+        transition: background 0.2s ease, color 0.2s ease;
+      }
 
-            .navbar a:hover {
-                background-color: rgba(30, 60, 114, 0.06);
-            }
+      .navbar a:hover {
+        background-color: rgba(30, 60, 114, 0.06);
+      }
 
-            /* İlk sekme: yalnızca yazı kalın */
-            .navbar a.brand {
-                font-weight: 800;                 /* kalın */
-                color: #1e3c72;                   /* arka plan paleti ile aynı */
-            }
-        </style>
-    </head>
-    <body>
-        <div class="navbar">
-            <a href="{{ url_for('base_page') }}" class="brand">DataBros</a>
-            <a href="{{ url_for('players_page') }}">Oyuncular</a>
-            <a href="{{ url_for('clubs_page') }}">Takımlar</a>
-            <a href="{{ url_for('transfers_page') }}">Transferler</a>
-            <a href="{{ url_for('competitions_page') }}">Ligler</a>
-            <a href="{{ url_for('games_page') }}">games</a>
-        </div>
+      /* İlk sekme: yalnızca yazı kalın */
+      .navbar a.brand {
+        font-weight: 800; /* kalın */
+        color: #1e3c72; /* arka plan paleti ile aynı */
+      }
+    </style>
+  </head>
+  <body>
+    <div class="navbar">
+      <a href="{{ url_for('base_page') }}" class="brand">DataBros</a>
+      <a href="{{ url_for('players_page') }}">Oyuncular</a>
+      <a href="{{ url_for('clubs_page') }}">Takımlar</a>
+      <a href="{{ url_for('transfers_page') }}">Transferler</a>
+      <a href="{{ url_for('competitions_page') }}">Ligler</a>
+      <a href="{{ url_for('games_page') }}">Maçlar</a>
+    </div>
 
-        {% block content %}{% endblock %}
-    </body>
-    </html>
+    {% block content %}{% endblock %}
+  </body>
+</html>
