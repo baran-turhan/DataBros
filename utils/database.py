@@ -41,8 +41,8 @@ def get_all_clubs():
         if conn:
             conn.close()
 
-def get_all_competitions(country_name=None):
-    """Tüm mücadeleleri veritabanından çeker. İsteğe bağlı olarak ülke adına göre filtreler."""
+def get_all_competitions(country_name=None, is_major_league=None):
+    """Tüm mücadeleleri veritabanından çeker. İsteğe bağlı olarak ülke adına ve major league durumuna göre filtreler."""
     conn = None
     try:
         conn = get_conn()
@@ -63,6 +63,10 @@ def get_all_competitions(country_name=None):
         if country_name:
             query += " AND c.country_name = %s"
             params.append(country_name)
+        
+        if is_major_league is not None:
+            query += " AND c.is_major_national_league = %s"
+            params.append(is_major_league)
         
         query += " ORDER BY c.name ASC"
         

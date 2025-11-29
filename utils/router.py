@@ -78,17 +78,29 @@ def games_page():
 def competitions_page():
     """Mücadeleler sayfasını render eder ve veritabanından mücadele verilerini çeker."""
     selected_country = request.args.get("country")
+    is_major_league_param = request.args.get("is_major_league")
     countries = database.get_all_countries()
     competitions = []
     
+    # Parse is_major_league parameter (can be "true", "false", or None)
+    is_major_league = None
+    if is_major_league_param == "true":
+        is_major_league = True
+    elif is_major_league_param == "false":
+        is_major_league = False
+    
     if selected_country:
-        competitions = database.get_all_competitions(country_name=selected_country)
+        competitions = database.get_all_competitions(
+            country_name=selected_country,
+            is_major_league=is_major_league
+        )
     
     return render_template(
         'competitions.html',
         competitions=competitions,
         countries=countries,
         selected_country=selected_country,
+        selected_is_major_league=is_major_league_param,
     )
 
 def clubs_page():

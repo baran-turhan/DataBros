@@ -1,6 +1,6 @@
 {% extends 'layout.html' %}
 
-{% block title %}Ligler{% endblock %}
+{% block title %}Leagues{% endblock %}
 
 {% block extra_head %}
 <style>
@@ -70,19 +70,25 @@
 {% block content %}
 <div class="container">
     <div class="header">
-        <h1>🏆 Ligler</h1>
-        <p>Dünya futbolundaki tüm ligler, kupalar ve özel turnuvalar</p>
+        <h1>🏆 Leagues</h1>
+        <p>All leagues, cups and special tournaments in world football</p>
     </div>
 
     <form method="get" class="filter-bar">
-        <label for="country">Ülke</label>
+        <label for="country">Country</label>
         <select id="country" name="country" required>
-            <option value="" disabled {% if not selected_country %}selected{% endif %}>Ülke seçin</option>
+            <option value="" disabled {% if not selected_country %}selected{% endif %}>Select country</option>
             {% for country in countries %}
                 <option value="{{ country }}" {% if country == selected_country %}selected{% endif %}>{{ country }}</option>
             {% endfor %}
         </select>
-        <button type="submit">Uygula</button>
+        <label for="is_major_league">Major League</label>
+        <select id="is_major_league" name="is_major_league">
+            <option value="" {% if not selected_is_major_league %}selected{% endif %}>All</option>
+            <option value="true" {% if selected_is_major_league == "true" %}selected{% endif %}>Yes</option>
+            <option value="false" {% if selected_is_major_league == "false" %}selected{% endif %}>No</option>
+        </select>
+        <button type="submit">Apply</button>
     </form>
 
     {% if selected_country %}
@@ -90,35 +96,35 @@
             <div id="competitionsContainer" class="players-grid">
                 {% for comp in competitions %}
                 <div class="player-card fade-in">
-                    <!-- Avatar + Başlık -->
+                    <!-- Avatar + Title -->
                     <div class="player-header">
                         <div class="player-avatar">
                             {{ comp.name[0]|upper if comp.name else '🏆' }}
                         </div>
                         <h2 class="player-name">
-                            {{ comp.name or 'Bilinmeyen Lig' }}
+                            {{ comp.name or 'Unknown League' }}
                         </h2>
                     </div>
 
-                    <!-- Bilgi alanı 1 -->
+                    <!-- Info Section -->
                     <div class="player-info">
                         <div class="info-item">
-                            <span class="info-label">🌍 Ülke</span>
+                            <span class="info-label">🌍 Country</span>
                             <span class="info-value">{{ comp.country_name or 'N/A' }}</span>
                         </div>
 
                         <div class="info-item">
-                            <span class="info-label">🏷️ Lig ID</span>
+                            <span class="info-label">🏷️ League ID</span>
                             <span class="info-value">{{ comp.competition_id or 'N/A' }}</span>
                         </div>
 
                         <div class="info-item">
-                            <span class="info-label">📌 Major League mi?</span>
+                            <span class="info-label">📌 Major League?</span>
                             <span class="info-value">
                                 {% if comp.is_major_league %}
-                                    <span class="value-highlight">Evet</span>
+                                    <span class="value-highlight">Yes</span>
                                 {% else %}
-                                    Hayır
+                                    No
                                 {% endif %}
                             </span>
                         </div>
@@ -128,7 +134,7 @@
                             <span class="info-value">
                                 {% if comp.url %}
                                     <a href="{{ comp.url }}" target="_blank" style="color:#2a5298; font-weight:700;">
-                                        Ziyaret Et
+                                        Visit
                                     </a>
                                 {% else %}
                                     N/A
@@ -140,10 +146,10 @@
                 {% endfor %}
             </div>
         {% else %}
-            <div class="no-results">Seçilen ülkede lig bulunamadı.</div>
+            <div class="no-results">No leagues found for the selected country.</div>
         {% endif %}
     {% else %}
-        <div class="info-banner">Ülke seçip "Uygula" butonuna basarak o ülkenin liglerini listeleyebilirsin.</div>
+        <div class="info-banner">Select a country and click 'Apply' to list that country's leagues.</div>
     {% endif %}
 </div>
 {% endblock %}
