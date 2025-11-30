@@ -11,6 +11,8 @@ def transfers_page():
     min_fee_raw = request.args.get("min_fee")
     max_fee_raw = request.args.get("max_fee")
     sort_option = request.args.get("sort")
+    page = request.args.get("page", default=1, type=int)
+    per_page = 20
 
     # Sezonlar kısaltılmış formatta (ör: 24/25) tutuluyor
     seasons = [f"{str(y)[-2:]}/{str(y+1)[-2:]}" for y in range(2025, 2000, -1)]
@@ -33,20 +35,42 @@ def transfers_page():
     sort_by, sort_dir = sort_map.get(sort_option, ("date", "desc"))
 
     transfers = []
+    total_results = 0
+    current_page = page if page and page > 0 else 1
     if submitted:
-        transfers = database.get_transfers(
+        transfers_raw, total_results = database.get_transfers(
             season=season,
             min_fee=_parse_money(min_fee_raw),
             max_fee=_parse_money(max_fee_raw),
             sort_by=sort_by,
             sort_dir=sort_dir,
+            page=current_page,
+            per_page=per_page,
         )
+        def _calc_age(dob):
+            if not dob:
+                return None
+            today = datetime.utcnow().date()
+            return today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+
+        transfers = []
+        for t in transfers_raw:
+            t["age"] = _calc_age(t.get("date_of_birth"))
+            transfers.append(t)
+
+    total_pages = 0
+    if submitted and total_results:
+        total_pages = (total_results + per_page - 1) // per_page
 
     return render_template(
         'transfers.html',
         transfers=transfers,
         filter_applied=bool(submitted),
         seasons=seasons,
+        page=current_page,
+        total_pages=total_pages,
+        total_results=total_results,
+        per_page=per_page,
         filters={
             "season": season or "",
             "min_fee": min_fee_raw or "",

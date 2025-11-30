@@ -107,43 +107,33 @@ def get_all_countries():
         if conn:
             conn.close()
 
-def get_transfers(season=None, min_fee=None, max_fee=None, sort_by=None, sort_dir="asc"):
-    """Transferleri isteğe göre filtreleyip sıralar."""
+def get_transfers(season=None, min_fee=None, max_fee=None, sort_by=None, sort_dir="asc", page=None, per_page=None):
+    """Transferleri isteğe göre filtreleyip sıralar, opsiyonel sayfalama uygular."""
     conn = None
     try:
         conn = get_conn()
         cur = conn.cursor(cursor_factory=RealDictCursor)
 
-        query = """
-            SELECT 
-                t.transfer_id,
-                t.transfer_season,
-                t.transfer_fee,
-                t.transfer_fee AS transfer_fee_value,
-                t.transfer_date,
-                t.market_value_in_eur,
-                p.name AS player_name,
-                fc.name AS from_club,
-                tc.name AS to_club
+        base_query = """
             FROM transfers t
             LEFT JOIN players p ON t.player_id = p.player_id
             LEFT JOIN clubs fc ON t.from_club_id = fc.club_id
             LEFT JOIN clubs tc ON t.to_club_id = tc.club_id
             WHERE 1=1
         """
-        params = []
+        filters = []
 
         if season:
-            query += " AND t.transfer_season = %s"
-            params.append(season)
+            base_query += " AND t.transfer_season = %s"
+            filters.append(season)
 
         if min_fee is not None:
-            query += " AND t.transfer_fee >= %s"
-            params.append(min_fee)
+            base_query += " AND t.transfer_fee >= %s"
+            filters.append(min_fee)
 
         if max_fee is not None:
-            query += " AND t.transfer_fee <= %s"
-            params.append(max_fee)
+            base_query += " AND t.transfer_fee <= %s"
+            filters.append(max_fee)
 
         sort_columns = {
             "fee": "t.transfer_fee",
@@ -152,15 +142,42 @@ def get_transfers(season=None, min_fee=None, max_fee=None, sort_by=None, sort_di
         sort_column = sort_columns.get(sort_by, "t.transfer_date")
         sort_direction = "DESC" if str(sort_dir).lower() == "desc" else "ASC"
 
-        query += f" ORDER BY {sort_column} {sort_direction}"
+        count_query = "SELECT COUNT(*) " + base_query
+        cur.execute(count_query, filters)
+        total_count = cur.fetchone()["count"]
 
-        cur.execute(query, params)
+        data_query = f"""
+            SELECT 
+                t.transfer_id,
+                t.transfer_season,
+                t.transfer_fee,
+                t.transfer_fee AS transfer_fee_value,
+                t.transfer_date,
+                t.market_value_in_eur,
+                p.name AS player_name,
+                t.market_value_in_eur AS player_value,
+                p.date_of_birth,
+                p.sub_position,
+                p.country_of_citizenship,
+                fc.name AS from_club,
+                tc.name AS to_club
+            {base_query}
+            ORDER BY {sort_column} {sort_direction}
+        """
+
+        params = list(filters)
+        if page and per_page:
+            offset = max(page - 1, 0) * per_page
+            data_query += " LIMIT %s OFFSET %s"
+            params.extend([per_page, offset])
+
+        cur.execute(data_query, params)
         transfers = cur.fetchall()
         cur.close()
-        return transfers
+        return transfers, total_count
     except Exception as e:
         print(f"Database error: {e}")
-        return []
+        return [], 0
     finally:
         if conn:
             conn.close()
