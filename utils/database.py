@@ -183,6 +183,7 @@ def get_games_by_year(year: int):
                 g.season,
                 g.home_club_position,
                 g.away_club_position,
+                g.is_favorite,
                 hc.name AS home_club_name,
                 ac.name AS away_club_name,
                 comp.name AS competition_name
@@ -201,6 +202,67 @@ def get_games_by_year(year: int):
     except Exception as e:
         print(f"Database error: {e}")
         return []
+    finally:
+        if conn:
+            conn.close()
+
+def get_favorite_games():
+    """Favori olarak işaretlenmiş maçları getirir."""
+    conn = None
+    try:
+        conn = get_conn()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        query = """
+            SELECT
+                g.game_id,
+                g.date AS game_date,
+                g.home_club_goals,
+                g.away_club_goals,
+                g.season,
+                g.home_club_position,
+                g.away_club_position,
+                g.is_favorite,
+                hc.name AS home_club_name,
+                ac.name AS away_club_name,
+                comp.name AS competition_name
+            FROM games g
+            LEFT JOIN clubs hc ON g.home_club_id = hc.club_id
+            LEFT JOIN clubs ac ON g.away_club_id = ac.club_id
+            LEFT JOIN competitions comp ON g.competition_id = comp.competition_id
+            WHERE g.is_favorite = TRUE
+            ORDER BY g.date ASC, g.game_id ASC
+        """
+
+        cur.execute(query)
+        games = cur.fetchall()
+        cur.close()
+        return games
+    except Exception as e:
+        print(f"Database error: {e}")
+        return []
+    finally:
+        if conn:
+            conn.close()
+
+def set_game_favorite(game_id: int, is_favorite: bool = True) -> bool:
+    """Bir maçı favori olarak işaretler veya kaldırır."""
+    conn = None
+    try:
+        conn = get_conn()
+        cur = conn.cursor()
+
+        query = "UPDATE games SET is_favorite = %s WHERE game_id = %s"
+        cur.execute(query, (is_favorite, game_id))
+        updated = cur.rowcount > 0
+        conn.commit()
+        cur.close()
+        return updated
+    except Exception as e:
+        print(f"Database error: {e}")
+        if conn:
+            conn.rollback()
+        return False
     finally:
         if conn:
             conn.close()

@@ -48,6 +48,26 @@
         box-shadow: 0 8px 20px rgba(30, 60, 114, 0.35);
     }
 
+    .filter-bar input {
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: none;
+        min-width: 160px;
+        font-size: 1rem;
+        outline: none;
+    }
+
+    .form-error {
+        margin: 12px auto 0;
+        max-width: 600px;
+        background: rgba(255, 99, 99, 0.15);
+        color: #fff;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 99, 99, 0.4);
+        text-align: center;
+    }
+
     .games-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -131,57 +151,280 @@
             margin: 0 auto;
         }
     }
+
+    .filter-bar .ghost {
+        background: #e2e8f0;
+        color: #1e3c72;
+    }
+
+    .filter-bar .ghost:hover {
+        box-shadow: none;
+        transform: none;
+    }
+
+    .title-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .favorite-toggle {
+        border: none;
+        background: rgba(255,255,255,0.18);
+        color: #ff5a8a;
+        padding: 10px 14px;
+        border-radius: 12px;
+        cursor: pointer;
+        font-size: 1.1rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+    }
+
+    .favorite-toggle:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(255, 90, 138, 0.35);
+    }
+
+    .favorite-toggle.active {
+        background: rgba(255,90,138,0.16);
+        box-shadow: 0 6px 16px rgba(255, 90, 138, 0.35);
+    }
+
+    .game-card {
+        position: relative;
+    }
+
+    .favorite-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 50%;
+        width: 38px;
+        height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.05rem;
+        color: #ff5a8a;
+        cursor: pointer;
+        transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+    }
+
+    .favorite-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 14px rgba(255, 90, 138, 0.25);
+    }
+
+    .favorite-btn.active {
+        background: #ffe4ed;
+        border-color: #ffb6d0;
+        color: #ff2d71;
+        box-shadow: 0 6px 14px rgba(255, 90, 138, 0.2);
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container">
     <div class="header">
-        <h1>🎮 Maçlar</h1>
-        <p>2012'den bugüne maçları yıl bazlı inceleyin</p>
+        <div class="title-row">
+            <h1>🎮 Games</h1>
+            <a
+                class="favorite-toggle {% if favorite_only %}active{% endif %}"
+                href="{% if favorite_only %}{{ url_for('games_page') }}{% else %}{{ url_for('games_page', favorites=1) }}{% endif %}"
+            >
+                {% if favorite_only %}❤️ View Favorites{% else %}♡ Show Favorites{% endif %}
+            </a>
+        </div>
+        <p>Browse matches by year since 2012</p>
     </div>
 
     <form method="get" class="filter-bar">
-        <label for="year">Yıl</label>
+        <label for="year">Year</label>
         <select id="year" name="year" required>
-            <option value="" disabled {% if not selected_year %}selected{% endif %}>Yıl seçin</option>
+            <option value="" disabled {% if not selected_year %}selected{% endif %}>Choose year</option>
             {% for year in years %}
                 <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
             {% endfor %}
         </select>
-        <button type="submit">Uygula</button>
+        <button type="submit">Apply</button>
     </form>
 
-    {% if selected_year %}
-        {% if games %}
-            <div class="games-grid">
-                {% for game in games %}
-                <div class="game-card fade-in">
-                    <div class="game-date">{{ game.game_date or 'Tarih yok' }}</div>
-                    <div class="game-row">
-                        <span class="club">{{ game.home_club_name or 'Ev Sahibi' }}</span>
-                        <span class="score">
-                            {{ game.home_club_goals if game.home_club_goals is not none else '-' }}
-                            -
-                            {{ game.away_club_goals if game.away_club_goals is not none else '-' }}
-                        </span>
-                        <span class="club">{{ game.away_club_name or 'Deplasman' }}</span>
-                    </div>
-                    <div class="game-meta">
-                        <span>{{ game.competition_name or 'Mücadele bilinmiyor' }}</span>
-                        {% if game.season %}<span>Sezon {{ game.season }}</span>{% endif %}
-                        {% if game.home_club_position is not none and game.away_club_position is not none %}
-                            <span>Tablo: {{ game.home_club_position }} - {{ game.away_club_position }}</span>
-                        {% endif %}
-                    </div>
+    {% if games %}
+    <div class="filter-bar">
+        <label for="average-filter">Goal Diff</label>
+        <input
+            id="average-filter"
+            type="number"
+            min="0"
+            step="1"
+            placeholder="Goal difference"
+            inputmode="numeric"
+            aria-describedby="average-error"
+        />
+        <button type="button" id="apply-average">Apply</button>
+        <button type="button" class="ghost" id="clear-average">Clear</button>
+    </div>
+    <div id="average-error" class="form-error" style="display:none;"></div>
+    {% endif %}
+
+    {% if games %}
+        <div class="games-grid">
+            {% for game in games %}
+            <div class="game-card fade-in" data-goal-diff="{{ game.goal_difference if game.goal_difference is not none else '' }}">
+                <button
+                    type="button"
+                    class="favorite-btn {% if game.is_favorite %}active{% endif %}"
+                    data-game-id="{{ game.game_id }}"
+                    aria-label="Add this match to favorites"
+                >
+                    {% if game.is_favorite %}♥{% else %}♡{% endif %}
+                </button>
+                <div class="game-date">{{ game.game_date or 'No date' }}</div>
+                <div class="game-row">
+                    <span class="club">{{ game.home_club_name or 'Home' }}</span>
+                    <span class="score">
+                        {{ game.home_club_goals if game.home_club_goals is not none else '-' }}
+                        -
+                        {{ game.away_club_goals if game.away_club_goals is not none else '-' }}
+                    </span>
+                    <span class="club">{{ game.away_club_name or 'Away' }}</span>
                 </div>
-                {% endfor %}
+                <div class="game-meta">
+                    <span>{{ game.competition_name or 'Unknown competition' }}</span>
+                    {% if game.season %}<span>Season {{ game.season }}</span>{% endif %}
+                    {% if game.home_club_position is not none and game.away_club_position is not none %}
+                        <span>Table: {{ game.home_club_position }} - {{ game.away_club_position }}</span>
+                    {% endif %}
+                    {% if game.goal_difference is not none %}
+                        <span>Goal diff: {{ game.goal_difference }}</span>
+                    {% endif %}
+                </div>
             </div>
-        {% else %}
-            <div class="no-results">Seçilen yılda maç bulunamadı.</div>
-        {% endif %}
+            {% endfor %}
+        </div>
+        <div id="client-no-results" class="no-results" style="display:none;">No matches for this goal difference.</div>
+    {% elif favorite_only %}
+        <div class="no-results">No favorite matches yet.</div>
+    {% elif selected_year %}
+        <div class="no-results">No matches found for the selected criteria.</div>
     {% else %}
-        <div class="info-banner">Yıl seçip "Uygula" butonuna basarak maçları listeleyebilirsin.</div>
+        <div class="info-banner">Choose a year and click "Apply" to list matches.</div>
     {% endif %}
 </div>
+
+{% if games %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const averageInput = document.getElementById("average-filter");
+        const applyBtn = document.getElementById("apply-average");
+        const clearBtn = document.getElementById("clear-average");
+        const cards = Array.from(document.querySelectorAll(".game-card"));
+        const errorBox = document.getElementById("average-error");
+        const noResultsBox = document.getElementById("client-no-results");
+        const favoriteButtons = Array.from(document.querySelectorAll(".favorite-btn"));
+
+        const resetVisibility = () => {
+            cards.forEach(card => card.style.display = "");
+            if (noResultsBox) noResultsBox.style.display = "none";
+        };
+
+        const showError = (msg) => {
+            if (!errorBox) return;
+            if (msg) {
+                errorBox.textContent = msg;
+                errorBox.style.display = "block";
+            } else {
+                errorBox.textContent = "";
+                errorBox.style.display = "none";
+            }
+        };
+
+        const applyFilter = () => {
+            if (!averageInput) return;
+            const raw = averageInput.value.trim();
+            showError("");
+            resetVisibility();
+
+            if (raw === "") return;
+
+            const parsed = Number(raw);
+            if (!Number.isInteger(parsed) || parsed < 0) {
+                showError("Only positive whole numbers are allowed for goal difference.");
+                return;
+            }
+
+            let visibleCount = 0;
+            cards.forEach(card => {
+                const diffAttr = card.dataset.goalDiff;
+                const diff = diffAttr === "" ? null : Number(diffAttr);
+                const match = diff !== null && diff === parsed;
+                card.style.display = match ? "" : "none";
+                if (match) visibleCount += 1;
+            });
+
+            if (noResultsBox) {
+                noResultsBox.style.display = visibleCount === 0 ? "block" : "none";
+            }
+        };
+
+        const clearFilter = () => {
+            if (!averageInput) return;
+            averageInput.value = "";
+            showError("");
+            resetVisibility();
+        };
+
+        if (averageInput) {
+            applyBtn?.addEventListener("click", applyFilter);
+            clearBtn?.addEventListener("click", clearFilter);
+            averageInput.addEventListener("keydown", (event) => {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    applyFilter();
+                }
+            });
+        }
+
+        favoriteButtons.forEach((btn) => {
+            btn.addEventListener("click", async () => {
+                if (btn.classList.contains("active")) return;
+
+                const gameId = btn.dataset.gameId;
+                if (!gameId) return;
+
+                btn.disabled = true;
+                try {
+                    const res = await fetch(`/games/${gameId}/favorite`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ favorite: true })
+                    });
+
+                    if (!res.ok) throw new Error("Request failed");
+                    const data = await res.json();
+                    if (data.success) {
+                        btn.classList.add("active");
+                        btn.textContent = "♥";
+                        btn.setAttribute("aria-pressed", "true");
+                    } else {
+                        throw new Error("Response not successful");
+                    }
+                } catch (err) {
+                    showError("Could not add to favorites, please try again.");
+                } finally {
+                    btn.disabled = false;
+                }
+            });
+        });
+    });
+</script>
+{% endif %}
 {% endblock %}

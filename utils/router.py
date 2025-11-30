@@ -1,5 +1,5 @@
 from datetime import datetime
-from flask import render_template, request
+from flask import render_template, request, jsonify
 import utils.database as database
 
 def base_page():
@@ -63,17 +63,41 @@ def games_page():
     years = list(range(current_year, 2011, -1))
     
     selected_year = request.args.get("year", type=int)
+    favorite_only_param = request.args.get("favorites")
+    favorite_only = str(favorite_only_param).lower() in ("1", "true", "yes")
     games = []
 
-    if selected_year and 1900 <= selected_year <= current_year:
+    if favorite_only:
+        selected_year = None
+        games = database.get_favorite_games()
+    elif selected_year and 1900 <= selected_year <= current_year:
         games = database.get_games_by_year(selected_year)
+
+    # Gol farkı bilgisini önden hesaplayıp front-end'de filtreleme için saklıyoruz
+    for game in games:
+        home_goals = game.get("home_club_goals")
+        away_goals = game.get("away_club_goals")
+        goal_difference = None
+
+        if home_goals is not None and away_goals is not None:
+            goal_difference = abs(home_goals - away_goals)
+
+        game["goal_difference"] = goal_difference
 
     return render_template(
         'games.html',
         years=years,
         selected_year=selected_year,
         games=games,
+        favorite_only=favorite_only,
     )
+
+def update_game_favorite(game_id: int):
+    """Bir maçı favori olarak işaretler."""
+    success = database.set_game_favorite(game_id, True)
+    if not success:
+        return jsonify({"success": False, "message": "Güncelleme yapılamadı."}), 500
+    return jsonify({"success": True, "is_favorite": True})
 
 def competitions_page():
     """Mücadeleler sayfasını render eder ve veritabanından mücadele verilerini çeker."""
