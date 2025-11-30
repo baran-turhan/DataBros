@@ -10,104 +10,141 @@
 {% block content %}
 <div class="container">
     <div class="header">
-        <h1>💸 Transferler</h1>
-        <p>Sezon ve ücret filtreleri ile transferleri listeleyin, tarih ya da ücrete göre sıralayın.</p>
+        <h1>💸 Transfers</h1>
+        <p>Filter by season and fee, then sort by date or amount.</p>
     </div>
 
     <form class="filter-bar" method="get" action="{{ url_for('transfers_page') }}">
         <input type="hidden" name="submitted" value="1">
         <div class="filter-group">
-            <label for="season">Sezon</label>
+            <label for="season">Season</label>
             <select id="season" name="season">
-                <option value="">Sezon seçin</option>
+                <option value="">Select season</option>
                 {% for s in seasons %}
                     <option value="{{ s }}" {% if filters.season == s %}selected{% endif %}>{{ s }}</option>
                 {% endfor %}
             </select>
         </div>
         <div class="filter-group">
-            <label for="min_fee">Min Ücret (€)</label>
+            <label for="min_fee">Min Fee (€)</label>
             <input id="min_fee" name="min_fee" inputmode="numeric" value="{{ filters.min_fee }}">
         </div>
         <div class="filter-group">
-            <label for="max_fee">Max Ücret (€)</label>
+            <label for="max_fee">Max Fee (€)</label>
             <input id="max_fee" name="max_fee" inputmode="numeric" value="{{ filters.max_fee }}">
         </div>
         <div class="filter-group">
-            <label for="sort">Sıralama</label>
+            <label for="sort">Sort</label>
             <select id="sort" name="sort">
-                <option value="" {% if not filters.sort %}selected{% endif %}>Tarih (Yeni → Eski)</option>
-                <option value="date_asc" {% if filters.sort == 'date_asc' %}selected{% endif %}>Tarih (Eski → Yeni)</option>
-                <option value="fee_desc" {% if filters.sort == 'fee_desc' %}selected{% endif %}>Ücret (Yüksek → Düşük)</option>
-                <option value="fee_asc" {% if filters.sort == 'fee_asc' %}selected{% endif %}>Ücret (Düşük → Yüksek)</option>
+                <option value="" {% if not filters.sort %}selected{% endif %}>Date (Newest → Oldest)</option>
+                <option value="date_asc" {% if filters.sort == 'date_asc' %}selected{% endif %}>Date (Oldest → Newest)</option>
+                <option value="fee_desc" {% if filters.sort == 'fee_desc' %}selected{% endif %}>Fee (High → Low)</option>
+                <option value="fee_asc" {% if filters.sort == 'fee_asc' %}selected{% endif %}>Fee (Low → High)</option>
             </select>
         </div>
         <div class="filter-actions">
-            <button type="submit" class="filter-button">Filtreyi Uygula</button>
-            <a class="reset-link" href="{{ url_for('transfers_page') }}">Temizle</a>
+            <button type="submit" class="filter-button">Apply Filters</button>
+            <a class="reset-link" href="{{ url_for('transfers_page') }}">Clear</a>
         </div>
     </form>
 
     {% if filter_applied %}
         {% if transfers %}
-        <div class="transfer-grid">
-            {% for transfer in transfers %}
-            <div class="player-card fade-in">
-                <div class="player-header">
-                    <div class="player-avatar">
-                        {{ transfer.player_name[0]|upper if transfer.player_name else '💸' }}
-                    </div>
-                    <div>
-                        <h2 class="player-name">{{ transfer.player_name or 'Bilinmeyen Oyuncu' }}</h2>
-                        <div class="transfer-flow">
-                            {{ transfer.from_club or 'N/A' }} → {{ transfer.to_club or 'N/A' }}
-                        </div>
-                    </div>
-                </div>
-
-                <div class="transfer-meta">
-                    <div>
-                        <div class="info-label">Transfer Tarihi</div>
-                        <div class="info-value">
-                            {% if transfer.transfer_date %}
-                                {{ transfer.transfer_date.strftime('%Y-%m-%d') }}
+        <div class="table-wrapper">
+            <table class="transfer-table">
+                <thead>
+                    <tr>
+                        <th>Player</th>
+                        <th>Position</th>
+                        <th>Age</th>
+                        <th>Nationality</th>
+                        <th>Clubs</th>
+                        <th>Value</th>
+                        <th>Fee</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transfer in transfers %}
+                    <tr>
+                        <td class="player-cell">
+                            <div class="player-avatar">
+                                {{ transfer.player_name[0]|upper if transfer.player_name else '💸' }}
+                            </div>
+                            <div class="player-meta">
+                                <div class="player-name">{{ transfer.player_name or 'Unknown Player' }}</div>
+                            </div>
+                        </td>
+                        <td class="text-center">{{ transfer.sub_position or '—' }}</td>
+                        <td class="text-center">{{ transfer.age or '—' }}</td>
+                        <td class="text-center">{{ transfer.country_of_citizenship or '—' }}</td>
+                        <td class="club-stack">
+                            <div class="club-cell">
+                                <div class="club-name">{{ transfer.from_club or 'N/A' }}</div>
+                                <div class="club-sub">From</div>
+                            </div>
+                            <div class="club-cell">
+                                <div class="club-name">{{ transfer.to_club or 'N/A' }}</div>
+                                <div class="club-sub">To</div>
+                            </div>
+                        </td>
+                        <td class="text-right">
+                            {% if transfer.player_value is not none %}
+                                {% set mv_str = "{:,.2f}".format(transfer.player_value) %}
+                                {% set mv_tr = mv_str.replace(",", "X").replace(".", ",").replace("X", ".") %}
+                                €{{ mv_tr }}
                             {% else %}
-                                N/A
+                                —
                             {% endif %}
-                        </div>
-                    </div>
-                    <div>
-                        <div class="info-label">Sezon</div>
-                        <div class="info-value">{{ transfer.transfer_season or 'N/A' }}</div>
-                    </div>
-                    <div>
-                        <div class="info-label">Ücret</div>
-                        <div class="fee-tag">
+                        </td>
+                        <td class="text-right">
                             {% if transfer.transfer_fee_value is not none %}
                                 {% set fee_str = "{:,.2f}".format(transfer.transfer_fee_value) %}
                                 {% set fee_tr = fee_str.replace(",", "X").replace(".", ",").replace("X", ".") %}
                                 €{{ fee_tr }}
                             {% else %}
-                                Belirtilmemiş
+                                —
                             {% endif %}
-                        </div>
-                    </div>
-                    <div>
-                        <div class="info-label">Transfer ID</div>
-                        <div class="info-value">{{ transfer.transfer_id }}</div>
-                    </div>
-                </div>
+                        </td>
+                        <td class="text-center">
+                            {% if transfer.transfer_date %}
+                                {{ transfer.transfer_date.strftime('%Y-%m-%d') }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="pagination">
+            <div class="page-info">
+                {{ total_results }} transfers total · Page {{ page }} / {{ total_pages if total_pages else 1 }} · {{ per_page }} per page
             </div>
-            {% endfor %}
+            <div class="page-actions">
+                {% set prev_page = page - 1 %}
+                {% set next_page = page + 1 %}
+                <a
+                    class="page-button {% if page <= 1 %}disabled{% endif %}"
+                    href="{% if page > 1 %}{{ url_for('transfers_page', submitted=1, season=filters.season, min_fee=filters.min_fee, max_fee=filters.max_fee, sort=filters.sort, page=prev_page) }}{% else %}#{% endif %}">
+                    ← Previous
+                </a>
+                <a
+                    class="page-button {% if total_pages and page >= total_pages %}disabled{% endif %}"
+                    href="{% if total_pages and page < total_pages %}{{ url_for('transfers_page', submitted=1, season=filters.season, min_fee=filters.min_fee, max_fee=filters.max_fee, sort=filters.sort, page=next_page) }}{% else %}#{% endif %}">
+                    Next →
+                </a>
+            </div>
         </div>
         {% else %}
         <div class="no-results">
-            <p>Filtrelere uyan transfer bulunamadı.</p>
+            <p>No transfers match these filters.</p>
         </div>
         {% endif %}
     {% else %}
         <div class="helper-box">
-            Filtreleri doldurup <strong>Filtreyi Uygula</strong> butonuna bastığınızda transferler listelenir.
+            Fill the filters and hit <strong>Apply Filters</strong> to list transfers.
         </div>
     {% endif %}
 </div>

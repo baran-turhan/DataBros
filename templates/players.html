@@ -13,51 +13,48 @@
         <input type="text" id="searchInput" placeholder="Oyuncu ara...">
     </div>
 
-    <div id="playersContainer" class="players-grid">
+    <div id="playersContainer" class="players-table-wrapper">
         {% if players %}
-        {% for player in players %}
-        <div class="player-card fade-in" data-player-name="{{ player.name|default('bilinmeyen')|lower }}">
-            <div class="player-header">
-                <div class="player-avatar">
-                    {{ player.name[0]|upper if player.name else '⚽' }}
-                </div>
-                <h2 class="player-name">{{ player.name or 'Bilinmeyen Oyuncu' }}</h2>
-            </div>
-            <div class="player-info">
-                <div class="info-item">
-                    <span class="info-label">📅 Doğum Tarihi</span>
-                    <span class="info-value">{{ player.date_of_birth or 'N/A' }}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">🦶 Ayak</span>
-                    <span class="info-value">{{ player.foot|title or 'N/A' }}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">📏 Boy</span>
-                    <span class="info-value">{{ player.height_in_cm or 'N/A' }} cm</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">🎯 Pozisyon</span>
-                    <span class="info-value value-highlight">
-                        {{ player.sub_position or 'N/A' }}
-                    </span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">🌍 Uyruk</span>
-                    <span class="info-value">{{ player.country_of_citizenship or 'N/A' }}</span>
-                </div>
-            </div>
-            
-            <div class="player-info" style="margin-top:25px;">
-                <div class="info-item" style="width: 100%;">
-                    <span class="info-label">🏟️ Kulüp</span>
-                    <span class="info-value" style="font-size: 1.4rem; color: #1e3c72;">
-                        {{ player.club_name or 'Kulüpsüz' }}
-                    </span>
-                </div>
-                </div>
-        </div>
-        {% endfor %}
+        <table class="players-table">
+            <thead>
+                <tr>
+                    <th>Oyuncu</th>
+                    <th>Doğum Tarihi</th>
+                    <th>Ayak</th>
+                    <th>Boy</th>
+                    <th>Pozisyon</th>
+                    <th>Uyruk</th>
+                    <th>Kulüp</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for player in players %}
+                <tr class="player-row fade-in" data-player-name="{{ player.name|default('bilinmeyen')|lower }}">
+                    <td class="player-name-cell">
+                        <div class="player-mini-avatar">
+                            {{ player.name[0]|upper if player.name else '⚽' }}
+                        </div>
+                        <div class="player-name-text">{{ player.name or 'Bilinmeyen Oyuncu' }}</div>
+                    </td>
+                    <td>{{ player.date_of_birth or 'N/A' }}</td>
+                    <td>{{ player.foot|title or 'N/A' }}</td>
+                    <td>
+                        {% if player.height_in_cm %}
+                            {{ player.height_in_cm }} cm
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td>{{ player.sub_position or 'N/A' }}</td>
+                    <td>{{ player.country_of_citizenship or 'N/A' }}</td>
+                    <td>{{ player.club_name or 'Kulüpsüz' }}</td>
+                </tr>
+                {% endfor %}
+                <tr id="noResultsRow" class="no-results-row" style="display: none;">
+                    <td colspan="7">Arama kriterine uyan oyuncu bulunamadı.</td>
+                </tr>
+            </tbody>
+        </table>
         {% else %}
             <div class="no-results">
                 <p>Henüz oyuncu verisi bulunmamaktadır.</p>
@@ -68,13 +65,20 @@
 
 <script>
 const searchInput = document.getElementById('searchInput');
-const playerCards = document.querySelectorAll('.player-card');
+const playerRows = document.querySelectorAll('.player-row');
+const noResultsRow = document.getElementById('noResultsRow');
 searchInput.addEventListener('input', function(e) {
     const searchTerm = e.target.value.toLowerCase().trim();
-    playerCards.forEach(card => {
-        const playerName = card.getAttribute('data-player-name');
-        card.style.display = playerName.includes(searchTerm) ? 'block' : 'none';
+    let visibleCount = 0;
+    playerRows.forEach(row => {
+        const playerName = row.getAttribute('data-player-name');
+        const isVisible = playerName.includes(searchTerm);
+        row.style.display = isVisible ? '' : 'none';
+        if (isVisible) visibleCount += 1;
     });
+    if (noResultsRow) {
+        noResultsRow.style.display = visibleCount === 0 ? '' : 'none';
+    }
 });
 </script>
 {% endblock %}

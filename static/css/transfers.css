@@ -131,3 +131,158 @@
     border-radius: 16px;
     border: 1px solid rgba(255, 255, 255, 0.2);
 }
+
+.pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.92);
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.page-info {
+    font-weight: 700;
+    color: #1e3c72;
+    font-size: 0.95rem;
+}
+
+.page-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.page-button {
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid #dbe2ef;
+    color: #1e3c72;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.95rem;
+    transition: all 0.15s ease;
+}
+
+.page-button:hover {
+    background: #f1f5fb;
+    border-color: #1e3c72;
+}
+
+.page-button.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.table-wrapper {
+    margin-top: 8px;
+    overflow-x: auto;
+    background: rgba(255, 255, 255, 0.94);
+    border-radius: 14px;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e4e9f2;
+}
+
+.transfer-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 720px;
+}
+
+.transfer-table th,
+.transfer-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #edf2f7;
+    vertical-align: middle;
+    font-size: 0.95rem;
+}
+
+.transfer-table th {
+    background: #f6f8fb;
+    color: #1e3c72;
+    font-weight: 800;
+    position: sticky;
+    top: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.transfer-table tbody tr:nth-child(even) td {
+    background: #fbfdff;
+}
+
+.transfer-table tbody tr:hover td {
+    background: #f1f5fb;
+}
+
+.player-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 700;
+    color: #1e3c72;
+}
+
+.player-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.player-name {
+    font-size: 1rem;
+}
+
+.player-sub {
+    color: #4a5568;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.player-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
+    flex-shrink: 0;
+}
+
+.club-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.club-name {
+    font-weight: 700;
+    color: #1a202c;
+    font-size: 0.98rem;
+}
+
+.club-sub {
+    color: #718096;
+    font-size: 0.85rem;
+}
+
+.club-stack {
+    display: grid;
+    gap: 8px;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-right {
+    text-align: right;
+    font-weight: 700;
+}

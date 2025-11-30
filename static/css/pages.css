@@ -67,98 +67,75 @@ body {
     pointer-events: none;
 }
 
-.players-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    gap: 30px;
-    margin-bottom: 40px;
+.players-table-wrapper {
+    background: rgba(255, 255, 255, 0.94);
+    border-radius: 16px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    overflow: auto;
+    margin-bottom: 30px;
 }
 
-.player-card {
-    background: white;
-    border-radius: 20px;
-    padding: 30px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-    border: 1px solid rgba(255,255,255,0.5);
+.players-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 900px;
 }
 
-.player-card::before {
-    content: "";
-    position: absolute;
+.players-table th {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: #fff;
+    font-weight: 700;
+    text-align: left;
+    padding: 14px 16px;
+    position: sticky;
     top: 0;
-    left: 0;
-    right: 0;
-    height: 5px;
-    background: linear-gradient(90deg, #1e3c72, #2a5298);
+    z-index: 1;
 }
 
-.player-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+.players-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #e8eef6;
+    color: #1f2d3d;
+    background: #fff;
 }
 
-.player-header {
+.players-table tbody tr:nth-child(even) td {
+    background: #f7fbff;
+}
+
+.players-table tbody tr:hover td {
+    background: #eef5ff;
+}
+
+.player-name-cell {
     display: flex;
     align-items: center;
-    margin-bottom: 20px;
+    gap: 12px;
+    font-weight: 700;
+    color: #1e3c72;
 }
 
-.player-avatar {
-    width: 70px;
-    height: 70px;
-    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+.player-mini-avatar {
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
-    display: flex;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: #fff;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: white;
-    font-size: 1.8rem;
-    font-weight: bold;
-    margin-right: 20px;
+    font-weight: 800;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.18);
     flex-shrink: 0;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
 
-.player-name {
-    font-size: 1.6rem;
+.no-results-row td {
+    text-align: center;
     font-weight: 700;
     color: #2d3748;
-    margin: 0;
-    line-height: 1.3;
-}
-
-.player-info {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-top: 20px;
-}
-
-.info-item {
-    display: flex;
-    flex-direction: column;
-}
-
-.info-label {
-    font-size: 0.8rem;
-    color: #718096;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    margin-bottom: 8px;
-    font-weight: 600;
-}
-
-.info-value {
-    font-size: 1.2rem;
-    color: #2d3748;
-    font-weight: 700;
-}
-
-.value-highlight {
-    color: #2a5298;
+    padding: 18px;
+    background: #fff7e6;
 }
 
 .no-results {
