@@ -1,5 +1,6 @@
 import psycopg2
 import os
+from typing import Optional
 from psycopg2.extras import RealDictCursor
 
 def get_conn():
@@ -206,8 +207,8 @@ def get_games_by_year(year: int):
         if conn:
             conn.close()
 
-def get_favorite_games():
-    """Favori olarak işaretlenmiş maçları getirir."""
+def get_favorite_games(year: Optional[int] = None):
+    """Favori olarak işaretlenmiş maçları getirir. İsteğe bağlı yıl filtresi uygular."""
     conn = None
     try:
         conn = get_conn()
@@ -231,10 +232,16 @@ def get_favorite_games():
             LEFT JOIN clubs ac ON g.away_club_id = ac.club_id
             LEFT JOIN competitions comp ON g.competition_id = comp.competition_id
             WHERE g.is_favorite = TRUE
-            ORDER BY g.date ASC, g.game_id ASC
         """
+        params = []
 
-        cur.execute(query)
+        if year is not None:
+            query += " AND EXTRACT(YEAR FROM g.date) = %s"
+            params.append(year)
+
+        query += " ORDER BY g.date ASC, g.game_id ASC"
+
+        cur.execute(query, params)
         games = cur.fetchall()
         cur.close()
         return games

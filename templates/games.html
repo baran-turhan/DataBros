@@ -238,7 +238,7 @@
             <h1>🎮 Games</h1>
             <a
                 class="favorite-toggle {% if favorite_only %}active{% endif %}"
-                href="{% if favorite_only %}{{ url_for('games_page') }}{% else %}{{ url_for('games_page', favorites=1) }}{% endif %}"
+                href="{% if favorite_only %}{% if selected_year %}{{ url_for('games_page', year=selected_year) }}{% else %}{{ url_for('games_page') }}{% endif %}{% else %}{% if selected_year %}{{ url_for('games_page', favorites=1, year=selected_year) }}{% else %}{{ url_for('games_page', favorites=1) }}{% endif %}{% endif %}"
             >
                 {% if favorite_only %}❤️ View Favorites{% else %}♡ Show Favorites{% endif %}
             </a>

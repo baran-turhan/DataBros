@@ -68,8 +68,11 @@ def games_page():
     games = []
 
     if favorite_only:
-        selected_year = None
-        games = database.get_favorite_games()
+        if selected_year and 1900 <= selected_year <= current_year:
+            games = database.get_favorite_games(selected_year)
+        else:
+            selected_year = None
+            games = database.get_favorite_games()
     elif selected_year and 1900 <= selected_year <= current_year:
         games = database.get_games_by_year(selected_year)
 
