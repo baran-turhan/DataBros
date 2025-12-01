@@ -48,11 +48,11 @@
   <body>
     <div class="navbar">
       <a href="{{ url_for('base_page') }}" class="brand">DataBros</a>
-      <a href="{{ url_for('players_page') }}">Oyuncular</a>
-      <a href="{{ url_for('clubs_page') }}">Takımlar</a>
+      <a href="{{ url_for('players_page') }}">Players</a>
+      <a href="{{ url_for('clubs_page') }}">Teams</a>
       <a href="{{ url_for('transfers_page') }}">Transfers</a>
       <a href="{{ url_for('competitions_page') }}">Leagues</a>
-      <a href="{{ url_for('games_page') }}">Maçlar</a>
+      <a href="{{ url_for('games_page') }}">Competitions</a>
     </div>
 
     {% block content %}{% endblock %}

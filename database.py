@@ -2,6 +2,7 @@ import psycopg2
 import os
 from psycopg2.extras import RealDictCursor
 
+
 def get_conn():
     """PostgreSQL bağlantısını oluşturur."""
     DB_URL = os.getenv("DATABASE_URL")
@@ -41,6 +42,7 @@ def get_all_clubs():
         if conn:
             conn.close()
 
+
 def get_all_competitions():
     """Tüm mücadeleleri veritabanından çeker."""
     conn = None
@@ -72,7 +74,7 @@ def get_all_competitions():
             conn.close()
 
 
-# database.py dosyasının en altına ekle:
+# database.py dosyasının en altına (eski get_all_players yerine) yapıştır:
 
 def get_all_players():
     conn = None
@@ -80,6 +82,10 @@ def get_all_players():
         conn = get_conn()
         cur = conn.cursor(cursor_factory=RealDictCursor)
         
+        # Konsola bilgi verelim
+        print("--- OYUNCU SORGUSU BAŞLIYOR ---")
+        
+        # Hem LIMIT ekledik hem de doğru JOIN yapısı
         query = """
             SELECT 
                 p.name,
@@ -92,14 +98,19 @@ def get_all_players():
             FROM players p
             LEFT JOIN clubs c ON p.current_club_id = c.club_id
             ORDER BY p.name ASC
+            LIMIT 100
         """
         
         cur.execute(query)
         players = cur.fetchall()
+        
+        # BU SATIR ÇOK ÖNEMLİ: Terminale kaç oyuncu bulunduğunu yazacak
+        print(f"--- SORGU BİTTİ. BULUNAN OYUNCU SAYISI: {len(players)} ---")
+        
         cur.close()
         return players
     except Exception as e:
-        print(f"Database error (get_all_players): {e}")
+        print(f"!!! HATA OLUŞTU: {e}")
         return []
     finally:
         if conn:

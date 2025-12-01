@@ -1,42 +1,118 @@
 {% extends 'layout.html' %}
 
-{% block title %}Oyuncular{% endblock %}
+{% block title %}Players{% endblock %}
 
 {% block content %}
 <div class="container">
     <div class="header">
-        <h1>🏆 Futbol Oyuncuları</h1>
-        <p>Dünya futbolundaki tüm oyuncuların detaylı bilgileri</p>
+        <h1>🏆 Football Players</h1>
+        <p>Detailed information about all players in world football</p>
     </div>
 
     <div class="search-bar">
-        <input type="text" id="searchInput" placeholder="Oyuncu ara...">
+        <input type="text" id="searchInput" placeholder="Search players...">
     </div>
+
+    <div class="filter-bar fade-in">
+        
+        <div class="filter-group">
+            <button class="filter-btn" id="ageDropdownBtn">
+                Age: <span id="ageButtonLabel" style="margin-left: 5px; color: #2a5298;">All</span>
+            </button>
+            <div class="filter-dropdown" id="ageDropdown">
+                <div class="age-slider-container" id="sliderContainer"
+                     data-min="{{ selected_min_age or '' }}"
+                     data-max="{{ selected_max_age or '' }}"
+                     data-global-min="{{ global_min_age }}"
+                     data-global-max="{{ global_max_age }}">
+                    <div class="slider-tooltip" id="sliderTooltip">25</div>
+                    <div class="slider-track-bg" id="sliderTrack">
+                        <div class="slider-track-fill" id="sliderFill" style="left: 0; width: 0;"></div>
+                    </div>
+                    <div id="sliderPoints"></div>
+                    <div class="slider-labels">
+                        <span>{{ global_min_age }}</span>
+                        <span>{{ global_max_age }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-group">
+            <button class="filter-btn" id="footDropdownBtn">
+                Foot: <span id="footButtonLabel" style="margin-left: 5px; color: #2a5298;">All</span>
+            </button>
+            
+            <div class="filter-dropdown" id="footDropdown" style="width: 200px;">
+                <ul id="footCheckboxList">
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="All" id="footAll">
+                        All
+                    </label>
+                    
+                    <div class="separator"></div>
+
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="foot" value="Right" class="foot-option">
+                        Right
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="foot" value="Left" class="foot-option">
+                        Left
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="foot" value="Both" class="foot-option">
+                        Both
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="foot" value="None" class="foot-option">
+                        None (Unknown)
+                    </label>
+                </ul>
+            </div>
+        </div>
+
+        <button class="apply-btn" id="applyFilterBtn">Apply Filter</button>
+    </div>
+
+    <form id="filterForm" action="{{ url_for('players_page') }}" method="get" style="display: none;">
+        <input type="hidden" name="min_age" id="inputMinAge" value="{{ selected_min_age or '' }}">
+        <input type="hidden" name="max_age" id="inputMaxAge" value="{{ selected_max_age or '' }}">
+        <div id="footHiddenInputs">
+            {% for foot in selected_feet %}
+            <input type="hidden" name="foot" value="{{ foot }}">
+            {% endfor %}
+        </div>
+    </form>
 
     <div id="playersContainer" class="players-table-wrapper">
         {% if players %}
         <table class="players-table">
             <thead>
                 <tr>
-                    <th>Oyuncu</th>
-                    <th>Doğum Tarihi</th>
-                    <th>Ayak</th>
-                    <th>Boy</th>
-                    <th>Pozisyon</th>
-                    <th>Uyruk</th>
-                    <th>Kulüp</th>
+                    <th>Player</th>
+                    <th>Date of Birth</th>
+                    <th>Age</th>
+                    <th>Foot</th>
+                    <th>Height</th>
+                    <th>Position</th>
+                    <th>Citizenship</th>
+                    <th>Club</th>
                 </tr>
             </thead>
             <tbody>
                 {% for player in players %}
-                <tr class="player-row fade-in" data-player-name="{{ player.name|default('bilinmeyen')|lower }}">
+                <tr class="player-row fade-in" data-player-name="{{ player.name|default('unknown')|lower }}">
                     <td class="player-name-cell">
                         <div class="player-mini-avatar">
                             {{ player.name[0]|upper if player.name else '⚽' }}
                         </div>
-                        <div class="player-name-text">{{ player.name or 'Bilinmeyen Oyuncu' }}</div>
+                        <div class="player-name-text">{{ player.name or 'Unknown Player' }}</div>
                     </td>
                     <td>{{ player.date_of_birth or 'N/A' }}</td>
+                    <td style="font-weight: bold; color: #2d3748;">
+                        {{ player.age if player.age is not none else '-' }}
+                    </td>
                     <td>{{ player.foot|title or 'N/A' }}</td>
                     <td>
                         {% if player.height_in_cm %}
@@ -47,38 +123,72 @@
                     </td>
                     <td>{{ player.sub_position or 'N/A' }}</td>
                     <td>{{ player.country_of_citizenship or 'N/A' }}</td>
-                    <td>{{ player.club_name or 'Kulüpsüz' }}</td>
+                    <td>{{ player.club_name or 'No Club' }}</td>
                 </tr>
                 {% endfor %}
                 <tr id="noResultsRow" class="no-results-row" style="display: none;">
-                    <td colspan="7">Arama kriterine uyan oyuncu bulunamadı.</td>
+                    <td colspan="7">No players found matching the search criteria.</td>
                 </tr>
             </tbody>
         </table>
+
+        {% if total_pages > 1 %}
+        <div class="pagination-container">
+            <div class="pagination">
+                
+                {% if current_page > 1 %}
+                <a href="{{ url_for('players_page', page=current_page-1, min_age=selected_min_age, max_age=selected_max_age, foot=selected_feet) }}" class="page-link arrow">←</a>
+                {% endif %}
+
+                {% set start_page = current_page - 2 %}
+                {% set end_page = current_page + 2 %}
+
+                {% if start_page < 1 %}
+                    {% set start_page = 1 %}
+                    {% set end_page = 5 %}
+                {% endif %}
+
+                {% if end_page > total_pages %}
+                    {% set end_page = total_pages %}
+                    {% set start_page = total_pages - 4 %}
+                    {% if start_page < 1 %}{% set start_page = 1 %}{% endif %}
+                {% endif %}
+
+                {% if start_page > 1 %}
+                    <a href="{{ url_for('players_page', page=1, min_age=selected_min_age, max_age=selected_max_age, foot=selected_feet) }}" class="page-link">1</a>
+                    {% if start_page > 2 %}
+                        <span class="dots">...</span>
+                    {% endif %}
+                {% endif %}
+
+                {% for p in range(start_page, end_page + 1) %}
+                    <a href="{{ url_for('players_page', page=p, min_age=selected_min_age, max_age=selected_max_age, foot=selected_feet) }}" class="page-link {% if p == current_page %}active{% endif %}">
+                        {{ p }}
+                    </a>
+                {% endfor %}
+
+                {% if end_page < total_pages %}
+                    {% if end_page < total_pages - 1 %}
+                        <span class="dots">...</span>
+                    {% endif %}
+                    <a href="{{ url_for('players_page', page=total_pages, min_age=selected_min_age, max_age=selected_max_age, foot=selected_feet) }}" class="page-link">{{ total_pages }}</a>
+                {% endif %}
+
+                {% if current_page < total_pages %}
+                <a href="{{ url_for('players_page', page=current_page+1, min_age=selected_min_age, max_age=selected_max_age, foot=selected_feet) }}" class="page-link arrow">→</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
         {% else %}
             <div class="no-results">
-                <p>Henüz oyuncu verisi bulunmamaktadır.</p>
+                <p>No player data available yet.</p>
             </div>
         {% endif %}
     </div>
 </div>
 
-<script>
-const searchInput = document.getElementById('searchInput');
-const playerRows = document.querySelectorAll('.player-row');
-const noResultsRow = document.getElementById('noResultsRow');
-searchInput.addEventListener('input', function(e) {
-    const searchTerm = e.target.value.toLowerCase().trim();
-    let visibleCount = 0;
-    playerRows.forEach(row => {
-        const playerName = row.getAttribute('data-player-name');
-        const isVisible = playerName.includes(searchTerm);
-        row.style.display = isVisible ? '' : 'none';
-        if (isVisible) visibleCount += 1;
-    });
-    if (noResultsRow) {
-        noResultsRow.style.display = visibleCount === 0 ? '' : 'none';
-    }
-});
-</script>
+<script src="{{ url_for('static', filename='js/players.js') }}"></script>
+
 {% endblock %}

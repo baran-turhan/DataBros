@@ -290,3 +290,125 @@ def set_game_favorite(game_id: int, is_favorite: bool = True) -> bool:
     finally:
         if conn:
             conn.close()
+
+
+
+
+def get_all_players(page=1, per_page=100, min_age=None, max_age=None, feet=None):
+    """
+    Sayfa, yaş ve ayak filtresine göre oyuncuları çeker.
+    feet: Seçilen ayakların listesi (Örn: ['Right', 'Left', 'None'])
+    """
+    conn = None
+    try:
+        conn = get_conn()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        base_where = "WHERE 1=1"
+        params = []
+
+        # 1. Yaş Filtresi
+        if min_age is not None:
+            base_where += " AND DATE_PART('year', AGE(CURRENT_DATE, p.date_of_birth)) >= %s"
+            params.append(min_age)
+        
+        if max_age is not None:
+            base_where += " AND DATE_PART('year', AGE(CURRENT_DATE, p.date_of_birth)) <= %s"
+            params.append(max_age)
+
+        # 2. Ayak Filtresi (Çoklu Seçim)
+        if feet and len(feet) > 0:
+            foot_conditions = []
+            
+            # Eğer listede 'None' varsa, NULL değerleri de arayalım
+            if 'None' in feet:
+                foot_conditions.append("p.foot IS NULL")
+                # Listeden 'None' stringini çıkar
+                feet = [f for f in feet if f != 'None']
+            
+            # Geriye kalan normal değerler (Right, Left -> right, left yapalım)
+            if len(feet) > 0:
+                # Gelen değerleri küçük harfe çeviriyoruz (DB uyumu için)
+                feet_lower = [f.lower() for f in feet]
+                
+                # DB'deki veriyi de LOWER() ile küçültüp karşılaştırıyoruz
+                foot_conditions.append("LOWER(p.foot) = ANY(%s)")
+                params.append(feet_lower)
+            
+            # Koşulları birleştir
+            if foot_conditions:
+                base_where += " AND (" + " OR ".join(foot_conditions) + ")"
+
+        # Toplam sayı
+        count_query = f"SELECT COUNT(*) as total FROM players p {base_where}"
+        cur.execute(count_query, params)
+        total_count = cur.fetchone()['total']
+
+        # OFFSET
+        offset = (page - 1) * per_page
+        
+        # Oyuncuları çek
+        query = f"""
+            SELECT 
+                p.name,
+                p.date_of_birth,
+                DATE_PART('year', AGE(CURRENT_DATE, p.date_of_birth))::INTEGER AS age,
+                p.sub_position,
+                p.foot,
+                p.height_in_cm,
+                p.country_of_citizenship,
+                c.name AS club_name
+            FROM players p
+            LEFT JOIN clubs c ON p.current_club_id = c.club_id
+            {base_where}
+            ORDER BY p.name ASC
+            LIMIT %s OFFSET %s
+        """
+        
+        query_params = params + [per_page, offset]
+        
+        cur.execute(query, query_params)
+        players = cur.fetchall()
+        
+        cur.close()
+        return players, total_count
+        
+    except Exception as e:
+        print(f"Database error (get_all_players): {e}")
+        return [], 0
+    finally:
+        if conn:
+            conn.close()
+
+
+def get_age_limits():
+    """Veritabanındaki en küçük ve en büyük yaşı hesaplar."""
+    conn = None
+    try:
+        conn = get_conn()
+        cur = conn.cursor()
+        
+        # En küçük ve en büyük yaşı hesaplayan sorgu
+        query = """
+            SELECT 
+                MIN(DATE_PART('year', AGE(CURRENT_DATE, date_of_birth)))::INTEGER as min_age,
+                MAX(DATE_PART('year', AGE(CURRENT_DATE, date_of_birth)))::INTEGER as max_age
+            FROM players
+            WHERE date_of_birth IS NOT NULL
+        """
+        
+        cur.execute(query)
+        result = cur.fetchone()
+        cur.close()
+        
+        # Eğer veri yoksa varsayılan olarak 15-45 döndür
+        if result and result[0] is not None:
+            return result[0], result[1]
+        return 15, 45
+        
+    except Exception as e:
+        print(f"Database error (get_age_limits): {e}")
+        return 15, 45
+    finally:
+        if conn:
+            conn.close()

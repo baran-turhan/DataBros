@@ -79,8 +79,39 @@ def transfers_page():
         }
     )
 
+
+
+
 def players_page():
-    return render_template('players.html')
+    page = request.args.get('page', 1, type=int)
+    per_page = 100
+    
+    # Filtreleri al
+    min_age = request.args.get('min_age', type=int)
+    max_age = request.args.get('max_age', type=int)
+    
+    # Çoklu ayak seçimi için getlist kullanıyoruz
+    selected_feet = request.args.getlist('foot')
+    
+    # Veritabanına gönder
+    players, total_count = database.get_all_players(page, per_page, min_age, max_age, selected_feet)
+    
+    global_min_age, global_max_age = database.get_age_limits()
+    total_pages = (total_count + per_page - 1) // per_page
+    
+    return render_template(
+        'players.html', 
+        players=players, 
+        current_page=page, 
+        total_pages=total_pages,
+        selected_min_age=min_age,
+        selected_max_age=max_age,
+        global_min_age=global_min_age,
+        global_max_age=global_max_age,
+        # Ayakları HTML'e geri gönderiyoruz ki kutucuklar işaretli kalsın
+        selected_feet=selected_feet
+    )
+
 
 def games_page():
     current_year = datetime.now().year
