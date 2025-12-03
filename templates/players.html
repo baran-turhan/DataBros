@@ -35,6 +35,9 @@
                         <span>{{ global_max_age }}</span>
                     </div>
                 </div>
+                <div style="text-align: center; margin-top: 10px; font-size: 0.9rem; color: #718096;">
+                    Click to select range
+                </div>
             </div>
         </div>
 
@@ -49,9 +52,7 @@
                         <input type="checkbox" value="All" id="footAll">
                         All
                     </label>
-                    
                     <div class="separator"></div>
-
                     <label class="checkbox-item">
                         <input type="checkbox" name="foot" value="Right" class="foot-option">
                         Right
@@ -72,15 +73,78 @@
             </div>
         </div>
 
+        <div class="filter-group">
+            <button class="filter-btn" id="posDropdownBtn" style="min-width: 140px;">
+                Pos: <span id="posButtonLabel" style="margin-left: 5px; color: #2a5298;">All</span>
+            </button>
+            
+            <div class="filter-dropdown" id="posDropdown" style="width: 280px; max-height: 400px; overflow-y: auto;">
+                <ul id="posCheckboxList">
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="All" id="posAll">
+                        All
+                    </label>
+                    <div class="separator"></div>
+                    {% for pos in all_positions %}
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="position" value="{{ pos }}" class="pos-option"
+                        {% if pos in selected_positions %}checked{% endif %}>
+                        {{ pos }}
+                    </label>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <div class="filter-group">
+            <button class="filter-btn" id="sortDropdownBtn" style="min-width: 160px;">
+                <span id="sortButtonLabel">▲ A-Z</span>
+            </button>
+            
+            <div class="filter-dropdown" id="sortDropdown" style="width: 220px;">
+                <ul class="sort-list">
+                    <li class="sort-item" data-value="name_asc" data-label="▲ A-Z">
+                        <span>▲ A-Z</span> <span class="sort-desc">(Alphabetical A-Z)</span>
+                    </li>
+                    <li class="sort-item" data-value="name_desc" data-label="▼ A-Z">
+                        <span>▼ A-Z</span> <span class="sort-desc">(Alphabetical Z-A)</span>
+                    </li>
+                    <div class="separator"></div>
+                    <li class="sort-item" data-value="age_asc" data-label="▲ Age">
+                        <span>▲ Age</span> <span class="sort-desc">(Youngest First)</span>
+                    </li>
+                    <li class="sort-item" data-value="age_desc" data-label="▼ Age">
+                        <span>▼ Age</span> <span class="sort-desc">(Oldest First)</span>
+                    </li>
+                    <div class="separator"></div>
+                    <li class="sort-item" data-value="height_asc" data-label="▲ Height">
+                        <span>▲ Height</span> <span class="sort-desc">(Shortest First)</span>
+                    </li>
+                    <li class="sort-item" data-value="height_desc" data-label="▼ Height">
+                        <span>▼ Height</span> <span class="sort-desc">(Tallest First)</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
         <button class="apply-btn" id="applyFilterBtn">Apply Filter</button>
     </div>
 
     <form id="filterForm" action="{{ url_for('players_page') }}" method="get" style="display: none;">
         <input type="hidden" name="min_age" id="inputMinAge" value="{{ selected_min_age or '' }}">
         <input type="hidden" name="max_age" id="inputMaxAge" value="{{ selected_max_age or '' }}">
+        
+        <input type="hidden" name="sort" id="inputSort" value="{{ current_sort }}">
+
         <div id="footHiddenInputs">
             {% for foot in selected_feet %}
             <input type="hidden" name="foot" value="{{ foot }}">
+            {% endfor %}
+        </div>
+        
+        <div id="posHiddenInputs">
+            {% for pos in selected_positions %}
+            <input type="hidden" name="position" value="{{ pos }}">
             {% endfor %}
         </div>
     </form>
@@ -137,7 +201,7 @@
             <div class="pagination">
                 
                 {% if current_page > 1 %}
-                <a href="{{ url_for('players_page', page=current_page-1, min_age=selected_min_age, max_age=selected_max_age, foot=selected_feet) }}" class="page-link arrow">←</a>
+                <a href="{{ url_for('players_page', page=current_page-1, min_age=selected_min_age, max_age=selected_max_age, foot=selected_feet, position=selected_positions, sort=current_sort) }}" class="page-link arrow">←</a>
                 {% endif %}
 
                 {% set start_page = current_page - 2 %}
@@ -155,14 +219,14 @@
                 {% endif %}
 
                 {% if start_page > 1 %}
-                    <a href="{{ url_for('players_page', page=1, min_age=selected_min_age, max_age=selected_max_age, foot=selected_feet) }}" class="page-link">1</a>
+                    <a href="{{ url_for('players_page', page=1, min_age=selected_min_age, max_age=selected_max_age, foot=selected_feet, position=selected_positions, sort=current_sort) }}" class="page-link">1</a>
                     {% if start_page > 2 %}
                         <span class="dots">...</span>
                     {% endif %}
                 {% endif %}
 
                 {% for p in range(start_page, end_page + 1) %}
-                    <a href="{{ url_for('players_page', page=p, min_age=selected_min_age, max_age=selected_max_age, foot=selected_feet) }}" class="page-link {% if p == current_page %}active{% endif %}">
+                    <a href="{{ url_for('players_page', page=p, min_age=selected_min_age, max_age=selected_max_age, foot=selected_feet, position=selected_positions, sort=current_sort) }}" class="page-link {% if p == current_page %}active{% endif %}">
                         {{ p }}
                     </a>
                 {% endfor %}
@@ -171,11 +235,11 @@
                     {% if end_page < total_pages - 1 %}
                         <span class="dots">...</span>
                     {% endif %}
-                    <a href="{{ url_for('players_page', page=total_pages, min_age=selected_min_age, max_age=selected_max_age, foot=selected_feet) }}" class="page-link">{{ total_pages }}</a>
+                    <a href="{{ url_for('players_page', page=total_pages, min_age=selected_min_age, max_age=selected_max_age, foot=selected_feet, position=selected_positions, sort=current_sort) }}" class="page-link">{{ total_pages }}</a>
                 {% endif %}
 
                 {% if current_page < total_pages %}
-                <a href="{{ url_for('players_page', page=current_page+1, min_age=selected_min_age, max_age=selected_max_age, foot=selected_feet) }}" class="page-link arrow">→</a>
+                <a href="{{ url_for('players_page', page=current_page+1, min_age=selected_min_age, max_age=selected_max_age, foot=selected_feet, position=selected_positions, sort=current_sort) }}" class="page-link arrow">→</a>
                 {% endif %}
             </div>
         </div>

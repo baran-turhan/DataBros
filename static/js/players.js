@@ -265,25 +265,106 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ============================================================
-    // 4. APPLY FILTER (UYGULA) VE FORM SUBMIT
+    // 4. POZİSYON FİLTRESİ (POSITION) MANTIĞI (YENİ)
+    // ============================================================
+    const posDropdownBtn = document.getElementById('posDropdownBtn');
+    const posDropdown = document.getElementById('posDropdown');
+    const posAllCheckbox = document.getElementById('posAll');
+    const posOptions = document.querySelectorAll('.pos-option');
+    const posButtonLabel = document.getElementById('posButtonLabel');
+    const posHiddenInputsContainer = document.getElementById('posHiddenInputs');
+
+    // Başlangıç Etiketi Güncelle
+    // (HTML tarafında 'checked' geldiği için sadece etiketi düzeltmemiz yeterli)
+    if (posOptions.length > 0) {
+        checkPosAllStatus();
+        updatePosLabel();
+    }
+
+    // Dropdown Aç/Kapa
+    if (posDropdownBtn) {
+        posDropdownBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            posDropdown.classList.toggle('show');
+            // Diğerleri açıksa kapat
+            if(document.getElementById('ageDropdown')) document.getElementById('ageDropdown').classList.remove('show');
+            if(document.getElementById('footDropdown')) document.getElementById('footDropdown').classList.remove('show');
+        });
+    }
+
+    // "All" Mantığı
+    if (posAllCheckbox) {
+        posAllCheckbox.addEventListener('change', function() {
+            const isChecked = this.checked;
+            posOptions.forEach(opt => opt.checked = isChecked);
+            updatePosLabel();
+        });
+    }
+
+    // Tekil Seçim Mantığı
+    posOptions.forEach(opt => {
+        opt.addEventListener('change', function() {
+            checkPosAllStatus();
+            updatePosLabel();
+        });
+    });
+
+    function checkPosAllStatus() {
+        const allChecked = Array.from(posOptions).every(opt => opt.checked);
+        if (posAllCheckbox) posAllCheckbox.checked = allChecked;
+    }
+
+    function updatePosLabel() {
+        if (!posButtonLabel) return;
+        const checkedOpts = Array.from(posOptions).filter(opt => opt.checked);
+        
+        if (posAllCheckbox && posAllCheckbox.checked) {
+            posButtonLabel.innerText = "All";
+        } else if (checkedOpts.length === 0) {
+            posButtonLabel.innerText = "None";
+        } else if (checkedOpts.length === 1) {
+            // Sadece 1 tane seçiliyse ismini yaz
+            posButtonLabel.innerText = checkedOpts[0].value;
+        } else {
+            // Birden fazla ise sayı göster (Çok uzun olmasın diye)
+            posButtonLabel.innerText = `${checkedOpts.length} Selected`;
+        }
+    }
+
+    // ============================================================
+    // 5. APPLY FILTER VE DIŞARI TIKLAMA (GÜNCELLENMİŞ)
     // ============================================================
     if (applyBtn) {
         applyBtn.addEventListener('click', function() {
-            // Foot verilerini forma dinamik olarak ekle
+            // A) Foot Verilerini Hazırla
             if (footHiddenInputsContainer) {
-                footHiddenInputsContainer.innerHTML = ''; // Temizle
-
-                // Eğer "All" seçili DEĞİLSE, seçili olanları tek tek ekle
-                // (All seçiliyse URL'i temiz tutmak için foot parametresi göndermiyoruz)
+                footHiddenInputsContainer.innerHTML = '';
                 if (footAllCheckbox && !footAllCheckbox.checked) {
-                    const checkedOpts = Array.from(footOptions).filter(opt => opt.checked);
-                    checkedOpts.forEach(opt => {
-                        const input = document.createElement('input');
-                        input.type = 'hidden';
-                        input.name = 'foot';
-                        input.value = opt.value;
-                        footHiddenInputsContainer.appendChild(input);
-                    });
+                    Array.from(document.querySelectorAll('.foot-option'))
+                        .filter(opt => opt.checked)
+                        .forEach(opt => {
+                            const input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = 'foot';
+                            input.value = opt.value;
+                            footHiddenInputsContainer.appendChild(input);
+                        });
+                }
+            }
+
+            // B) Position Verilerini Hazırla (YENİ)
+            if (posHiddenInputsContainer) {
+                posHiddenInputsContainer.innerHTML = '';
+                if (posAllCheckbox && !posAllCheckbox.checked) {
+                    Array.from(document.querySelectorAll('.pos-option'))
+                        .filter(opt => opt.checked)
+                        .forEach(opt => {
+                            const input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = 'position'; // name='position' olmalı
+                            input.value = opt.value;
+                            posHiddenInputsContainer.appendChild(input);
+                        });
                 }
             }
 
@@ -293,8 +374,23 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Dışarı tıklayınca kapatma (Global)
+    window.addEventListener('click', function(e) {
+        const dropdowns = [
+            {box: document.getElementById('ageDropdown'), btn: document.getElementById('ageDropdownBtn')},
+            {box: document.getElementById('footDropdown'), btn: document.getElementById('footDropdownBtn')},
+            {box: document.getElementById('posDropdown'), btn: document.getElementById('posDropdownBtn')} // Yeni eklendi
+        ];
+
+        dropdowns.forEach(item => {
+            if (item.box && item.btn && !item.box.contains(e.target) && !item.btn.contains(e.target)) {
+                item.box.classList.remove('show');
+            }
+        });
+    });
+
     // ============================================================
-    // 5. DIŞARI TIKLAYINCA KAPATMA (GLOBAL)
+    // 6. DIŞARI TIKLAYINCA KAPATMA (GLOBAL)
     // ============================================================
     window.addEventListener('click', function(e) {
         // Age Dropdown Kapatma
@@ -309,6 +405,103 @@ document.addEventListener('DOMContentLoaded', function() {
         const footBtn = document.getElementById('footDropdownBtn');
         if (footDrop && footBtn && !footDrop.contains(e.target) && !footBtn.contains(e.target)) {
             footDrop.classList.remove('show');
+        }
+    });
+
+    // ============================================================
+    // 7. SIRALAMA (SORTING) MANTIĞI 
+    // ============================================================
+    const sortDropdownBtn = document.getElementById('sortDropdownBtn');
+    const sortDropdown = document.getElementById('sortDropdown');
+    const sortItems = document.querySelectorAll('.sort-item');
+    const sortButtonLabel = document.getElementById('sortButtonLabel');
+    const inputSort = document.getElementById('inputSort');
+
+    // Başlangıç Etiketini Ayarla
+    if (inputSort && inputSort.value) {
+        // Mevcut değere sahip item'ı bul ve etiketini al
+        const currentItem = Array.from(sortItems).find(item => item.getAttribute('data-value') === inputSort.value);
+        if (currentItem) {
+            sortButtonLabel.innerText = currentItem.getAttribute('data-label');
+            // Seçili olana görsel bir stil ekleyebiliriz
+            currentItem.style.backgroundColor = '#f0f4f8';
+            currentItem.style.fontWeight = 'bold';
+        }
+    }
+
+    // Dropdown Aç/Kapa
+    if (sortDropdownBtn) {
+        sortDropdownBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            sortDropdown.classList.toggle('show');
+            // Diğerleri açıksa kapat
+            if(document.getElementById('ageDropdown')) document.getElementById('ageDropdown').classList.remove('show');
+            if(document.getElementById('footDropdown')) document.getElementById('footDropdown').classList.remove('show');
+            if(document.getElementById('posDropdown')) document.getElementById('posDropdown').classList.remove('show');
+        });
+    }
+
+    // Sıralama Seçimi
+    sortItems.forEach(item => {
+        item.addEventListener('click', function() {
+            const value = this.getAttribute('data-value');
+            
+            // Input'u güncelle
+            if (inputSort) inputSort.value = value;
+            
+            // Formu hemen gönder (Sıralama genelde anlık olur)
+            // Ancak Apply Filter ile entegre olsun dersen burayı yorum satırı yapıp
+            // Apply butonuna basılmasını bekleyebilirsin.
+            // Kullanıcı deneyimi için sıralamanın hemen çalışması daha iyidir:
+            
+            // Foot ve Position verilerini hidden inputlara doldur (Form submit öncesi)
+            // (Aşağıdaki kod applyBtn logic'inin aynısıdır, formu göndermeden önce verileri tazeler)
+            refreshHiddenInputs(); 
+            
+            document.getElementById('filterForm').submit();
+        });
+    });
+
+    // Yardımcı Fonksiyon: Formu göndermeden önce checkbox verilerini hidden inputlara doldurur
+    function refreshHiddenInputs() {
+        const footContainer = document.getElementById('footHiddenInputs');
+        const posContainer = document.getElementById('posHiddenInputs');
+        const footAll = document.getElementById('footAll');
+        const posAll = document.getElementById('posAll');
+
+        if (footContainer) {
+            footContainer.innerHTML = '';
+            if (footAll && !footAll.checked) {
+                Array.from(document.querySelectorAll('.foot-option'))
+                    .filter(opt => opt.checked)
+                    .forEach(opt => {
+                        const i = document.createElement('input');
+                        i.type = 'hidden'; i.name = 'foot'; i.value = opt.value;
+                        footContainer.appendChild(i);
+                    });
+            }
+        }
+        if (posContainer) {
+            posContainer.innerHTML = '';
+            if (posAll && !posAll.checked) {
+                Array.from(document.querySelectorAll('.pos-option'))
+                    .filter(opt => opt.checked)
+                    .forEach(opt => {
+                        const i = document.createElement('input');
+                        i.type = 'hidden'; i.name = 'position'; i.value = opt.value;
+                        posContainer.appendChild(i);
+                    });
+            }
+        }
+    }
+
+    // Dışarı tıklama olayına Sort dropdown'ı da ekle
+    window.addEventListener('click', function(e) {
+        // ... (Eski kodlar) ...
+        const sortDrop = document.getElementById('sortDropdown');
+        const sortBtn = document.getElementById('sortDropdownBtn');
+        if (sortDrop && sortBtn && !sortDrop.contains(e.target) && !sortBtn.contains(e.target)) {
+            sortDrop.classList.remove('show');
         }
     });
 

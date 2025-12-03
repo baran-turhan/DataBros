@@ -293,11 +293,12 @@ def set_game_favorite(game_id: int, is_favorite: bool = True) -> bool:
 
 
 
+#----------------------------------PLAYERS------------------------------------------------
+# utils/database.py içindeki get_all_players fonksiyonunu GÜNCELLE:
 
-def get_all_players(page=1, per_page=100, min_age=None, max_age=None, feet=None):
+def get_all_players(page=1, per_page=100, min_age=None, max_age=None, feet=None, positions=None, sort_option="name_asc"):
     """
-    Sayfa, yaş ve ayak filtresine göre oyuncuları çeker.
-    feet: Seçilen ayakların listesi (Örn: ['Right', 'Left', 'None'])
+    Sayfa, yaş, ayak, pozisyon ve SIRALAMA seçeneğine göre oyuncuları çeker.
     """
     conn = None
     try:
@@ -307,47 +308,58 @@ def get_all_players(page=1, per_page=100, min_age=None, max_age=None, feet=None)
         base_where = "WHERE 1=1"
         params = []
 
-        # 1. Yaş Filtresi
+        # 1. Filtreler (Yaş, Ayak, Pozisyon) - DEĞİŞMEDİ
         if min_age is not None:
             base_where += " AND DATE_PART('year', AGE(CURRENT_DATE, p.date_of_birth)) >= %s"
             params.append(min_age)
-        
         if max_age is not None:
             base_where += " AND DATE_PART('year', AGE(CURRENT_DATE, p.date_of_birth)) <= %s"
             params.append(max_age)
-
-        # 2. Ayak Filtresi (Çoklu Seçim)
         if feet and len(feet) > 0:
             foot_conditions = []
-            
-            # Eğer listede 'None' varsa, NULL değerleri de arayalım
             if 'None' in feet:
                 foot_conditions.append("p.foot IS NULL")
-                # Listeden 'None' stringini çıkar
                 feet = [f for f in feet if f != 'None']
-            
-            # Geriye kalan normal değerler (Right, Left -> right, left yapalım)
             if len(feet) > 0:
-                # Gelen değerleri küçük harfe çeviriyoruz (DB uyumu için)
                 feet_lower = [f.lower() for f in feet]
-                
-                # DB'deki veriyi de LOWER() ile küçültüp karşılaştırıyoruz
                 foot_conditions.append("LOWER(p.foot) = ANY(%s)")
                 params.append(feet_lower)
-            
-            # Koşulları birleştir
             if foot_conditions:
                 base_where += " AND (" + " OR ".join(foot_conditions) + ")"
+        if positions and len(positions) > 0:
+            if 'All' not in positions:
+                base_where += " AND p.sub_position = ANY(%s)"
+                params.append(positions)
 
-        # Toplam sayı
+        # 2. SIRALAMA MANTIĞI (YENİ)
+        # Varsayılan: İsim A-Z
+        order_clause = "ORDER BY p.name ASC"
+        
+        if sort_option == "name_desc":
+            order_clause = "ORDER BY p.name DESC"
+        
+        elif sort_option == "age_asc": 
+            # Küçük yaştan büyüğe (Genç -> Yaşlı) = Doğum Tarihi YENİDEN ESKİYE (DESC)
+            order_clause = "ORDER BY p.date_of_birth DESC NULLS LAST"
+            
+        elif sort_option == "age_desc":
+            # Büyük yaştan küçüğe (Yaşlı -> Genç) = Doğum Tarihi ESKİDEN YENİYE (ASC)
+            order_clause = "ORDER BY p.date_of_birth ASC NULLS LAST"
+            
+        elif sort_option == "height_asc":
+            order_clause = "ORDER BY p.height_in_cm ASC NULLS LAST"
+            
+        elif sort_option == "height_desc":
+            order_clause = "ORDER BY p.height_in_cm DESC NULLS LAST"
+
+        # 3. Toplam Sayı Sorgusu
         count_query = f"SELECT COUNT(*) as total FROM players p {base_where}"
         cur.execute(count_query, params)
         total_count = cur.fetchone()['total']
 
-        # OFFSET
+        # 4. Veri Çekme Sorgusu
         offset = (page - 1) * per_page
         
-        # Oyuncuları çek
         query = f"""
             SELECT 
                 p.name,
@@ -361,7 +373,7 @@ def get_all_players(page=1, per_page=100, min_age=None, max_age=None, feet=None)
             FROM players p
             LEFT JOIN clubs c ON p.current_club_id = c.club_id
             {base_where}
-            ORDER BY p.name ASC
+            {order_clause}
             LIMIT %s OFFSET %s
         """
         
@@ -412,3 +424,30 @@ def get_age_limits():
     finally:
         if conn:
             conn.close()
+
+def get_all_positions():
+    """Veritabanındaki tüm benzersiz pozisyonları (sub_position) çeker."""
+    conn = None
+    try:
+        conn = get_conn()
+        cur = conn.cursor() # Dict cursor gerekmez, sadece liste döneceğiz
+        
+        query = """
+            SELECT DISTINCT sub_position 
+            FROM players 
+            WHERE sub_position IS NOT NULL 
+            ORDER BY sub_position ASC
+        """
+        
+        cur.execute(query)
+        positions = [row[0] for row in cur.fetchall()]
+        cur.close()
+        return positions
+    except Exception as e:
+        print(f"Database error (get_all_positions): {e}")
+        return []
+    finally:
+        if conn:
+            conn.close()
+
+#-----------------------------------------------------------------------------------------

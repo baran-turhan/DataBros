@@ -89,14 +89,20 @@ def players_page():
     # Filtreleri al
     min_age = request.args.get('min_age', type=int)
     max_age = request.args.get('max_age', type=int)
-    
-    # Çoklu ayak seçimi için getlist kullanıyoruz
     selected_feet = request.args.getlist('foot')
+    selected_positions = request.args.getlist('position')
+    
+    # YENİ: Sıralama parametresini al (Varsayılan: name_asc)
+    sort_option = request.args.get('sort', 'name_asc')
     
     # Veritabanına gönder
-    players, total_count = database.get_all_players(page, per_page, min_age, max_age, selected_feet)
+    players, total_count = database.get_all_players(
+        page, per_page, min_age, max_age, selected_feet, selected_positions, sort_option
+    )
     
+    # Ekstra Bilgiler
     global_min_age, global_max_age = database.get_age_limits()
+    all_positions = database.get_all_positions()
     total_pages = (total_count + per_page - 1) // per_page
     
     return render_template(
@@ -108,8 +114,11 @@ def players_page():
         selected_max_age=max_age,
         global_min_age=global_min_age,
         global_max_age=global_max_age,
-        # Ayakları HTML'e geri gönderiyoruz ki kutucuklar işaretli kalsın
-        selected_feet=selected_feet
+        selected_feet=selected_feet,
+        selected_positions=selected_positions,
+        # YENİ: Sıralama bilgisini şablona gönder
+        current_sort=sort_option,
+        all_positions=all_positions
     )
 
 
