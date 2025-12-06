@@ -91,6 +91,34 @@
         color: #d1d5db;
     }
 
+    .filter-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 14px;
+    }
+
+    .apply-filters-btn {
+        background: linear-gradient(135deg, #1e3c72, #2a5298);
+        color: #fff;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 10px 24px rgba(30, 60, 114, 0.35);
+        transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+
+    .apply-filters-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 14px 30px rgba(30, 60, 114, 0.4);
+    }
+
+    .apply-filters-btn:active {
+        transform: translateY(0);
+        box-shadow: 0 8px 18px rgba(30, 60, 114, 0.32);
+    }
+
     .clubs-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -306,6 +334,9 @@
                 <div class="filter-note">Tribün büyüklüğüne göre filtrele</div>
             </div>
         </div>
+        <div class="filter-actions">
+            <button type="button" id="applyFilters" class="apply-filters-btn">Filtreleri Uygula</button>
+        </div>
     </div>
 
     {% if clubs %}
@@ -398,6 +429,7 @@
     const maxAgeInput = document.getElementById('maxAge');
     const minCapacityInput = document.getElementById('minCapacity');
     const maxCapacityInput = document.getElementById('maxCapacity');
+    const applyFiltersButton = document.getElementById('applyFilters');
     const clubCards = Array.from(document.querySelectorAll('.club-card'));
 
     const filterInputs = [searchInput, leagueFilter, minAgeInput, maxAgeInput, minCapacityInput, maxCapacityInput].filter(Boolean);
@@ -454,12 +486,16 @@
         }
     }
 
+    applyFiltersButton?.addEventListener('click', filterClubs);
+
     filterInputs.forEach((input) => {
-        const eventName = input.tagName === 'SELECT' ? 'change' : 'input';
-        input.addEventListener(eventName, filterClubs);
+        input.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                filterClubs();
+            }
+        });
     });
 
     filterClubs();
 </script>
 {% endblock %}
-

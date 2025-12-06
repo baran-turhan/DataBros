@@ -3,6 +3,11 @@ import os
 from typing import Optional
 from psycopg2.extras import RealDictCursor
 
+from dotenv import load_dotenv
+
+load_dotenv(override=True)
+
+
 def _game_sort_clause(sort_by: str) -> str:
     """Returns an ORDER BY clause for game queries."""
     if sort_by == "goal_diff_desc":
@@ -14,6 +19,7 @@ def _game_sort_clause(sort_by: str) -> str:
 def get_conn():
     """PostgreSQL bağlantısını oluşturur."""
     DB_URL = os.getenv("DATABASE_URL")
+    # print(DB_URL)
     if not DB_URL:
         raise ValueError("DATABASE_URL environment variable is not set")
     return psycopg2.connect(DB_URL)
@@ -467,6 +473,7 @@ def get_all_positions():
     conn = None
     try:
         conn = get_conn()
+        print("1")
         cur = conn.cursor() # Dict cursor gerekmez, sadece liste döneceğiz
         
         query = """
