@@ -1,8 +1,11 @@
 from flask import Flask
+from dotenv import load_dotenv
 from utils import router as router
 
 
 def create_app():
+    # Load environment variables from a local .env file if present
+    load_dotenv()
     app = Flask(__name__)
     app.config.from_object("utils.settings")
 

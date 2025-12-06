@@ -29,16 +29,26 @@
     }
 
     .club-controls {
-        max-width: 720px;
+        max-width: 1100px;
         margin: 0 auto 40px;
         background: rgba(255, 255, 255, 0.12);
         border-radius: 18px;
-        padding: 16px 20px;
+        padding: 18px 20px;
         backdrop-filter: blur(10px);
-        display: flex;
-        align-items: center;
-        gap: 14px;
         box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 14px;
+        align-items: center;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
     }
 
     .club-controls label {
@@ -46,17 +56,39 @@
         letter-spacing: 0.5px;
     }
 
-    .club-controls input {
-        flex: 1;
+    .club-controls input,
+    .club-controls select {
         padding: 12px 20px;
         border: none;
         border-radius: 12px;
         font-size: 1rem;
         outline: none;
+        width: 100%;
+        background: #fff;
     }
 
     .club-controls input::placeholder {
         color: #9ca3af;
+    }
+
+    .range-inputs {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .range-inputs input {
+        flex: 1;
+    }
+
+    .range-sep {
+        color: #cbd5e1;
+        font-weight: 700;
+    }
+
+    .filter-note {
+        font-size: 0.85rem;
+        color: #d1d5db;
     }
 
     .clubs-grid {
@@ -109,6 +141,24 @@
         font-size: 1.4rem;
         font-weight: 800;
         margin: 0;
+    }
+
+    .league-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(30, 60, 114, 0.08);
+        color: #1e3c72;
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        margin-top: 6px;
+    }
+
+    .league-badge small {
+        color: #6b7280;
+        font-weight: 600;
     }
 
     .club-info {
@@ -200,8 +250,7 @@
 
     @media (max-width: 768px) {
         .club-controls {
-            flex-direction: column;
-            align-items: stretch;
+            padding: 16px;
         }
 
         .page-hero h1 {
@@ -218,15 +267,57 @@
         <p>Kadro, yaş ortalaması ve stat detaylarıyla dünya kulüplerini keşfedin.</p>
     </div>
 
+    {% set min_age_value = min_age if min_age is not none else 16 %}
+    {% set max_age_value = max_age if max_age is not none else 40 %}
+    {% set min_capacity_value = min_capacity if min_capacity is not none else 0 %}
+    {% set max_capacity_value = max_capacity if max_capacity is not none else 100000 %}
+
     <div class="club-controls">
-        <label for="searchInput">Kulüp Ara</label>
-        <input type="text" id="searchInput" placeholder="Örn: Barcelona, Galatasaray, Arsenal...">
+        <div class="filters-grid">
+            <div class="filter-group">
+                <label for="searchInput">Kulüp Ara</label>
+                <input type="text" id="searchInput" placeholder="Örn: Barcelona, Galatasaray, Arsenal...">
+            </div>
+            <div class="filter-group">
+                <label for="leagueFilter">Lig</label>
+                <select id="leagueFilter">
+                    <option value="">Tüm Ligler</option>
+                    {% for league in leagues %}
+                        <option value="{{ league|lower }}">{{ league }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Ortalama Yaş</label>
+                <div class="range-inputs">
+                    <input type="number" id="minAge" step="0.1" min="0" value="{{ '%.1f'|format(min_age_value) }}">
+                    <span class="range-sep">-</span>
+                    <input type="number" id="maxAge" step="0.1" min="0" value="{{ '%.1f'|format(max_age_value) }}">
+                </div>
+                <div class="filter-note">Yaş ortalaması aralığını belirle</div>
+            </div>
+            <div class="filter-group">
+                <label>Stadyum Kapasitesi</label>
+                <div class="range-inputs">
+                    <input type="number" id="minCapacity" min="0" value="{{ min_capacity_value }}">
+                    <span class="range-sep">-</span>
+                    <input type="number" id="maxCapacity" min="0" value="{{ max_capacity_value }}">
+                </div>
+                <div class="filter-note">Tribün büyüklüğüne göre filtrele</div>
+            </div>
+        </div>
     </div>
 
     {% if clubs %}
         <div id="clubsContainer" class="clubs-grid">
             {% for club in clubs %}
-            <div class="club-card fade-in" data-club-name="{% if club.name %}{{ club.name|lower }}{% else %}bilinmeyen{% endif %}">
+            <div 
+                class="club-card fade-in" 
+                data-club-name="{% if club.name %}{{ club.name|lower }}{% else %}bilinmeyen{% endif %}"
+                data-league="{{ (club.league_name or 'bilinmeyen lig')|lower }}"
+                data-average-age="{{ club.average_age if club.average_age is not none else '' }}"
+                data-stadium-capacity="{{ club.stadium_capacity if club.stadium_capacity is not none else '' }}"
+            >
                 <div class="club-header">
                     <div class="club-logo">
                         {% if club.name and club.name|length > 0 %}
@@ -235,7 +326,15 @@
                             ⚽
                         {% endif %}
                     </div>
-                    <h2 class="club-name">{{ club.name or 'Bilinmeyen Kulüp' }}</h2>
+                    <div>
+                        <h2 class="club-name">{{ club.name or 'Bilinmeyen Kulüp' }}</h2>
+                        <div class="league-badge">
+                            {{ club.league_name or 'Lig bilgisi yok' }}
+                            {% if club.league_country %}
+                                <small>({{ club.league_country }})</small>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
 
                 <div class="club-info">
@@ -247,7 +346,7 @@
                         <span class="info-label">Ortalama Yaş</span>
                         <span class="info-value">
                             {% if club.average_age %}
-                                {{ "%.1f"|format(club.average_age) }}
+                                {{ '%.1f'|format(club.average_age) }}
                             {% else %}
                                 N/A
                             {% endif %}
@@ -259,7 +358,7 @@
                 <div class="stadium-info">
                     <div class="stadium-name">🏟️ {{ club.stadium_name }}</div>
                     {% if club.stadium_capacity %}
-                    <div class="stadium-capacity">Kapasite: {{ "{:,}".format(club.stadium_capacity) }} kişi</div>
+                    <div class="stadium-capacity">Kapasite: {{ '{:,}'.format(club.stadium_capacity) }} kişi</div>
                     {% endif %}
                 </div>
                 {% endif %}
@@ -294,35 +393,73 @@
 
 <script>
     const searchInput = document.getElementById('searchInput');
+    const leagueFilter = document.getElementById('leagueFilter');
+    const minAgeInput = document.getElementById('minAge');
+    const maxAgeInput = document.getElementById('maxAge');
+    const minCapacityInput = document.getElementById('minCapacity');
+    const maxCapacityInput = document.getElementById('maxCapacity');
     const clubCards = Array.from(document.querySelectorAll('.club-card'));
 
-    if (searchInput) {
-        searchInput.addEventListener('input', (event) => {
-            const term = event.target.value.toLowerCase().trim();
-            let visibleCount = 0;
+    const filterInputs = [searchInput, leagueFilter, minAgeInput, maxAgeInput, minCapacityInput, maxCapacityInput].filter(Boolean);
 
-            clubCards.forEach((card) => {
-                const clubName = card.getAttribute('data-club-name');
-                const match = clubName.includes(term);
-                card.style.display = match ? 'block' : 'none';
-                if (match) {
-                    visibleCount += 1;
-                }
-            });
+    function filterClubs() {
+        const term = (searchInput?.value || '').toLowerCase().trim();
+        const leagueValue = (leagueFilter?.value || '').toLowerCase();
+        const minAge = parseFloat(minAgeInput?.value);
+        const maxAge = parseFloat(maxAgeInput?.value);
+        const minCapacity = parseInt(minCapacityInput?.value, 10);
+        const maxCapacity = parseInt(maxCapacityInput?.value, 10);
 
-            let noResult = document.querySelector('.no-results-search');
-            if (term && visibleCount === 0) {
-                if (!noResult) {
-                    noResult = document.createElement('div');
-                    noResult.className = 'no-results no-results-search';
-                    noResult.textContent = 'Aradığınız kulüp bulunamadı.';
-                    document.querySelector('.clubs-page').appendChild(noResult);
-                }
-            } else if (noResult) {
-                noResult.remove();
+        let visibleCount = 0;
+
+        clubCards.forEach((card) => {
+            const clubName = card.getAttribute('data-club-name') || '';
+            const league = card.getAttribute('data-league') || '';
+            const averageAge = parseFloat(card.getAttribute('data-average-age'));
+            const stadiumCapacity = parseInt(card.getAttribute('data-stadium-capacity'), 10);
+
+            const matchesSearch = !term || clubName.includes(term);
+            const matchesLeague = !leagueValue || league === leagueValue;
+
+            const ageMatches =
+                (isNaN(minAge) && isNaN(maxAge)) ||
+                (!isNaN(averageAge) &&
+                    (isNaN(minAge) || averageAge >= minAge) &&
+                    (isNaN(maxAge) || averageAge <= maxAge));
+
+            const capacityMatches =
+                (isNaN(minCapacity) && isNaN(maxCapacity)) ||
+                (!isNaN(stadiumCapacity) &&
+                    (isNaN(minCapacity) || stadiumCapacity >= minCapacity) &&
+                    (isNaN(maxCapacity) || stadiumCapacity <= maxCapacity));
+
+            const isVisible = matchesSearch && matchesLeague && ageMatches && capacityMatches;
+
+            card.style.display = isVisible ? 'block' : 'none';
+            if (isVisible) {
+                visibleCount += 1;
             }
         });
+
+        let noResult = document.querySelector('.no-results-search');
+        if (visibleCount === 0) {
+            if (!noResult) {
+                noResult = document.createElement('div');
+                noResult.className = 'no-results no-results-search';
+                noResult.textContent = 'Filtrelere uyan kulüp bulunamadı.';
+                document.querySelector('.clubs-page').appendChild(noResult);
+            }
+        } else if (noResult) {
+            noResult.remove();
+        }
     }
+
+    filterInputs.forEach((input) => {
+        const eventName = input.tagName === 'SELECT' ? 'change' : 'input';
+        input.addEventListener(eventName, filterClubs);
+    });
+
+    filterClubs();
 </script>
 {% endblock %}
 

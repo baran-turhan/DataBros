@@ -198,4 +198,33 @@ def competitions_page():
 def clubs_page():
     """Kulüpler sayfasını render eder ve veritabanından kulüp verilerini çeker."""
     clubs = database.get_all_clubs()
-    return render_template('clubs.html', clubs=clubs)
+    leagues = []
+    min_age = max_age = None
+    min_capacity = max_capacity = None
+
+    for club in clubs:
+        league_label = club.get("league_name") or "Bilinmeyen Lig"
+        if league_label and league_label not in leagues:
+            leagues.append(league_label)
+
+        age = club.get("average_age")
+        if age is not None:
+            min_age = age if min_age is None else min(min_age, age)
+            max_age = age if max_age is None else max(max_age, age)
+
+        capacity = club.get("stadium_capacity")
+        if capacity is not None:
+            min_capacity = capacity if min_capacity is None else min(min_capacity, capacity)
+            max_capacity = capacity if max_capacity is None else max(max_capacity, capacity)
+
+    leagues.sort()
+
+    return render_template(
+        'clubs.html',
+        clubs=clubs,
+        leagues=leagues,
+        min_age=min_age,
+        max_age=max_age,
+        min_capacity=min_capacity,
+        max_capacity=max_capacity,
+    )

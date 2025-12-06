@@ -24,21 +24,26 @@ def get_all_clubs():
     try:
         conn = get_conn()
         cur = conn.cursor(cursor_factory=RealDictCursor)
-        
+
         query = """
             SELECT 
-                club_id,
-                name,
-                stadium_name,
-                stadium_seats AS stadium_capacity,
-                squad_size,
-                average_age,
-                foreigners_number AS foreign_number,
-                national_team_players AS national_number
-            FROM clubs
-            ORDER BY name ASC
+                c.club_id,
+                c.name,
+                c.stadium_name,
+                c.stadium_seats AS stadium_capacity,
+                c.squad_size,
+                c.average_age,
+                c.foreigners_number AS foreign_number,
+                c.national_team_players AS national_number,
+                c.domestic_competition_id,
+                comp.name AS league_name,
+                comp.country_name AS league_country,
+                comp.is_major_national_league AS is_major_league
+            FROM clubs c
+            LEFT JOIN competitions comp ON c.domestic_competition_id = comp.competition_id
+            ORDER BY c.name ASC
         """
-        
+
         cur.execute(query)
         clubs = cur.fetchall()
         cur.close()
