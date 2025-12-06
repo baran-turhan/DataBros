@@ -228,6 +228,28 @@
         color: #ff2d71;
         box-shadow: 0 6px 14px rgba(255, 90, 138, 0.2);
     }
+
+    .league-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #1e3c72;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .league-link:hover {
+        text-decoration: underline;
+    }
+
+    .league-chip {
+        background: #e2e8f0;
+        color: #1a202c;
+        border-radius: 999px;
+        padding: 2px 10px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
 </style>
 {% endblock %}
 
@@ -236,9 +258,22 @@
     <div class="header">
         <div class="title-row">
             <h1>🎮 Games</h1>
+            {% if favorite_only %}
+                {% if selected_year %}
+                    {% set fav_url = url_for('games_page', year=selected_year, sort=sort_option) %}
+                {% else %}
+                    {% set fav_url = url_for('games_page', sort=sort_option) %}
+                {% endif %}
+            {% else %}
+                {% if selected_year %}
+                    {% set fav_url = url_for('games_page', favorites=1, year=selected_year, sort=sort_option) %}
+                {% else %}
+                    {% set fav_url = url_for('games_page', favorites=1, sort=sort_option) %}
+                {% endif %}
+            {% endif %}
             <a
                 class="favorite-toggle {% if favorite_only %}active{% endif %}"
-                href="{% if favorite_only %}{% if selected_year %}{{ url_for('games_page', year=selected_year) }}{% else %}{{ url_for('games_page') }}{% endif %}{% else %}{% if selected_year %}{{ url_for('games_page', favorites=1, year=selected_year) }}{% else %}{{ url_for('games_page', favorites=1) }}{% endif %}{% endif %}"
+                href="{{ fav_url }}"
             >
                 {% if favorite_only %}❤️ View Favorites{% else %}♡ Show Favorites{% endif %}
             </a>
@@ -253,6 +288,12 @@
             {% for year in years %}
                 <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
             {% endfor %}
+        </select>
+        <label for="sort">Sort</label>
+        <select id="sort" name="sort">
+            <option value="date" {% if sort_option == 'date' %}selected{% endif %}>Date (oldest first)</option>
+            <option value="goal_diff_desc" {% if sort_option == 'goal_diff_desc' %}selected{% endif %}>Goal diff (high → low)</option>
+            <option value="goal_diff_asc" {% if sort_option == 'goal_diff_asc' %}selected{% endif %}>Goal diff (low → high)</option>
         </select>
         <button type="submit">Apply</button>
     </form>
@@ -298,7 +339,23 @@
                     <span class="club">{{ game.away_club_name or 'Away' }}</span>
                 </div>
                 <div class="game-meta">
-                    <span>{{ game.competition_name or 'Unknown competition' }}</span>
+                    {% set league_link = url_for(
+                        'competitions_page',
+                        country=game.competition_country,
+                        is_major_league='true' if game.competition_is_major else 'false'
+                    ) if game.competition_country else None %}
+                    {% if league_link %}
+                        <a class="league-link" href="{{ league_link }}">
+                            {{ game.competition_name or 'Unknown competition' }}
+                            {% if game.competition_is_major is not none %}
+                                <span class="league-chip">
+                                    {% if game.competition_is_major %}Major{% else %}Minor{% endif %}
+                                </span>
+                            {% endif %}
+                        </a>
+                    {% else %}
+                        <span>{{ game.competition_name or 'Unknown competition' }}</span>
+                    {% endif %}
                     {% if game.season %}<span>Season {{ game.season }}</span>{% endif %}
                     {% if game.home_club_position is not none and game.away_club_position is not none %}
                         <span>Table: {{ game.home_club_position }} - {{ game.away_club_position }}</span>

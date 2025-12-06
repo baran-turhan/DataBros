@@ -3,6 +3,14 @@ import os
 from typing import Optional
 from psycopg2.extras import RealDictCursor
 
+def _game_sort_clause(sort_by: str) -> str:
+    """Returns an ORDER BY clause for game queries."""
+    if sort_by == "goal_diff_desc":
+        return "ORDER BY goal_difference DESC NULLS LAST, g.date ASC, g.game_id ASC"
+    if sort_by == "goal_diff_asc":
+        return "ORDER BY goal_difference ASC NULLS LAST, g.date ASC, g.game_id ASC"
+    return "ORDER BY g.date ASC, g.game_id ASC"
+
 def get_conn():
     """PostgreSQL bağlantısını oluşturur."""
     DB_URL = os.getenv("DATABASE_URL")
@@ -182,7 +190,7 @@ def get_transfers(season=None, min_fee=None, max_fee=None, sort_by=None, sort_di
         if conn:
             conn.close()
 
-def get_games_by_year(year: int):
+def get_games_by_year(year: int, sort_by: str = "date"):
     """Belirli bir yıl için maçları getirir."""
     if not year:
         return []
@@ -191,6 +199,15 @@ def get_games_by_year(year: int):
     try:
         conn = get_conn()
         cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        goal_diff_expr = """
+            CASE
+                WHEN g.home_club_goals IS NULL OR g.away_club_goals IS NULL THEN NULL
+                ELSE ABS(g.home_club_goals - g.away_club_goals)
+            END
+        """
+
+        order_clause = _game_sort_clause(sort_by)
 
         query = """
             SELECT
@@ -204,14 +221,17 @@ def get_games_by_year(year: int):
                 g.is_favorite,
                 hc.name AS home_club_name,
                 ac.name AS away_club_name,
-                comp.name AS competition_name
+                comp.name AS competition_name,
+                comp.country_name AS competition_country,
+                comp.is_major_national_league AS competition_is_major,
+                {goal_diff_expr} AS goal_difference
             FROM games g
             LEFT JOIN clubs hc ON g.home_club_id = hc.club_id
             LEFT JOIN clubs ac ON g.away_club_id = ac.club_id
             LEFT JOIN competitions comp ON g.competition_id = comp.competition_id
             WHERE EXTRACT(YEAR FROM g.date) = %s
-            ORDER BY g.date ASC, g.game_id ASC
-        """
+            {order_clause}
+        """.format(goal_diff_expr=goal_diff_expr, order_clause=order_clause)
 
         cur.execute(query, (year,))
         games = cur.fetchall()
@@ -224,12 +244,21 @@ def get_games_by_year(year: int):
         if conn:
             conn.close()
 
-def get_favorite_games(year: Optional[int] = None):
+def get_favorite_games(year: Optional[int] = None, sort_by: str = "date"):
     """Favori olarak işaretlenmiş maçları getirir. İsteğe bağlı yıl filtresi uygular."""
     conn = None
     try:
         conn = get_conn()
         cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        goal_diff_expr = """
+            CASE
+                WHEN g.home_club_goals IS NULL OR g.away_club_goals IS NULL THEN NULL
+                ELSE ABS(g.home_club_goals - g.away_club_goals)
+            END
+        """
+
+        order_clause = _game_sort_clause(sort_by)
 
         query = """
             SELECT
@@ -243,7 +272,10 @@ def get_favorite_games(year: Optional[int] = None):
                 g.is_favorite,
                 hc.name AS home_club_name,
                 ac.name AS away_club_name,
-                comp.name AS competition_name
+                comp.name AS competition_name,
+                comp.country_name AS competition_country,
+                comp.is_major_national_league AS competition_is_major,
+                {goal_diff_expr} AS goal_difference
             FROM games g
             LEFT JOIN clubs hc ON g.home_club_id = hc.club_id
             LEFT JOIN clubs ac ON g.away_club_id = ac.club_id
@@ -256,9 +288,9 @@ def get_favorite_games(year: Optional[int] = None):
             query += " AND EXTRACT(YEAR FROM g.date) = %s"
             params.append(year)
 
-        query += " ORDER BY g.date ASC, g.game_id ASC"
+        query += f" {order_clause}"
 
-        cur.execute(query, params)
+        cur.execute(query.format(goal_diff_expr=goal_diff_expr), params)
         games = cur.fetchall()
         cur.close()
         return games

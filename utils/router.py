@@ -129,27 +129,27 @@ def games_page():
     selected_year = request.args.get("year", type=int)
     favorite_only_param = request.args.get("favorites")
     favorite_only = str(favorite_only_param).lower() in ("1", "true", "yes")
+    sort_option = request.args.get("sort", "date")
+    if sort_option not in ("date", "goal_diff_desc", "goal_diff_asc"):
+        sort_option = "date"
     games = []
 
     if favorite_only:
         if selected_year and 1900 <= selected_year <= current_year:
-            games = database.get_favorite_games(selected_year)
+            games = database.get_favorite_games(selected_year, sort_by=sort_option)
         else:
             selected_year = None
-            games = database.get_favorite_games()
+            games = database.get_favorite_games(sort_by=sort_option)
     elif selected_year and 1900 <= selected_year <= current_year:
-        games = database.get_games_by_year(selected_year)
+        games = database.get_games_by_year(selected_year, sort_by=sort_option)
 
     # Gol farkı bilgisini önden hesaplayıp front-end'de filtreleme için saklıyoruz
     for game in games:
-        home_goals = game.get("home_club_goals")
-        away_goals = game.get("away_club_goals")
-        goal_difference = None
-
-        if home_goals is not None and away_goals is not None:
-            goal_difference = abs(home_goals - away_goals)
-
-        game["goal_difference"] = goal_difference
+        if game.get("goal_difference") is None:
+            home_goals = game.get("home_club_goals")
+            away_goals = game.get("away_club_goals")
+            if home_goals is not None and away_goals is not None:
+                game["goal_difference"] = abs(home_goals - away_goals)
 
     return render_template(
         'games.html',
@@ -157,6 +157,7 @@ def games_page():
         selected_year=selected_year,
         games=games,
         favorite_only=favorite_only,
+        sort_option=sort_option,
     )
 
 def update_game_favorite(game_id: int):
