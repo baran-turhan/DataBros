@@ -10,7 +10,7 @@
     </div>
 
     <div class="search-bar">
-        <input type="text" id="searchInput" placeholder="Search players..." value="{{ search_query or '' }}">
+        <input type="text" id="searchInput" placeholder="Search players..." value="{{ search_query }}">
     </div>
 
     <div class="filter-bar fade-in">
@@ -135,6 +135,8 @@
         <input type="hidden" name="max_age" id="inputMaxAge" value="{{ selected_max_age or '' }}">
         
         <input type="hidden" name="sort" id="inputSort" value="{{ current_sort }}">
+
+        <input type="hidden" name="search" id="inputSearch" value="{{ search_query }}">
 
         <div id="footHiddenInputs">
             {% for foot in selected_feet %}

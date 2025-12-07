@@ -106,26 +106,27 @@ def transfers_page():
 
 
 
+# utils/router.py içindeki players_page fonksiyonunu GÜNCELLE:
+
 def players_page():
     page = request.args.get('page', 1, type=int)
     per_page = 100
-    search_query = (request.args.get('search') or '').strip()
     
     # Filtreleri al
     min_age = request.args.get('min_age', type=int)
     max_age = request.args.get('max_age', type=int)
     selected_feet = request.args.getlist('foot')
     selected_positions = request.args.getlist('position')
-    
-    # YENİ: Sıralama parametresini al (Varsayılan: name_asc)
     sort_option = request.args.get('sort', 'name_asc')
     
-    # Veritabanına gönder
+    # YENİ: Arama sorgusunu al
+    search_query = request.args.get('search', '')
+    
+    # Veritabanına search_query'i de gönderiyoruz
     players, total_count = database.get_all_players(
-        page, per_page, min_age, max_age, selected_feet, selected_positions, sort_option
+        page, per_page, min_age, max_age, selected_feet, selected_positions, sort_option, search_query
     )
     
-    # Ekstra Bilgiler
     global_min_age, global_max_age = database.get_age_limits()
     all_positions = database.get_all_positions()
     total_pages = (total_count + per_page - 1) // per_page
@@ -141,10 +142,10 @@ def players_page():
         global_max_age=global_max_age,
         selected_feet=selected_feet,
         selected_positions=selected_positions,
-        # YENİ: Sıralama bilgisini şablona gönder
         current_sort=sort_option,
         all_positions=all_positions,
-        search_query=search_query,
+        # YENİ: Arama metnini şablona geri gönder (input içinde kalsın diye)
+        search_query=search_query
     )
 
 

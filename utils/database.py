@@ -501,9 +501,9 @@ def set_game_favorite(game_id: int, is_favorite: bool = True) -> bool:
 #----------------------------------PLAYERS------------------------------------------------
 # utils/database.py içindeki get_all_players fonksiyonunu GÜNCELLE:
 
-def get_all_players(page=1, per_page=100, min_age=None, max_age=None, feet=None, positions=None, sort_option="name_asc"):
+def get_all_players(page=1, per_page=100, min_age=None, max_age=None, feet=None, positions=None, sort_option="name_asc", search_query=None):
     """
-    Sayfa, yaş, ayak, pozisyon ve SIRALAMA seçeneğine göre oyuncuları çeker.
+    Sayfa, yaş, ayak, pozisyon, sıralama ve ARAMA SORGUSUNA göre oyuncuları çeker.
     """
     conn = None
     try:
@@ -513,7 +513,14 @@ def get_all_players(page=1, per_page=100, min_age=None, max_age=None, feet=None,
         base_where = "WHERE 1=1"
         params = []
 
-        # 1. Filtreler (Yaş, Ayak, Pozisyon) - DEĞİŞMEDİ
+        # --- YENİ EKLENEN: ARAMA SORGUSU ---
+        if search_query:
+            # ILIKE: Büyük/Küçük harf duyarsız 'içinde geçiyor mu' araması
+            base_where += " AND p.name ILIKE %s"
+            params.append(f"%{search_query}%")
+        # -----------------------------------
+
+        # 1. Filtreler (Mevcut kodlar)
         if min_age is not None:
             base_where += " AND DATE_PART('year', AGE(CURRENT_DATE, p.date_of_birth)) >= %s"
             params.append(min_age)
@@ -536,33 +543,20 @@ def get_all_players(page=1, per_page=100, min_age=None, max_age=None, feet=None,
                 base_where += " AND p.sub_position = ANY(%s)"
                 params.append(positions)
 
-        # 2. SIRALAMA MANTIĞI (YENİ)
-        # Varsayılan: İsim A-Z
+        # 2. Sıralama
         order_clause = "ORDER BY p.name ASC"
-        
-        if sort_option == "name_desc":
-            order_clause = "ORDER BY p.name DESC"
-        
-        elif sort_option == "age_asc": 
-            # Küçük yaştan büyüğe (Genç -> Yaşlı) = Doğum Tarihi YENİDEN ESKİYE (DESC)
-            order_clause = "ORDER BY p.date_of_birth DESC NULLS LAST"
-            
-        elif sort_option == "age_desc":
-            # Büyük yaştan küçüğe (Yaşlı -> Genç) = Doğum Tarihi ESKİDEN YENİYE (ASC)
-            order_clause = "ORDER BY p.date_of_birth ASC NULLS LAST"
-            
-        elif sort_option == "height_asc":
-            order_clause = "ORDER BY p.height_in_cm ASC NULLS LAST"
-            
-        elif sort_option == "height_desc":
-            order_clause = "ORDER BY p.height_in_cm DESC NULLS LAST"
+        if sort_option == "name_desc": order_clause = "ORDER BY p.name DESC"
+        elif sort_option == "age_asc": order_clause = "ORDER BY p.date_of_birth DESC NULLS LAST"
+        elif sort_option == "age_desc": order_clause = "ORDER BY p.date_of_birth ASC NULLS LAST"
+        elif sort_option == "height_asc": order_clause = "ORDER BY p.height_in_cm ASC NULLS LAST"
+        elif sort_option == "height_desc": order_clause = "ORDER BY p.height_in_cm DESC NULLS LAST"
 
-        # 3. Toplam Sayı Sorgusu
+        # 3. Toplam Sayı (Arama sonuçlarına göre toplam sayfa sayısını hesaplamak için önemli)
         count_query = f"SELECT COUNT(*) as total FROM players p {base_where}"
         cur.execute(count_query, params)
         total_count = cur.fetchone()['total']
 
-        # 4. Veri Çekme Sorgusu
+        # 4. Veri Çekme
         offset = (page - 1) * per_page
         
         query = f"""

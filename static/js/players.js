@@ -1,31 +1,46 @@
 document.addEventListener('DOMContentLoaded', function() {
     
     // ============================================================
-    // 1. ARAMA (SEARCH BAR) MANTIĞI
+    // 1. ARAMA (SEARCH BAR) MANTIĞI - SERVER SIDE
     // ============================================================
     const searchInput = document.getElementById('searchInput');
-    const playerRows = document.querySelectorAll('.player-row');
-    const noResultsRow = document.getElementById('noResultsRow');
+    const inputSearch = document.getElementById('inputSearch');
+    const filterForm = document.getElementById('filterForm');
 
-    function applyNameFilter(term) {
-        const searchTerm = (term || '').toLowerCase().trim();
-        let visibleCount = 0;
-        
-        playerRows.forEach(row => {
-            const playerName = (row.getAttribute('data-player-name') || '').toLowerCase();
-            const isVisible = playerName.includes(searchTerm);
-            row.style.display = isVisible ? '' : 'none';
-            if (isVisible) visibleCount += 1;
-        });
-
-        if (noResultsRow) {
-            noResultsRow.style.display = visibleCount === 0 ? '' : 'none';
-        }
-    }
+    // Debounce Timer: Kullanıcı her harfe bastığında değil, 
+    // yazmayı bitirdikten 600ms sonra arama yapsın.
+    let typingTimer;
+    const doneTypingInterval = 600; // ms
 
     if (searchInput) {
-        searchInput.addEventListener('input', (e) => applyNameFilter(e.target.value));
-        applyNameFilter(searchInput.value);
+        // Kullanıcı yazarken sayacı sıfırla
+        searchInput.addEventListener('input', function() {
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(performSearch, doneTypingInterval);
+        });
+
+        // Enter'a basarsa hemen ara
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                clearTimeout(typingTimer);
+                performSearch();
+            }
+        });
+    }
+
+    function performSearch() {
+        // 1. Search değerini gizli forma aktar
+        if (inputSearch && searchInput) {
+            inputSearch.value = searchInput.value;
+        }
+        
+        // 2. Foot ve Position verilerini hidden inputlara doldur (yardımcı fonk.)
+        refreshHiddenInputs();
+
+        // 3. Formu gönder (Sayfa yenilenecek ve veritabanından veri gelecek)
+        if (filterForm) {
+            filterForm.submit();
+        }
     }
 
     // ============================================================
