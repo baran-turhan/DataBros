@@ -295,49 +295,50 @@
         <p>Kadro, yaş ortalaması ve stat detaylarıyla dünya kulüplerini keşfedin.</p>
     </div>
 
-    {% set min_age_value = min_age if min_age is not none else 16 %}
-    {% set max_age_value = max_age if max_age is not none else 40 %}
-    {% set min_capacity_value = min_capacity if min_capacity is not none else 0 %}
-    {% set max_capacity_value = max_capacity if max_capacity is not none else 100000 %}
+    {% set min_age_value = selected_min_age if selected_min_age is not none else (min_age if min_age is not none else 16) %}
+    {% set max_age_value = selected_max_age if selected_max_age is not none else (max_age if max_age is not none else 40) %}
+    {% set min_capacity_value = selected_min_capacity if selected_min_capacity is not none else (min_capacity if min_capacity is not none else 0) %}
+    {% set max_capacity_value = selected_max_capacity if selected_max_capacity is not none else (max_capacity if max_capacity is not none else 100000) %}
 
-    <div class="club-controls">
+    <form class="club-controls" id="clubsFilters" method="get">
+        <input type="hidden" name="submitted" value="1">
         <div class="filters-grid">
             <div class="filter-group">
                 <label for="searchInput">Kulüp Ara</label>
-                <input type="text" id="searchInput" placeholder="Örn: Barcelona, Galatasaray, Arsenal..." value="{{ search_query or '' }}">
+                <input type="text" id="searchInput" name="search" placeholder="Örn: Barcelona, Galatasaray, Arsenal..." value="{{ search_query or '' }}">
             </div>
             <div class="filter-group">
                 <label for="leagueFilter">Lig</label>
-                <select id="leagueFilter">
+                <select id="leagueFilter" name="league">
                     <option value="">Tüm Ligler</option>
                     {% for league in leagues %}
-                        <option value="{{ league|lower }}">{{ league }}</option>
+                        <option value="{{ league|lower }}" {% if selected_league and selected_league|lower == league|lower %}selected{% endif %}>{{ league }}</option>
                     {% endfor %}
                 </select>
             </div>
             <div class="filter-group">
                 <label>Ortalama Yaş</label>
                 <div class="range-inputs">
-                    <input type="number" id="minAge" step="0.1" min="0" value="{{ '%.1f'|format(min_age_value) }}">
+                    <input type="number" id="minAge" name="min_age" step="0.1" min="0" value="{{ '%.1f'|format(min_age_value) }}">
                     <span class="range-sep">-</span>
-                    <input type="number" id="maxAge" step="0.1" min="0" value="{{ '%.1f'|format(max_age_value) }}">
+                    <input type="number" id="maxAge" name="max_age" step="0.1" min="0" value="{{ '%.1f'|format(max_age_value) }}">
                 </div>
                 <div class="filter-note">Yaş ortalaması aralığını belirle</div>
             </div>
             <div class="filter-group">
                 <label>Stadyum Kapasitesi</label>
                 <div class="range-inputs">
-                    <input type="number" id="minCapacity" min="0" value="{{ min_capacity_value }}">
+                    <input type="number" id="minCapacity" name="min_capacity" min="0" value="{{ min_capacity_value }}">
                     <span class="range-sep">-</span>
-                    <input type="number" id="maxCapacity" min="0" value="{{ max_capacity_value }}">
+                    <input type="number" id="maxCapacity" name="max_capacity" min="0" value="{{ max_capacity_value }}">
                 </div>
                 <div class="filter-note">Tribün büyüklüğüne göre filtrele</div>
             </div>
         </div>
         <div class="filter-actions">
-            <button type="button" id="applyFilters" class="apply-filters-btn">Filtreleri Uygula</button>
+            <button type="submit" id="applyFilters" class="apply-filters-btn">Filtreleri Uygula</button>
         </div>
-    </div>
+    </form>
 
     {% if clubs %}
         <div id="clubsContainer" class="clubs-grid">
@@ -415,87 +416,15 @@
             </div>
             {% endfor %}
         </div>
+    {% elif filter_applied %}
+        <div class="no-results">
+            <p>Filtrelere uyan kulüp bulunamadı.</p>
+        </div>
     {% else %}
         <div class="no-results">
-            <p>Henüz kulüp verisi bulunamadı.</p>
+            <p>Kulüpleri görmek için filtreleri uygulayın.</p>
         </div>
     {% endif %}
 </div>
 
-<script>
-    const searchInput = document.getElementById('searchInput');
-    const leagueFilter = document.getElementById('leagueFilter');
-    const minAgeInput = document.getElementById('minAge');
-    const maxAgeInput = document.getElementById('maxAge');
-    const minCapacityInput = document.getElementById('minCapacity');
-    const maxCapacityInput = document.getElementById('maxCapacity');
-    const applyFiltersButton = document.getElementById('applyFilters');
-    const clubCards = Array.from(document.querySelectorAll('.club-card'));
-
-    const filterInputs = [searchInput, leagueFilter, minAgeInput, maxAgeInput, minCapacityInput, maxCapacityInput].filter(Boolean);
-
-    function filterClubs() {
-        const term = (searchInput?.value || '').toLowerCase().trim();
-        const leagueValue = (leagueFilter?.value || '').toLowerCase();
-        const minAge = parseFloat(minAgeInput?.value);
-        const maxAge = parseFloat(maxAgeInput?.value);
-        const minCapacity = parseInt(minCapacityInput?.value, 10);
-        const maxCapacity = parseInt(maxCapacityInput?.value, 10);
-
-        let visibleCount = 0;
-
-        clubCards.forEach((card) => {
-            const clubName = card.getAttribute('data-club-name') || '';
-            const league = card.getAttribute('data-league') || '';
-            const averageAge = parseFloat(card.getAttribute('data-average-age'));
-            const stadiumCapacity = parseInt(card.getAttribute('data-stadium-capacity'), 10);
-
-            const matchesSearch = !term || clubName.includes(term);
-            const matchesLeague = !leagueValue || league === leagueValue;
-
-            const ageMatches =
-                (isNaN(minAge) && isNaN(maxAge)) ||
-                (!isNaN(averageAge) &&
-                    (isNaN(minAge) || averageAge >= minAge) &&
-                    (isNaN(maxAge) || averageAge <= maxAge));
-
-            const capacityMatches =
-                (isNaN(minCapacity) && isNaN(maxCapacity)) ||
-                (!isNaN(stadiumCapacity) &&
-                    (isNaN(minCapacity) || stadiumCapacity >= minCapacity) &&
-                    (isNaN(maxCapacity) || stadiumCapacity <= maxCapacity));
-
-            const isVisible = matchesSearch && matchesLeague && ageMatches && capacityMatches;
-
-            card.style.display = isVisible ? 'block' : 'none';
-            if (isVisible) {
-                visibleCount += 1;
-            }
-        });
-
-        let noResult = document.querySelector('.no-results-search');
-        if (visibleCount === 0) {
-            if (!noResult) {
-                noResult = document.createElement('div');
-                noResult.className = 'no-results no-results-search';
-                noResult.textContent = 'Filtrelere uyan kulüp bulunamadı.';
-                document.querySelector('.clubs-page').appendChild(noResult);
-            }
-        } else if (noResult) {
-            noResult.remove();
-        }
-    }
-
-    applyFiltersButton?.addEventListener('click', filterClubs);
-
-    filterInputs.forEach((input) => {
-        input.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter') {
-                filterClubs();
-            }
-        });
-    });
-
-    filterClubs();
-</script>
 {% endblock %}

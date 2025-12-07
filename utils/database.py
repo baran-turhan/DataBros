@@ -61,6 +61,121 @@ def get_all_clubs():
         if conn:
             conn.close()
 
+def get_club_filter_metadata():
+    """Kulüp filtreleri için lig listesi ve min/max özetleri döner."""
+    conn = None
+    try:
+        conn = get_conn()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        cur.execute(
+            """
+            SELECT DISTINCT comp.name AS league_name
+            FROM clubs c
+            LEFT JOIN competitions comp ON c.domestic_competition_id = comp.competition_id
+            WHERE comp.name IS NOT NULL
+            ORDER BY comp.name ASC
+            """
+        )
+        leagues = [row["league_name"] for row in cur.fetchall()]
+
+        cur.execute(
+            """
+            SELECT
+                MIN(average_age) AS min_age,
+                MAX(average_age) AS max_age,
+                MIN(stadium_seats) AS min_capacity,
+                MAX(stadium_seats) AS max_capacity
+            FROM clubs
+            """
+        )
+        stats = cur.fetchone() or {}
+        cur.close()
+
+        return {
+            "leagues": leagues,
+            "min_age": stats.get("min_age"),
+            "max_age": stats.get("max_age"),
+            "min_capacity": stats.get("min_capacity"),
+            "max_capacity": stats.get("max_capacity"),
+        }
+    except Exception as e:
+        print(f"Database error (get_club_filter_metadata): {e}")
+        return {
+            "leagues": [],
+            "min_age": None,
+            "max_age": None,
+            "min_capacity": None,
+            "max_capacity": None,
+        }
+    finally:
+        if conn:
+            conn.close()
+
+def get_clubs_filtered(search=None, league=None, min_age=None, max_age=None, min_capacity=None, max_capacity=None):
+    """Filtrelere göre kulüp verilerini döner."""
+    conn = None
+    try:
+        conn = get_conn()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        query = """
+            SELECT 
+                c.club_id,
+                c.name,
+                c.stadium_name,
+                c.stadium_seats AS stadium_capacity,
+                c.squad_size,
+                c.average_age,
+                c.foreigners_number AS foreign_number,
+                c.national_team_players AS national_number,
+                c.domestic_competition_id,
+                comp.name AS league_name,
+                comp.country_name AS league_country,
+                comp.is_major_national_league AS is_major_league
+            FROM clubs c
+            LEFT JOIN competitions comp ON c.domestic_competition_id = comp.competition_id
+            WHERE 1=1
+        """
+        params = []
+
+        if search:
+            query += " AND LOWER(c.name) LIKE %s"
+            params.append(f"%{search.lower()}%")
+
+        if league:
+            query += " AND LOWER(comp.name) = %s"
+            params.append(league.lower())
+
+        if min_age is not None:
+            query += " AND c.average_age >= %s"
+            params.append(min_age)
+
+        if max_age is not None:
+            query += " AND c.average_age <= %s"
+            params.append(max_age)
+
+        if min_capacity is not None:
+            query += " AND c.stadium_seats >= %s"
+            params.append(min_capacity)
+
+        if max_capacity is not None:
+            query += " AND c.stadium_seats <= %s"
+            params.append(max_capacity)
+
+        query += " ORDER BY c.name ASC"
+
+        cur.execute(query, params)
+        clubs = cur.fetchall()
+        cur.close()
+        return clubs
+    except Exception as e:
+        print(f"Database error (get_clubs_filtered): {e}")
+        return []
+    finally:
+        if conn:
+            conn.close()
+
 def get_all_competitions(country_name=None, is_major_league=None):
     """Tüm mücadeleleri veritabanından çeker. İsteğe bağlı olarak ülke adına ve major league durumuna göre filtreler."""
     conn = None

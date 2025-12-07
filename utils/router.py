@@ -223,36 +223,68 @@ def competitions_page():
 
 def clubs_page():
     """Kulüpler sayfasını render eder ve veritabanından kulüp verilerini çeker."""
-    clubs = database.get_all_clubs()
-    leagues = []
-    min_age = max_age = None
-    min_capacity = max_capacity = None
-    search_query = (request.args.get('search') or '').strip()
+    filters_metadata = database.get_club_filter_metadata()
 
-    for club in clubs:
-        league_label = club.get("league_name") or "Bilinmeyen Lig"
-        if league_label and league_label not in leagues:
-            leagues.append(league_label)
+    search_query = (request.args.get("search") or "").strip()
+    league_filter = (request.args.get("league") or "").strip()
+    min_age_raw = request.args.get("min_age")
+    max_age_raw = request.args.get("max_age")
+    min_capacity_raw = request.args.get("min_capacity")
+    max_capacity_raw = request.args.get("max_capacity")
+    submitted = request.args.get("submitted")
 
-        age = club.get("average_age")
-        if age is not None:
-            min_age = age if min_age is None else min(min_age, age)
-            max_age = age if max_age is None else max(max_age, age)
+    def _parse_float(val):
+        try:
+            return float(val)
+        except (TypeError, ValueError):
+            return None
 
-        capacity = club.get("stadium_capacity")
-        if capacity is not None:
-            min_capacity = capacity if min_capacity is None else min(min_capacity, capacity)
-            max_capacity = capacity if max_capacity is None else max(max_capacity, capacity)
+    def _parse_int(val):
+        try:
+            return int(val)
+        except (TypeError, ValueError):
+            return None
 
-    leagues.sort()
+    selected_min_age = _parse_float(min_age_raw)
+    selected_max_age = _parse_float(max_age_raw)
+    selected_min_capacity = _parse_int(min_capacity_raw)
+    selected_max_capacity = _parse_int(max_capacity_raw)
+
+    filter_applied = bool(submitted) or any(
+        [
+            search_query,
+            league_filter,
+            min_age_raw not in (None, ""),
+            max_age_raw not in (None, ""),
+            min_capacity_raw not in (None, ""),
+            max_capacity_raw not in (None, ""),
+        ]
+    )
+
+    clubs = []
+    if filter_applied:
+        clubs = database.get_clubs_filtered(
+            search=search_query or None,
+            league=league_filter or None,
+            min_age=selected_min_age,
+            max_age=selected_max_age,
+            min_capacity=selected_min_capacity,
+            max_capacity=selected_max_capacity,
+        )
 
     return render_template(
-        'clubs.html',
+        "clubs.html",
         clubs=clubs,
-        leagues=leagues,
-        min_age=min_age,
-        max_age=max_age,
-        min_capacity=min_capacity,
-        max_capacity=max_capacity,
+        leagues=filters_metadata.get("leagues", []),
+        min_age=filters_metadata.get("min_age"),
+        max_age=filters_metadata.get("max_age"),
+        min_capacity=filters_metadata.get("min_capacity"),
+        max_capacity=filters_metadata.get("max_capacity"),
         search_query=search_query,
+        selected_league=league_filter,
+        selected_min_age=selected_min_age,
+        selected_max_age=selected_max_age,
+        selected_min_capacity=selected_min_capacity,
+        selected_max_capacity=selected_max_capacity,
+        filter_applied=filter_applied,
     )
