@@ -1,0 +1,148 @@
+/* Competition Card Styles */
+.leagues-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 22px;
+    margin-bottom: 30px;
+}
+
+.league-card {
+    background: rgba(255, 255, 255, 0.94);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.league-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22);
+}
+
+.league-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #e8eef6;
+}
+
+.league-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 800;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.18);
+    flex-shrink: 0;
+}
+
+.league-name {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #1e3c72;
+    margin: 0;
+}
+
+.league-name-link {
+    color: #1e3c72;
+    text-decoration: none;
+    transition: color 0.2s ease;
+    cursor: pointer;
+}
+
+.league-name-link:hover {
+    color: #2a5298;
+    text-decoration: underline;
+}
+
+.league-info {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #718096;
+    font-size: 0.9rem;
+}
+
+.info-value {
+    font-weight: 700;
+    color: #1f2d3d;
+    font-size: 1rem;
+}
+
+.value-highlight {
+    color: #2a5298;
+    background: rgba(42, 82, 152, 0.1);
+    padding: 4px 10px;
+    border-radius: 6px;
+}
+
+.info-item a {
+    color: #2a5298;
+    font-weight: 700;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.info-item a:hover {
+    color: #1e3c72;
+    text-decoration: underline;
+}
+
+.info-banner {
+    text-align: center;
+    color: white;
+    font-size: 1.1rem;
+    padding: 40px 20px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 20px;
+    margin: 0 auto;
+    max-width: 640px;
+    backdrop-filter: blur(10px);
+}
+
+/* Active state for dropdown items */
+.sort-item.active {
+    background-color: #eef5ff;
+    color: #1e3c72;
+    font-weight: 600;
+}
+
+/* Dropdown button label styles */
+.filter-btn span {
+    margin-left: 5px;
+    color: #2a5298;
+}
+
+/* Dropdown width overrides */
+#countryDropdown {
+    width: 220px;
+}
+
+#majorLeagueDropdown {
+    width: 180px;
+}
+
