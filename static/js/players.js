@@ -7,22 +7,25 @@ document.addEventListener('DOMContentLoaded', function() {
     const playerRows = document.querySelectorAll('.player-row');
     const noResultsRow = document.getElementById('noResultsRow');
 
-    if (searchInput) {
-        searchInput.addEventListener('input', function(e) {
-            const searchTerm = e.target.value.toLowerCase().trim();
-            let visibleCount = 0;
-            
-            playerRows.forEach(row => {
-                const playerName = row.getAttribute('data-player-name');
-                const isVisible = playerName.includes(searchTerm);
-                row.style.display = isVisible ? '' : 'none';
-                if (isVisible) visibleCount += 1;
-            });
-
-            if (noResultsRow) {
-                noResultsRow.style.display = visibleCount === 0 ? '' : 'none';
-            }
+    function applyNameFilter(term) {
+        const searchTerm = (term || '').toLowerCase().trim();
+        let visibleCount = 0;
+        
+        playerRows.forEach(row => {
+            const playerName = (row.getAttribute('data-player-name') || '').toLowerCase();
+            const isVisible = playerName.includes(searchTerm);
+            row.style.display = isVisible ? '' : 'none';
+            if (isVisible) visibleCount += 1;
         });
+
+        if (noResultsRow) {
+            noResultsRow.style.display = visibleCount === 0 ? '' : 'none';
+        }
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => applyNameFilter(e.target.value));
+        applyNameFilter(searchInput.value);
     }
 
     // ============================================================

@@ -11,11 +11,28 @@ def transfers_page():
     min_fee_raw = request.args.get("min_fee")
     max_fee_raw = request.args.get("max_fee")
     sort_option = request.args.get("sort")
+    from_league = request.args.get("from_league")
+    to_league = request.args.get("to_league")
     page = request.args.get("page", default=1, type=int)
     per_page = 20
 
     # Sezonlar kısaltılmış formatta (ör: 24/25) tutuluyor
     seasons = [f"{str(y)[-2:]}/{str(y+1)[-2:]}" for y in range(2025, 2000, -1)]
+
+    def _format_league_name(name: str) -> str:
+        if not name:
+            return ""
+        return name.replace("-", " ").replace("_", " ").title()
+
+    leagues_raw = database.get_transfer_leagues()
+    leagues = [
+        {
+            "value": row.get("name"),
+            "label": _format_league_name(row.get("name")),
+            "country": row.get("country_name"),
+        }
+        for row in leagues_raw
+    ]
 
     def _parse_money(val):
         if val is None or val == "":
@@ -29,6 +46,8 @@ def transfers_page():
     sort_map = {
         "fee_asc": ("fee", "asc"),
         "fee_desc": ("fee", "desc"),
+        "value_asc": ("value", "asc"),
+        "value_desc": ("value", "desc"),
         "date_asc": ("date", "asc"),
         "date_desc": ("date", "desc"),
     }
@@ -46,6 +65,8 @@ def transfers_page():
             sort_dir=sort_dir,
             page=current_page,
             per_page=per_page,
+            from_league=from_league,
+            to_league=to_league,
         )
         def _calc_age(dob):
             if not dob:
@@ -76,7 +97,10 @@ def transfers_page():
             "min_fee": min_fee_raw or "",
             "max_fee": max_fee_raw or "",
             "sort": sort_option or "",
-        }
+            "from_league": from_league or "",
+            "to_league": to_league or "",
+        },
+        leagues=leagues,
     )
 
 
@@ -85,6 +109,7 @@ def transfers_page():
 def players_page():
     page = request.args.get('page', 1, type=int)
     per_page = 100
+    search_query = (request.args.get('search') or '').strip()
     
     # Filtreleri al
     min_age = request.args.get('min_age', type=int)
@@ -118,7 +143,8 @@ def players_page():
         selected_positions=selected_positions,
         # YENİ: Sıralama bilgisini şablona gönder
         current_sort=sort_option,
-        all_positions=all_positions
+        all_positions=all_positions,
+        search_query=search_query,
     )
 
 
@@ -201,6 +227,7 @@ def clubs_page():
     leagues = []
     min_age = max_age = None
     min_capacity = max_capacity = None
+    search_query = (request.args.get('search') or '').strip()
 
     for club in clubs:
         league_label = club.get("league_name") or "Bilinmeyen Lig"
@@ -227,4 +254,5 @@ def clubs_page():
         max_age=max_age,
         min_capacity=min_capacity,
         max_capacity=max_capacity,
+        search_query=search_query,
     )

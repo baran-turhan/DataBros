@@ -26,6 +26,28 @@
             </select>
         </div>
         <div class="filter-group">
+            <label for="from_league">From League</label>
+            <select id="from_league" name="from_league">
+                <option value="">Any league</option>
+                {% for league in leagues %}
+                <option value="{{ league.value }}" {% if filters.from_league == league.value %}selected{% endif %}>
+                    {{ league.country }} — {{ league.label }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="to_league">To League</label>
+            <select id="to_league" name="to_league">
+                <option value="">Any league</option>
+                {% for league in leagues %}
+                <option value="{{ league.value }}" {% if filters.to_league == league.value %}selected{% endif %}>
+                    {{ league.country }} — {{ league.label }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-group">
             <label for="min_fee">Min Fee (€)</label>
             <input id="min_fee" name="min_fee" inputmode="numeric" value="{{ filters.min_fee }}">
         </div>
@@ -40,6 +62,8 @@
                 <option value="date_asc" {% if filters.sort == 'date_asc' %}selected{% endif %}>Date (Oldest → Newest)</option>
                 <option value="fee_desc" {% if filters.sort == 'fee_desc' %}selected{% endif %}>Fee (High → Low)</option>
                 <option value="fee_asc" {% if filters.sort == 'fee_asc' %}selected{% endif %}>Fee (Low → High)</option>
+                <option value="value_desc" {% if filters.sort == 'value_desc' %}selected{% endif %}>Value (High → Low)</option>
+                <option value="value_asc" {% if filters.sort == 'value_asc' %}selected{% endif %}>Value (Low → High)</option>
             </select>
         </div>
         <div class="filter-actions">
@@ -50,45 +74,65 @@
 
     {% if filter_applied %}
         {% if transfers %}
-        <div class="table-wrapper">
-            <table class="transfer-table">
-                <thead>
-                    <tr>
-                        <th>Player</th>
-                        <th>Position</th>
-                        <th>Age</th>
-                        <th>Nationality</th>
-                        <th>Clubs</th>
-                        <th>Value</th>
-                        <th>Fee</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody>
+        <div class="players-table-wrapper transfers-table-wrapper">
+            <div class="transfers-list">
+                <div class="transfers-header transfers-row">
+                    <div class="transfer-cell player-col">Player</div>
+                    <div class="transfer-cell position-col">Position</div>
+                    <div class="transfer-cell age-col">Age</div>
+                    <div class="transfer-cell nat-col">Nationality</div>
+                    <div class="transfer-cell clubs-col">Clubs</div>
+                    <div class="transfer-cell value-col">Value</div>
+                    <div class="transfer-cell fee-col">Fee</div>
+                    <div class="transfer-cell date-col">Date</div>
+                </div>
+                <div class="transfers-body">
                     {% for transfer in transfers %}
-                    <tr>
-                        <td class="player-cell">
-                            <div class="player-avatar">
-                                {{ transfer.player_name[0]|upper if transfer.player_name else '💸' }}
+                    <div class="transfers-row fade-in">
+                        <div class="transfer-cell player-col">
+                            <div class="transfer-player">
+                                <div class="player-mini-avatar">
+                                    {{ transfer.player_name[0]|upper if transfer.player_name else '💸' }}
+                                </div>
+                                <div class="player-meta">
+                                    {% set player_name = transfer.player_name or 'Unknown Player' %}
+                                    {% if transfer.player_name %}
+                                    <a class="player-name player-name-link" href="{{ url_for('players_page', search=transfer.player_name) }}">
+                                        {{ player_name }}
+                                    </a>
+                                    {% else %}
+                                    <div class="player-name">{{ player_name }}</div>
+                                    {% endif %}
+                                    <div class="player-sub">{{ transfer.sub_position or '—' }}</div>
+                                </div>
                             </div>
-                            <div class="player-meta">
-                                <div class="player-name">{{ transfer.player_name or 'Unknown Player' }}</div>
+                        </div>
+                        <div class="transfer-cell position-col text-center">{{ transfer.sub_position or '—' }}</div>
+                        <div class="transfer-cell age-col text-center">{{ transfer.age or '—' }}</div>
+                        <div class="transfer-cell nat-col text-center">{{ transfer.country_of_citizenship or '—' }}</div>
+                        <div class="transfer-cell clubs-col">
+                            <div class="club-stack">
+                                <div class="club-cell">
+                                    {% set from_club = transfer.from_club or 'N/A' %}
+                                    {% if transfer.from_club %}
+                                    <a class="club-name club-link" href="{{ url_for('clubs_page', search=transfer.from_club) }}">{{ from_club }}</a>
+                                    {% else %}
+                                    <div class="club-name">{{ from_club }}</div>
+                                    {% endif %}
+                                    <div class="club-sub">From</div>
+                                </div>
+                                <div class="club-cell">
+                                    {% set to_club = transfer.to_club or 'N/A' %}
+                                    {% if transfer.to_club %}
+                                    <a class="club-name club-link" href="{{ url_for('clubs_page', search=transfer.to_club) }}">{{ to_club }}</a>
+                                    {% else %}
+                                    <div class="club-name">{{ to_club }}</div>
+                                    {% endif %}
+                                    <div class="club-sub">To</div>
+                                </div>
                             </div>
-                        </td>
-                        <td class="text-center">{{ transfer.sub_position or '—' }}</td>
-                        <td class="text-center">{{ transfer.age or '—' }}</td>
-                        <td class="text-center">{{ transfer.country_of_citizenship or '—' }}</td>
-                        <td class="club-stack">
-                            <div class="club-cell">
-                                <div class="club-name">{{ transfer.from_club or 'N/A' }}</div>
-                                <div class="club-sub">From</div>
-                            </div>
-                            <div class="club-cell">
-                                <div class="club-name">{{ transfer.to_club or 'N/A' }}</div>
-                                <div class="club-sub">To</div>
-                            </div>
-                        </td>
-                        <td class="text-right">
+                        </div>
+                        <div class="transfer-cell value-col text-right">
                             {% if transfer.player_value is not none %}
                                 {% set mv_str = "{:,.2f}".format(transfer.player_value) %}
                                 {% set mv_tr = mv_str.replace(",", "X").replace(".", ",").replace("X", ".") %}
@@ -96,8 +140,8 @@
                             {% else %}
                                 —
                             {% endif %}
-                        </td>
-                        <td class="text-right">
+                        </div>
+                        <div class="transfer-cell fee-col text-right">
                             {% if transfer.transfer_fee_value is not none %}
                                 {% set fee_str = "{:,.2f}".format(transfer.transfer_fee_value) %}
                                 {% set fee_tr = fee_str.replace(",", "X").replace(".", ",").replace("X", ".") %}
@@ -105,38 +149,66 @@
                             {% else %}
                                 —
                             {% endif %}
-                        </td>
-                        <td class="text-center">
+                        </div>
+                        <div class="transfer-cell date-col text-center">
                             {% if transfer.transfer_date %}
                                 {{ transfer.transfer_date.strftime('%Y-%m-%d') }}
                             {% else %}
                                 —
                             {% endif %}
-                        </td>
-                    </tr>
+                        </div>
+                    </div>
                     {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        <div class="pagination">
-            <div class="page-info">
-                {{ total_results }} transfers total · Page {{ page }} / {{ total_pages if total_pages else 1 }} · {{ per_page }} per page
-            </div>
-            <div class="page-actions">
-                {% set prev_page = page - 1 %}
-                {% set next_page = page + 1 %}
-                <a
-                    class="page-button {% if page <= 1 %}disabled{% endif %}"
-                    href="{% if page > 1 %}{{ url_for('transfers_page', submitted=1, season=filters.season, min_fee=filters.min_fee, max_fee=filters.max_fee, sort=filters.sort, page=prev_page) }}{% else %}#{% endif %}">
-                    ← Previous
-                </a>
-                <a
-                    class="page-button {% if total_pages and page >= total_pages %}disabled{% endif %}"
-                    href="{% if total_pages and page < total_pages %}{{ url_for('transfers_page', submitted=1, season=filters.season, min_fee=filters.min_fee, max_fee=filters.max_fee, sort=filters.sort, page=next_page) }}{% else %}#{% endif %}">
-                    Next →
-                </a>
+                </div>
             </div>
         </div>
+        {% if total_pages > 1 %}
+        <div class="pagination-container">
+            <div class="pagination">
+                {% if page > 1 %}
+                <a href="{{ url_for('transfers_page', submitted=1, season=filters.season, min_fee=filters.min_fee, max_fee=filters.max_fee, sort=filters.sort, from_league=filters.from_league, to_league=filters.to_league, page=page-1) }}" class="page-link arrow">←</a>
+                {% endif %}
+
+                {% set start_page = page - 2 %}
+                {% set end_page = page + 2 %}
+
+                {% if start_page < 1 %}
+                    {% set start_page = 1 %}
+                    {% set end_page = 5 %}
+                {% endif %}
+
+                {% if end_page > total_pages %}
+                    {% set end_page = total_pages %}
+                    {% set start_page = total_pages - 4 %}
+                    {% if start_page < 1 %}{% set start_page = 1 %}{% endif %}
+                {% endif %}
+
+                {% if start_page > 1 %}
+                    <a href="{{ url_for('transfers_page', submitted=1, season=filters.season, min_fee=filters.min_fee, max_fee=filters.max_fee, sort=filters.sort, from_league=filters.from_league, to_league=filters.to_league, page=1) }}" class="page-link">1</a>
+                    {% if start_page > 2 %}
+                        <span class="dots">...</span>
+                    {% endif %}
+                {% endif %}
+
+                {% for p in range(start_page, end_page + 1) %}
+                    <a href="{{ url_for('transfers_page', submitted=1, season=filters.season, min_fee=filters.min_fee, max_fee=filters.max_fee, sort=filters.sort, from_league=filters.from_league, to_league=filters.to_league, page=p) }}" class="page-link {% if p == page %}active{% endif %}">
+                        {{ p }}
+                    </a>
+                {% endfor %}
+
+                {% if end_page < total_pages %}
+                    {% if end_page < total_pages - 1 %}
+                        <span class="dots">...</span>
+                    {% endif %}
+                    <a href="{{ url_for('transfers_page', submitted=1, season=filters.season, min_fee=filters.min_fee, max_fee=filters.max_fee, sort=filters.sort, from_league=filters.from_league, to_league=filters.to_league, page=total_pages) }}" class="page-link">{{ total_pages }}</a>
+                {% endif %}
+
+                {% if page < total_pages %}
+                <a href="{{ url_for('transfers_page', submitted=1, season=filters.season, min_fee=filters.min_fee, max_fee=filters.max_fee, sort=filters.sort, from_league=filters.from_league, to_league=filters.to_league, page=page+1) }}" class="page-link arrow">→</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
         {% else %}
         <div class="no-results">
             <p>No transfers match these filters.</p>

@@ -126,7 +126,41 @@ def get_all_countries():
         if conn:
             conn.close()
 
-def get_transfers(season=None, min_fee=None, max_fee=None, sort_by=None, sort_dir="asc", page=None, per_page=None):
+def get_transfer_leagues():
+    """Transfers için lig listesini ülkeye göre sıralı döner, 'Europa' hariç."""
+    conn = None
+    try:
+        conn = get_conn()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        query = """
+            SELECT name, country_name
+            FROM competitions
+            WHERE competition_id LIKE '%1'
+            ORDER BY country_name ASC, name ASC
+        """
+        cur.execute(query)
+        leagues = cur.fetchall()
+        cur.close()
+        return leagues
+    except Exception as e:
+        print(f"Database error: {e}")
+        return []
+    finally:
+        if conn:
+            conn.close()
+
+
+def get_transfers(
+    season=None,
+    min_fee=None,
+    max_fee=None,
+    sort_by=None,
+    sort_dir="asc",
+    page=None,
+    per_page=None,
+    from_league=None,
+    to_league=None,
+):
     """Transferleri isteğe göre filtreleyip sıralar, opsiyonel sayfalama uygular."""
     conn = None
     try:
@@ -138,6 +172,8 @@ def get_transfers(season=None, min_fee=None, max_fee=None, sort_by=None, sort_di
             LEFT JOIN players p ON t.player_id = p.player_id
             LEFT JOIN clubs fc ON t.from_club_id = fc.club_id
             LEFT JOIN clubs tc ON t.to_club_id = tc.club_id
+            LEFT JOIN competitions fc_comp ON fc.domestic_competition_id = fc_comp.competition_id
+            LEFT JOIN competitions tc_comp ON tc.domestic_competition_id = tc_comp.competition_id
             WHERE 1=1
         """
         filters = []
@@ -154,9 +190,18 @@ def get_transfers(season=None, min_fee=None, max_fee=None, sort_by=None, sort_di
             base_query += " AND t.transfer_fee <= %s"
             filters.append(max_fee)
 
+        if from_league:
+            base_query += " AND fc_comp.name = %s"
+            filters.append(from_league)
+
+        if to_league:
+            base_query += " AND tc_comp.name = %s"
+            filters.append(to_league)
+
         sort_columns = {
             "fee": "t.transfer_fee",
-            "date": "t.transfer_date"
+            "date": "t.transfer_date",
+            "value": "t.market_value_in_eur",
         }
         sort_column = sort_columns.get(sort_by, "t.transfer_date")
         sort_direction = "DESC" if str(sort_dir).lower() == "desc" else "ASC"
@@ -179,6 +224,8 @@ def get_transfers(season=None, min_fee=None, max_fee=None, sort_by=None, sort_di
                 p.sub_position,
                 p.country_of_citizenship,
                 fc.name AS from_club,
+                fc_comp.name AS from_league,
+                tc_comp.name AS to_league,
                 tc.name AS to_club
             {base_query}
             ORDER BY {sort_column} {sort_direction}

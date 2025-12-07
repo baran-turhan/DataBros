@@ -1,5 +1,5 @@
 from flask import render_template, current_app
-import database
+import utils.database as database
 
 def base_page():
     return render_template('base.html')

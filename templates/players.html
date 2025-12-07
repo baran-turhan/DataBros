@@ -10,7 +10,7 @@
     </div>
 
     <div class="search-bar">
-        <input type="text" id="searchInput" placeholder="Search players...">
+        <input type="text" id="searchInput" placeholder="Search players..." value="{{ search_query or '' }}">
     </div>
 
     <div class="filter-bar fade-in">
@@ -201,7 +201,7 @@
             <div class="pagination">
                 
                 {% if current_page > 1 %}
-                <a href="{{ url_for('players_page', page=current_page-1, min_age=selected_min_age, max_age=selected_max_age, foot=selected_feet, position=selected_positions, sort=current_sort) }}" class="page-link arrow">←</a>
+                <a href="{{ url_for('players_page', page=current_page-1, min_age=selected_min_age, max_age=selected_max_age, foot=selected_feet, position=selected_positions, sort=current_sort, search=search_query) }}" class="page-link arrow">←</a>
                 {% endif %}
 
                 {% set start_page = current_page - 2 %}
@@ -219,14 +219,14 @@
                 {% endif %}
 
                 {% if start_page > 1 %}
-                    <a href="{{ url_for('players_page', page=1, min_age=selected_min_age, max_age=selected_max_age, foot=selected_feet, position=selected_positions, sort=current_sort) }}" class="page-link">1</a>
+                    <a href="{{ url_for('players_page', page=1, min_age=selected_min_age, max_age=selected_max_age, foot=selected_feet, position=selected_positions, sort=current_sort, search=search_query) }}" class="page-link">1</a>
                     {% if start_page > 2 %}
                         <span class="dots">...</span>
                     {% endif %}
                 {% endif %}
 
                 {% for p in range(start_page, end_page + 1) %}
-                    <a href="{{ url_for('players_page', page=p, min_age=selected_min_age, max_age=selected_max_age, foot=selected_feet, position=selected_positions, sort=current_sort) }}" class="page-link {% if p == current_page %}active{% endif %}">
+                    <a href="{{ url_for('players_page', page=p, min_age=selected_min_age, max_age=selected_max_age, foot=selected_feet, position=selected_positions, sort=current_sort, search=search_query) }}" class="page-link {% if p == current_page %}active{% endif %}">
                         {{ p }}
                     </a>
                 {% endfor %}
@@ -235,11 +235,11 @@
                     {% if end_page < total_pages - 1 %}
                         <span class="dots">...</span>
                     {% endif %}
-                    <a href="{{ url_for('players_page', page=total_pages, min_age=selected_min_age, max_age=selected_max_age, foot=selected_feet, position=selected_positions, sort=current_sort) }}" class="page-link">{{ total_pages }}</a>
+                    <a href="{{ url_for('players_page', page=total_pages, min_age=selected_min_age, max_age=selected_max_age, foot=selected_feet, position=selected_positions, sort=current_sort, search=search_query) }}" class="page-link">{{ total_pages }}</a>
                 {% endif %}
 
                 {% if current_page < total_pages %}
-                <a href="{{ url_for('players_page', page=current_page+1, min_age=selected_min_age, max_age=selected_max_age, foot=selected_feet, position=selected_positions, sort=current_sort) }}" class="page-link arrow">→</a>
+                <a href="{{ url_for('players_page', page=current_page+1, min_age=selected_min_age, max_age=selected_max_age, foot=selected_feet, position=selected_positions, sort=current_sort, search=search_query) }}" class="page-link arrow">→</a>
                 {% endif %}
             </div>
         </div>
