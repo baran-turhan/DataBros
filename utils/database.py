@@ -561,6 +561,7 @@ def get_all_players(page=1, per_page=100, min_age=None, max_age=None, feet=None,
         
         query = f"""
             SELECT 
+                p.player_id,
                 p.name,
                 p.date_of_birth,
                 DATE_PART('year', AGE(CURRENT_DATE, p.date_of_birth))::INTEGER AS age,
@@ -587,6 +588,82 @@ def get_all_players(page=1, per_page=100, min_age=None, max_age=None, feet=None,
     except Exception as e:
         print(f"Database error (get_all_players): {e}")
         return [], 0
+    finally:
+        if conn:
+            conn.close()
+
+
+def get_players_by_club(club_id: int):
+    """Secilen kulup kadrosunu doner."""
+    if not club_id:
+        return []
+
+    conn = None
+    try:
+        conn = get_conn()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        query = """
+            SELECT
+                p.player_id,
+                p.name,
+                p.date_of_birth,
+                DATE_PART('year', AGE(CURRENT_DATE, p.date_of_birth))::INTEGER AS age,
+                p.sub_position,
+                p.foot,
+                p.height_in_cm,
+                p.country_of_citizenship
+            FROM players p
+            WHERE p.current_club_id = %s
+            ORDER BY p.name ASC
+        """
+        cur.execute(query, (club_id,))
+        players = cur.fetchall()
+        cur.close()
+        return players
+    except Exception as e:
+        print(f"Database error (get_players_by_club): {e}")
+        return []
+    finally:
+        if conn:
+            conn.close()
+
+
+def get_player_by_id(player_id: int):
+    """Tek bir oyuncu kaydini (kulup ve lig bilgisi ile) getirir."""
+    if not player_id:
+        return None
+
+    conn = None
+    try:
+        conn = get_conn()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        query = """
+            SELECT
+                p.player_id,
+                p.name,
+                p.date_of_birth,
+                DATE_PART('year', AGE(CURRENT_DATE, p.date_of_birth))::INTEGER AS age,
+                p.sub_position,
+                p.foot,
+                p.height_in_cm,
+                p.country_of_citizenship,
+                c.club_id,
+                c.name AS club_name,
+                comp.name AS league_name,
+                comp.country_name AS league_country
+            FROM players p
+            LEFT JOIN clubs c ON p.current_club_id = c.club_id
+            LEFT JOIN competitions comp ON c.domestic_competition_id = comp.competition_id
+            WHERE p.player_id = %s
+        """
+        cur.execute(query, (player_id,))
+        player = cur.fetchone()
+        cur.close()
+        return player
+    except Exception as e:
+        print(f"Database error (get_player_by_id): {e}")
+        return None
     finally:
         if conn:
             conn.close()

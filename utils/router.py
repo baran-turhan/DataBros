@@ -1,5 +1,5 @@
 from datetime import datetime
-from flask import render_template, request, jsonify
+from flask import render_template, request, jsonify, abort
 import utils.database as database
 
 def base_page():
@@ -144,9 +144,17 @@ def players_page():
         selected_positions=selected_positions,
         current_sort=sort_option,
         all_positions=all_positions,
-        # YENİ: Arama metnini şablona geri gönder (input içinde kalsın diye)
+        # YENI: Arama metnini sablona geri gonder (input icinde kalsin diye)
         search_query=search_query
     )
+
+
+def player_profile_page(player_id: int):
+    """Single player profile page."""
+    player = database.get_player_by_id(player_id)
+    if not player:
+        abort(404)
+    return render_template("player_profile.html", player=player)
 
 
 def games_page():
@@ -289,3 +297,9 @@ def clubs_page():
         selected_max_capacity=selected_max_capacity,
         filter_applied=filter_applied,
     )
+
+
+def club_players_api(club_id: int):
+    """Secilen kulup icin oyuncu listesini JSON olarak doner."""
+    players = database.get_players_by_club(club_id)
+    return jsonify({"players": players, "count": len(players)})

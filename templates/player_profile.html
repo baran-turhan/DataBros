@@ -1,0 +1,153 @@
+{% extends "layout.html" %}
+
+{% block title %}Player Profile{% endblock %}
+
+{% block extra_head %}
+<style>
+    .player-profile {
+        max-width: 960px;
+        margin: 30px auto;
+        padding: 24px;
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+    }
+    .profile-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 18px;
+    }
+    .profile-avatar {
+        width: 72px;
+        height: 72px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, #1e3c72, #2a5298);
+        color: #fff;
+        font-size: 2rem;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 10px 24px rgba(30, 60, 114, 0.35);
+    }
+    .profile-name {
+        font-size: 1.9rem;
+        font-weight: 800;
+        margin: 0;
+        color: #0f172a;
+    }
+    .profile-meta {
+        color: #475569;
+        font-size: 1rem;
+    }
+    .profile-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 12px;
+        margin-top: 16px;
+    }
+    .profile-card {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 12px 14px;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    .label {
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        color: #6b7280;
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
+        font-weight: 700;
+    }
+    .value {
+        font-size: 1.05rem;
+        color: #0f172a;
+        font-weight: 700;
+    }
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 14px;
+        color: #1e3c72;
+        text-decoration: none;
+        font-weight: 700;
+    }
+    .back-link:hover {
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <a class="back-link" href="{{ url_for('players_page') }}">&#8592; Back to players</a>
+    <div class="player-profile">
+        <div class="profile-header">
+            <div class="profile-avatar">
+                {% if player and player.name %}
+                    {{ player.name[0]|upper }}
+                {% else %}
+                    P
+                {% endif %}
+            </div>
+            <div>
+                <h1 class="profile-name">{{ player.name or "Unknown Player" }}</h1>
+                <div class="profile-meta">
+                    {% if player.country_of_citizenship %}{{ player.country_of_citizenship }}{% endif %}
+                    {% if player.age %} &middot; {{ player.age }} yrs{% endif %}
+                    {% if player.sub_position %} &middot; {{ player.sub_position }}{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-grid">
+            <div class="profile-card">
+                <div class="label">Date of birth</div>
+                <div class="value">{{ player.date_of_birth or "N/A" }}</div>
+            </div>
+            <div class="profile-card">
+                <div class="label">Height</div>
+                <div class="value">
+                    {% if player.height_in_cm %}
+                        {{ player.height_in_cm }} cm
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </div>
+            </div>
+            <div class="profile-card">
+                <div class="label">Foot</div>
+                <div class="value">{{ player.foot or "N/A" }}</div>
+            </div>
+            <div class="profile-card">
+                <div class="label">Position</div>
+                <div class="value">{{ player.sub_position or "N/A" }}</div>
+            </div>
+            <div class="profile-card">
+                <div class="label">Club</div>
+                <div class="value">
+                    {% if player.club_name %}
+                        {{ player.club_name }}
+                    {% else %}
+                        No club
+                    {% endif %}
+                </div>
+            </div>
+            <div class="profile-card">
+                <div class="label">League</div>
+                <div class="value">
+                    {% if player.league_name %}
+                        {{ player.league_name }}
+                        {% if player.league_country %} ({{ player.league_country }}){% endif %}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

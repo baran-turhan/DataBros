@@ -393,6 +393,18 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Dışarı tıklayınca kapatma (Global)
+    // Tablodaki satirlari profil sayfasina yonlendir
+    const playerRows = document.querySelectorAll('.players-table .player-row[data-player-id]');
+    playerRows.forEach((row) => {
+        const playerId = row.getAttribute('data-player-id');
+        if (!playerId) return;
+        row.style.cursor = 'pointer';
+        row.addEventListener('click', (e) => {
+            if (e.target.closest('.player-link')) return;
+            window.location.href = `/players/${encodeURIComponent(playerId)}`;
+        });
+    });
+
     window.addEventListener('click', function(e) {
         const dropdowns = [
             {box: document.getElementById('ageDropdown'), btn: document.getElementById('ageDropdownBtn')},
