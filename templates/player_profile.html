@@ -66,17 +66,32 @@
         color: #0f172a;
         font-weight: 700;
     }
+    
+    /* GÜNCELLENEN KISIM: Back Link Tasarımı */
     .back-link {
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        margin-bottom: 14px;
+        margin-top: 25px;
+        margin-bottom: 10px; /* Biraz boşluk bıraktık */
+        
+        /* Renk ve Yazı */
         color: #1e3c72;
         text-decoration: none;
         font-weight: 700;
+        
+        /* Kutu Görünümü */
+        background-color: #fff;
+        padding: 6px 18px;
+        border-radius: 50px; /* Yuvarlak köşeler */
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08); /* Hafif gölge */
+        transition: all 0.2s ease; /* Yumuşak geçiş efekti */
     }
+
     .back-link:hover {
-        text-decoration: underline;
+        text-decoration: none;
+        transform: translateY(-2px); /* Üzerine gelince hafif yukarı kalksın */
+        box-shadow: 0 6px 15px rgba(30, 60, 114, 0.15); /* Gölgeyi belirginleştir */
     }
 </style>
 {% endblock %}
@@ -87,10 +102,16 @@
     <div class="player-profile">
         <div class="profile-header">
             <div class="profile-avatar">
-                {% if player and player.name %}
-                    {{ player.name[0]|upper }}
+                {% if player.image_url %}
+                    <img src="{{ player.image_url }}" 
+                         alt="{{ player.name }}" 
+                         style="width: 100%; height: 100%; object-fit: cover; border-radius: 18px;">
                 {% else %}
-                    P
+                    {% if player and player.name %}
+                        {{ player.name[0]|upper }}
+                    {% else %}
+                        P
+                    {% endif %}
                 {% endif %}
             </div>
             <div>

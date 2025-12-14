@@ -499,7 +499,6 @@ def set_game_favorite(game_id: int, is_favorite: bool = True) -> bool:
 
 
 #----------------------------------PLAYERS------------------------------------------------
-# utils/database.py içindeki get_all_players fonksiyonunu GÜNCELLE:
 
 def get_all_players(page=1, per_page=100, min_age=None, max_age=None, feet=None, positions=None, sort_option="name_asc", search_query=None):
     """
@@ -563,6 +562,7 @@ def get_all_players(page=1, per_page=100, min_age=None, max_age=None, feet=None,
             SELECT 
                 p.player_id,
                 p.name,
+                p.image_url,
                 p.date_of_birth,
                 DATE_PART('year', AGE(CURRENT_DATE, p.date_of_birth))::INTEGER AS age,
                 p.sub_position,
@@ -642,6 +642,7 @@ def get_player_by_id(player_id: int):
             SELECT
                 p.player_id,
                 p.name,
+                p.image_url,
                 p.date_of_birth,
                 DATE_PART('year', AGE(CURRENT_DATE, p.date_of_birth))::INTEGER AS age,
                 p.sub_position,
