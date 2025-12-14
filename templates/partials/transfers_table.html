@@ -1,0 +1,94 @@
+{% macro render_transfers_table(transfers) %}
+<div class="players-table-wrapper transfers-table-wrapper">
+    <div class="transfers-list">
+        <div class="transfers-header transfers-row">
+            <div class="transfer-cell player-col">Player</div>
+            <div class="transfer-cell position-col">Position</div>
+            <div class="transfer-cell age-col">Age</div>
+            <div class="transfer-cell nat-col">Nationality</div>
+            <div class="transfer-cell clubs-col">Clubs</div>
+            <div class="transfer-cell value-col">Value</div>
+            <div class="transfer-cell fee-col">Fee</div>
+            <div class="transfer-cell date-col">Date</div>
+        </div>
+        <div class="transfers-body">
+            {% for transfer in transfers %}
+            <div class="transfers-row fade-in">
+                <div class="transfer-cell player-col">
+                    <div class="transfer-player">
+                        <div class="player-mini-avatar">
+                            {% if transfer.image_url %}
+                            <img src="{{ transfer.image_url }}" alt="{{ transfer.player_name or 'Player' }}">
+                            {% else %}
+                            {{ transfer.player_name[0]|upper if transfer.player_name else '💸' }}
+                            {% endif %}
+                        </div>
+                        <div class="player-meta">
+                            {% set player_name = transfer.player_name or 'Unknown Player' %}
+                            {% if transfer.player_name %}
+                            <a class="player-name player-name-link" href="{{ url_for('players_page', search=transfer.player_name) }}">
+                                {{ player_name }}
+                            </a>
+                            {% else %}
+                            <div class="player-name">{{ player_name }}</div>
+                            {% endif %}
+                            <div class="player-sub">{{ transfer.sub_position or '—' }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="transfer-cell position-col text-center">{{ transfer.sub_position or '—' }}</div>
+                <div class="transfer-cell age-col text-center">{{ transfer.age or '—' }}</div>
+                <div class="transfer-cell nat-col text-center">{{ transfer.country_of_citizenship or '—' }}</div>
+                <div class="transfer-cell clubs-col">
+                    <div class="club-stack">
+                        <div class="club-cell">
+                            {% set from_club = transfer.from_club or 'N/A' %}
+                            {% if transfer.from_club %}
+                            <a class="club-name club-link" href="{{ url_for('clubs_page', search=transfer.from_club) }}">{{ from_club }}</a>
+                            {% else %}
+                            <div class="club-name">{{ from_club }}</div>
+                            {% endif %}
+                            <div class="club-sub">From</div>
+                        </div>
+                        <div class="club-cell">
+                            {% set to_club = transfer.to_club or 'N/A' %}
+                            {% if transfer.to_club %}
+                            <a class="club-name club-link" href="{{ url_for('clubs_page', search=transfer.to_club) }}">{{ to_club }}</a>
+                            {% else %}
+                            <div class="club-name">{{ to_club }}</div>
+                            {% endif %}
+                            <div class="club-sub">To</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="transfer-cell value-col text-right">
+                    {% if transfer.player_value is not none %}
+                        {% set mv_str = "{:,.2f}".format(transfer.player_value) %}
+                        {% set mv_tr = mv_str.replace(",", "X").replace(".", ",").replace("X", ".") %}
+                        €{{ mv_tr }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </div>
+                <div class="transfer-cell fee-col text-right">
+                    {% if transfer.transfer_fee_value is not none %}
+                        {% set fee_str = "{:,.2f}".format(transfer.transfer_fee_value) %}
+                        {% set fee_tr = fee_str.replace(",", "X").replace(".", ",").replace("X", ".") %}
+                        €{{ fee_tr }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </div>
+                <div class="transfer-cell date-col text-center">
+                    {% if transfer.transfer_date %}
+                        {{ transfer.transfer_date.strftime('%Y-%m-%d') }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endmacro %}

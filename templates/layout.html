@@ -13,7 +13,7 @@
       /* Üst beyaz navbar */
       .navbar {
         display: grid;
-        grid-template-columns: repeat(6, 1fr);
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
         background-color: #fff; /* Şerit beyaz */
         height: 70px;
         align-items: center;
@@ -53,6 +53,7 @@
       <a href="{{ url_for('transfers_page') }}">Transfers</a>
       <a href="{{ url_for('competitions_page') }}">Leagues</a>
       <a href="{{ url_for('games_page') }}">Games</a>
+      <a href="{{ url_for('admin_page') }}" class="brand">Administration</a>
     </div>
 
     {% block content %}{% endblock %}

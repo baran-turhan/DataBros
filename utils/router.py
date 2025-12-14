@@ -25,6 +25,7 @@ def transfers_page():
     from_league = request.args.get("from_league")
     to_league = request.args.get("to_league")
     page = request.args.get("page", default=1, type=int)
+    player_query = (request.args.get("player_name") or "").strip()
     per_page = 20
 
     # Sezonlar kısaltılmış formatta (ör: 24/25) tutuluyor
@@ -64,6 +65,19 @@ def transfers_page():
     }
     sort_by, sort_dir = sort_map.get(sort_option, ("date", "desc"))
 
+    def _calc_age(dob):
+        if not dob:
+            return None
+        today = datetime.utcnow().date()
+        return today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+
+    player_transfers = []
+    if player_query:
+        player_transfers_raw = database.get_transfers_by_player_name(player_query)
+        for t in player_transfers_raw:
+            t["age"] = _calc_age(t.get("date_of_birth"))
+            player_transfers.append(t)
+
     transfers = []
     total_results = 0
     current_page = page if page and page > 0 else 1
@@ -79,11 +93,6 @@ def transfers_page():
             from_league=from_league,
             to_league=to_league,
         )
-        def _calc_age(dob):
-            if not dob:
-                return None
-            today = datetime.utcnow().date()
-            return today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
 
         transfers = []
         for t in transfers_raw:
@@ -112,6 +121,9 @@ def transfers_page():
             "to_league": to_league or "",
         },
         leagues=leagues,
+        player_query=player_query,
+        player_search_applied=bool(player_query),
+        player_transfers=player_transfers,
     )
 
 
@@ -288,6 +300,39 @@ def competitions_page():
         countries=countries,
         selected_country=selected_country,
         selected_is_major_league=is_major_league_param,
+    )
+
+def admin_page():
+    tables = database.get_table_schemas()
+    message = None
+    error = None
+
+    if request.method == "POST":
+        table_name = (request.form.get("table_name") or "").strip()
+        target_table = next((t for t in tables if t["name"] == table_name), None)
+        if not target_table:
+            error = "Select a valid table."
+        else:
+            row_data = {}
+            for col in target_table["columns"]:
+                val = request.form.get(col["name"])
+                if val is not None and val != "":
+                    row_data[col["name"]] = val
+
+            if not row_data:
+                error = "Provide at least one column value to insert."
+            else:
+                inserted = database.insert_row(table_name, row_data)
+                if inserted:
+                    message = f"Inserted row into {table_name}."
+                else:
+                    error = "Insert failed. Check required fields and values."
+
+    return render_template(
+        'admin.html',
+        tables=tables,
+        message=message,
+        error=error,
     )
 
 def clubs_page():

@@ -560,6 +560,7 @@ def get_transfers(
                 t.transfer_date,
                 t.market_value_in_eur,
                 p.name AS player_name,
+                p.image_url,
                 t.market_value_in_eur AS player_value,
                 p.date_of_birth,
                 p.sub_position,
@@ -585,6 +586,136 @@ def get_transfers(
     except Exception as e:
         print(f"Database error: {e}")
         return [], 0
+    finally:
+        if conn:
+            conn.close()
+
+
+def get_transfers_by_player_name(player_name: str):
+    """Belirtilen oyuncu adını içeren transferleri kronolojik sıralı döner."""
+    if not player_name:
+        return []
+
+    conn = None
+    try:
+        conn = get_conn()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        query = """
+            SELECT 
+                t.transfer_id,
+                t.transfer_season,
+                t.transfer_fee,
+                t.transfer_fee AS transfer_fee_value,
+                t.transfer_date,
+                t.market_value_in_eur,
+                p.name AS player_name,
+                p.image_url,
+                t.market_value_in_eur AS player_value,
+                p.date_of_birth,
+                p.sub_position,
+                p.country_of_citizenship,
+                fc.name AS from_club,
+                fc_comp.name AS from_league,
+                tc_comp.name AS to_league,
+                tc.name AS to_club
+            FROM transfers t
+            LEFT JOIN players p ON t.player_id = p.player_id
+            LEFT JOIN clubs fc ON t.from_club_id = fc.club_id
+            LEFT JOIN clubs tc ON t.to_club_id = tc.club_id
+            LEFT JOIN competitions fc_comp ON fc.domestic_competition_id = fc_comp.competition_id
+            LEFT JOIN competitions tc_comp ON tc.domestic_competition_id = tc_comp.competition_id
+            WHERE p.name ILIKE %s
+            ORDER BY t.transfer_date ASC NULLS LAST, t.transfer_id ASC
+        """
+        cur.execute(query, (f"%{player_name}%",))
+        transfers = cur.fetchall()
+        cur.close()
+        return transfers
+    except Exception as e:
+        print(f"Database error: {e}")
+        return []
+    finally:
+        if conn:
+            conn.close()
+
+
+def get_table_schemas():
+    """Public schema tablolarını ve sütun bilgilerini döner."""
+    conn = None
+    try:
+        conn = get_conn()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute(
+            """
+            SELECT table_name
+            FROM information_schema.tables
+            WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+            ORDER BY table_name
+            """
+        )
+        tables = [row["table_name"] for row in cur.fetchall()]
+
+        schemas = []
+        for name in tables:
+            cur.execute(
+                """
+                SELECT column_name, data_type, is_nullable, column_default
+                FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = %s
+                ORDER BY ordinal_position
+                """,
+                (name,),
+            )
+            cols = cur.fetchall()
+            schemas.append(
+                {
+                    "name": name,
+                    "columns": [
+                        {
+                            "name": c["column_name"],
+                            "type": c["data_type"],
+                            "nullable": c["is_nullable"] == "YES",
+                            "default": c["column_default"],
+                        }
+                        for c in cols
+                    ],
+                }
+            )
+        cur.close()
+        return schemas
+    except Exception as e:
+        print(f"Database error: {e}")
+        return []
+    finally:
+        if conn:
+            conn.close()
+
+
+def insert_row(table_name: str, values: dict):
+    """Belirtilen tabloya satır ekler; sütunlar dinamik belirlenir."""
+    if not table_name or not values:
+        return False
+
+    conn = None
+    try:
+        conn = get_conn()
+        cur = conn.cursor()
+
+        cols = list(values.keys())
+        placeholders = ", ".join(["%s"] * len(cols))
+        col_sql = ", ".join([f'"{c}"' for c in cols])
+        sql = f'INSERT INTO "{table_name}" ({col_sql}) VALUES ({placeholders})'
+        params = [values[c] for c in cols]
+
+        cur.execute(sql, params)
+        conn.commit()
+        cur.close()
+        return True
+    except Exception as e:
+        print(f"Database error: {e}")
+        if conn:
+            conn.rollback()
+        return False
     finally:
         if conn:
             conn.close()

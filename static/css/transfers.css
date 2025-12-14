@@ -11,6 +11,10 @@
     align-items: end;
 }
 
+.player-search-bar {
+    margin-bottom: 12px;
+}
+
 .filter-group {
     display: flex;
     flex-direction: column;
@@ -231,6 +235,28 @@
     display: grid;
     gap: 8px;
     align-items: center;
+}
+
+.section-header {
+    margin: 8px 0 12px;
+    color: #1e3c72;
+}
+
+.section-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.section-header p {
+    margin: 4px 0 0;
+    color: #4a5568;
+}
+
+.player-mini-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
 }
 
 .text-center {

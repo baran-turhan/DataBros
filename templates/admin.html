@@ -1,0 +1,166 @@
+{% extends 'layout.html' %}
+
+{% block title %}Administration{% endblock %}
+
+{% block extra_head %}
+<style>
+  .admin-container {
+    max-width: 1000px;
+    margin: 32px auto;
+    background: rgba(255,255,255,0.92);
+    border-radius: 18px;
+    padding: 22px 24px;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.12);
+  }
+  .admin-header h1 {
+    margin: 0 0 6px;
+    color: #1e3c72;
+  }
+  .admin-header p {
+    margin: 0;
+    color: #4a5568;
+  }
+  .admin-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 18px;
+  }
+  .admin-form label {
+    font-weight: 700;
+    color: #1e3c72;
+  }
+  .admin-form select,
+  .admin-form input {
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid #dbe2ef;
+    font-size: 1rem;
+    outline: none;
+  }
+  .admin-form select:focus,
+  .admin-form input:focus {
+    border-color: #2a5298;
+    box-shadow: 0 0 0 3px rgba(42,82,152,0.15);
+  }
+  .columns-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .columns-grid > div {
+    display: grid;
+    grid-template-columns: 220px 1fr 260px;
+    gap: 10px;
+    align-items: center;
+  }
+  .columns-grid label {
+    min-width: 0;
+  }
+  .columns-grid input {
+    width: 100%;
+    min-width: 0;
+  }
+  .field-note {
+    display: inline-block;
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin-top: 0;
+  }
+  .submit-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  .admin-button {
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(30, 60, 114, 0.25);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .admin-button:hover { transform: translateY(-1px); }
+  .message {
+    padding: 12px 14px;
+    border-radius: 12px;
+    font-weight: 700;
+  }
+  .message.success { background: #ecfdf3; color: #166534; border: 1px solid #bbf7d0; }
+  .message.error { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+  <div class="admin-header">
+    <h1>Administration</h1>
+    <p>Add new rows: pick a table, fill the fields you need, and save.</p>
+  </div>
+
+  {% if message %}
+  <div class="message success">{{ message }}</div>
+  {% endif %}
+  {% if error %}
+  <div class="message error">{{ error }}</div>
+  {% endif %}
+
+  <form class="admin-form" method="post" action="{{ url_for('admin_page') }}">
+    <div>
+      <label for="table_name">Table</label>
+      <select id="table_name" name="table_name" required>
+        <option value="">Select table</option>
+        {% for t in tables %}
+        <option value="{{ t.name }}">{{ t.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div id="columns-container" class="columns-grid"></div>
+
+    <div class="submit-row">
+      <button class="admin-button" type="submit">Insert Row</button>
+      <span class="field-note">Fields left blank will use defaults or stay NULL.</span>
+    </div>
+  </form>
+</div>
+
+<script>
+  const tableSchemas = {{ tables | tojson }};
+  const tableSelect = document.getElementById("table_name");
+  const columnsContainer = document.getElementById("columns-container");
+
+  function renderColumns(tableName) {
+    columnsContainer.innerHTML = "";
+    const table = tableSchemas.find(t => t.name === tableName);
+    if (!table) return;
+
+    table.columns.forEach(col => {
+      const wrap = document.createElement("div");
+      const label = document.createElement("label");
+      label.textContent = col.name;
+      const input = document.createElement("input");
+      input.name = col.name;
+      input.placeholder = col.type;
+      if (col.default && col.default.includes("nextval")) {
+        input.placeholder = "identity/auto";
+      }
+      wrap.appendChild(label);
+      wrap.appendChild(input);
+
+      const note = document.createElement("span");
+      note.className = "field-note";
+      const nullable = col.nullable ? "optional" : "required";
+      const defText = col.default ? `, default: ${col.default}` : "";
+      note.textContent = `${nullable}${defText}`;
+      wrap.appendChild(note);
+      columnsContainer.appendChild(wrap);
+    });
+  }
+
+  tableSelect.addEventListener("change", (e) => renderColumns(e.target.value));
+</script>
+{% endblock %}
