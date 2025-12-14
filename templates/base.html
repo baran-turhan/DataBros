@@ -1,5 +1,110 @@
 {% extends 'layout.html' %}
 
-{% block title %}Ana Sayfa{% endblock %}
+{% block title %}Home{% endblock %}
 
-{% block content %}{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="main-page-container">
+    <!-- Hero Section -->
+    <div class="hero-section fade-in">
+        <h1 class="hero-title">Welcome to DataBros</h1>
+        <p class="hero-subtitle">Your comprehensive football data platform</p>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-section fade-in">
+        <div class="stat-card">
+            <div class="stat-icon">👥</div>
+            <div class="stat-content">
+                <div class="stat-number">{{ stats.total_players|default(0) }}</div>
+                <div class="stat-label">Players</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🏟️</div>
+            <div class="stat-content">
+                <div class="stat-number">{{ stats.total_teams|default(0) }}</div>
+                <div class="stat-label">Teams</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🏆</div>
+            <div class="stat-content">
+                <div class="stat-number">{{ stats.total_leagues|default(0) }}</div>
+                <div class="stat-label">Leagues</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🔄</div>
+            <div class="stat-content">
+                <div class="stat-number">{{ stats.total_transfers|default(0) }}</div>
+                <div class="stat-label">Transfers</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leagues & Teams Section -->
+    <div class="leagues-teams-section fade-in">
+        <a href="{{ url_for('competitions_page') }}" class="leagues-teams-card">
+            <div class="leagues-teams-icon">🏆</div>
+            <div class="leagues-teams-content">
+                <h2 class="leagues-teams-title">Leagues & Teams</h2>
+                <p class="leagues-teams-description">Explore all leagues and teams related </p>
+            </div>
+            <div class="leagues-teams-arrow">→</div>
+        </a>
+    </div>
+
+    <!-- Quick Navigation Cards -->
+    <div class="quick-nav-section fade-in">
+        <h2 class="section-title">Quick Navigation</h2>
+        <div class="quick-nav-grid">
+            <a href="{{ url_for('players_page') }}" class="quick-nav-card">
+                <div class="quick-nav-icon">👤</div>
+                <h3 class="quick-nav-title">Players</h3>
+                <p class="quick-nav-description">Browse and search through our extensive player database</p>
+            </a>
+            <a href="{{ url_for('clubs_page') }}" class="quick-nav-card">
+                <div class="quick-nav-icon">🏟️</div>
+                <h3 class="quick-nav-title">Teams</h3>
+                <p class="quick-nav-description">Discover teams, their stats, and squad information</p>
+            </a>
+            <a href="{{ url_for('transfers_page') }}" class="quick-nav-card">
+                <div class="quick-nav-icon">🔄</div>
+                <h3 class="quick-nav-title">Transfers</h3>
+                <p class="quick-nav-description">Track player transfers and market movements</p>
+            </a>
+            <a href="{{ url_for('games_page') }}" class="quick-nav-card">
+                <div class="quick-nav-icon">⚽</div>
+                <h3 class="quick-nav-title">Games</h3>
+                <p class="quick-nav-description">View match results and game statistics</p>
+            </a>
+        </div>
+    </div>
+
+    <!-- Featured Major Leagues -->
+    {% if major_leagues %}
+    <div class="featured-leagues-section fade-in">
+        <h2 class="section-title">Featured Major Leagues</h2>
+        <div class="featured-leagues-grid">
+            {% for league in major_leagues %}
+            <a href="{{ url_for('competitions_page') }}" class="featured-league-card">
+                <div class="featured-league-header">
+                    <div class="featured-league-avatar">
+                        {{ league.name[0]|upper if league.name else '🏆' }}
+                    </div>
+                    <h3 class="featured-league-name">{{ league.name or 'Unknown League' }}</h3>
+                </div>
+                <div class="featured-league-info">
+                    <div class="featured-league-country">🌍 {{ league.country_name or 'N/A' }}</div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

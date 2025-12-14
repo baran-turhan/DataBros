@@ -3,7 +3,18 @@ from flask import render_template, request, jsonify, abort
 import utils.database as database
 
 def base_page():
-    return render_template('base.html')
+    """Ana sayfa için verileri çeker ve render eder."""
+    # Major leagues (top 8 for featured section)
+    major_leagues = database.get_all_competitions(is_major_league=True)[:8]
+    
+    # Statistics for quick stats cards
+    stats = database.get_statistics()
+    
+    return render_template(
+        'base.html',
+        major_leagues=major_leagues,
+        stats=stats
+    )
 
 def transfers_page():
     submitted = request.args.get("submitted")

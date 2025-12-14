@@ -727,4 +727,40 @@ def get_all_positions():
         if conn:
             conn.close()
 
+def get_statistics():
+    """Ana sayfa için istatistikleri döner (toplam oyuncu, takım, lig, transfer sayıları)."""
+    conn = None
+    try:
+        conn = get_conn()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        query = """
+            SELECT 
+                (SELECT COUNT(*) FROM players) AS total_players,
+                (SELECT COUNT(*) FROM clubs) AS total_teams,
+                (SELECT COUNT(*) FROM competitions) AS total_leagues,
+                (SELECT COUNT(*) FROM transfers) AS total_transfers
+        """
+        
+        cur.execute(query)
+        stats = cur.fetchone()
+        cur.close()
+        return stats or {
+            "total_players": 0,
+            "total_teams": 0,
+            "total_leagues": 0,
+            "total_transfers": 0
+        }
+    except Exception as e:
+        print(f"Database error (get_statistics): {e}")
+        return {
+            "total_players": 0,
+            "total_teams": 0,
+            "total_leagues": 0,
+            "total_transfers": 0
+        }
+    finally:
+        if conn:
+            conn.close()
+
 #-----------------------------------------------------------------------------------------
