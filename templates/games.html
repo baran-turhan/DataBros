@@ -137,6 +137,145 @@
         max-width: 640px;
     }
 
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 14px;
+        margin: 24px 0;
+    }
+
+    .summary-card {
+        background: rgba(255,255,255,0.12);
+        border: 1px solid rgba(255,255,255,0.18);
+        border-radius: 14px;
+        padding: 14px 16px;
+        color: #fff;
+        backdrop-filter: blur(8px);
+    }
+
+    .summary-label {
+        font-size: 0.9rem;
+        opacity: 0.8;
+    }
+
+    .summary-value {
+        font-size: 1.4rem;
+        font-weight: 800;
+        margin-top: 4px;
+    }
+
+    .h2h-card {
+        margin: 26px 0;
+        background: rgba(255,255,255,0.14);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 16px;
+        padding: 16px;
+        color: #fff;
+    }
+
+    .h2h-form {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 12px;
+        align-items: end;
+        margin-top: 10px;
+    }
+
+    .h2h-form label {
+        font-weight: 700;
+        margin-bottom: 6px;
+        display: block;
+    }
+
+    .h2h-form select {
+        width: 100%;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: none;
+        font-size: 1rem;
+        color: #1a202c;
+    }
+
+    .h2h-actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .h2h-button {
+        padding: 12px 18px;
+        border-radius: 12px;
+        border: none;
+        background: linear-gradient(135deg, #38b2ac, #3182ce);
+        color: white;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        width: 100%;
+    }
+
+    .h2h-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(49, 130, 206, 0.35);
+    }
+
+    .h2h-results {
+        margin-top: 14px;
+    }
+
+    .h2h-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 12px;
+        margin: 12px 0 10px;
+    }
+
+    .h2h-stat {
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.18);
+        border-radius: 12px;
+        padding: 10px 12px;
+    }
+
+    .h2h-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255,255,255,0.12);
+        padding: 8px 10px;
+        border-radius: 12px;
+        font-weight: 700;
+    }
+
+    .h2h-matches {
+        margin-top: 10px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 10px;
+    }
+
+    .h2h-match {
+        background: #f8fafc;
+        color: #1a202c;
+        border-radius: 12px;
+        padding: 12px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .h2h-match .scoreline {
+        font-weight: 800;
+        font-size: 1.1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .h2h-match .meta {
+        font-size: 0.95rem;
+        color: #4a5568;
+        margin-top: 6px;
+    }
+
     @media (max-width: 768px) {
         .filter-bar {
             flex-direction: column;
@@ -297,6 +436,147 @@
         </select>
         <button type="submit">Apply</button>
     </form>
+
+    {% if year_summary and selected_year %}
+    <div class="summary-grid">
+        <div class="summary-card">
+            <div class="summary-label">Matches in {{ selected_year }}</div>
+            <div class="summary-value">{{ year_summary.match_count }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-label">Total goals</div>
+            <div class="summary-value">{{ year_summary.total_goals }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-label">Avg goals / match</div>
+            <div class="summary-value">
+                {% if year_summary.avg_goals is not none %}
+                    {{ "%.2f"|format(year_summary.avg_goals) }}
+                {% else %}-{% endif %}
+            </div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-label">Avg goal diff</div>
+            <div class="summary-value">
+                {% if year_summary.avg_goal_diff is not none %}
+                    {{ "%.2f"|format(year_summary.avg_goal_diff) }}
+                {% else %}-{% endif %}
+            </div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-label">Draws</div>
+            <div class="summary-value">{{ year_summary.draws }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-label">Home / Away wins</div>
+            <div class="summary-value">{{ year_summary.home_wins }} / {{ year_summary.away_wins }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-label">Top scoring match (goals)</div>
+            <div class="summary-value">{{ year_summary.max_goals_single_match }}</div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="h2h-card">
+        <div class="title-row">
+            <h2>⚔️ Head-to-Head</h2>
+            <span class="league-chip">Quick club comparison</span>
+        </div>
+        <form method="get" class="h2h-form">
+            <div>
+                <label for="club_a">Team A</label>
+                <select id="club_a" name="club_a" required>
+                    <option value="" disabled {% if not club_a_id %}selected{% endif %}>Choose club</option>
+                    {% for club in club_options %}
+                        <option value="{{ club.club_id }}" {% if club.club_id == club_a_id %}selected{% endif %}>{{ club.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="club_b">Team B</label>
+                <select id="club_b" name="club_b" required data-selected="{{ club_b_id or '' }}" {% if not club_a_id %}disabled{% endif %}>
+                    <option value="" disabled {% if not club_b_id %}selected{% endif %}>
+                        {% if club_a_id %}Choose opponent{% else %}Select Team A first{% endif %}
+                    </option>
+                    {% if opponent_options %}
+                        {% for club in opponent_options %}
+                            <option value="{{ club.club_id }}" {% if club.club_id == club_b_id %}selected{% endif %}>{{ club.name }}</option>
+                        {% endfor %}
+                    {% endif %}
+                </select>
+            </div>
+            <div class="h2h-actions">
+                <input type="hidden" name="sort" value="{{ sort_option }}">
+                {% if selected_year %}<input type="hidden" name="year" value="{{ selected_year }}">{% endif %}
+                {% if favorite_only %}<input type="hidden" name="favorites" value="1">{% endif %}
+                <button type="submit" class="h2h-button">Compare</button>
+            </div>
+        </form>
+        {% if head_to_head_error %}
+            <div class="form-error" style="margin-top:10px;">{{ head_to_head_error }}</div>
+        {% endif %}
+        {% if head_to_head_stats %}
+            <div class="h2h-results">
+                <div class="h2h-stats">
+                    <div class="h2h-stat">
+                        <div class="summary-label">Matches played</div>
+                        <div class="summary-value">{{ head_to_head_stats.match_count }}</div>
+                    </div>
+                    <div class="h2h-stat">
+                        <div class="summary-label">{{ club_name_map.get(club_a_id) or 'Team A' }} wins</div>
+                        <div class="summary-value">{{ head_to_head_stats.club_a_wins }}</div>
+                    </div>
+                    <div class="h2h-stat">
+                        <div class="summary-label">{{ club_name_map.get(club_b_id) or 'Team B' }} wins</div>
+                        <div class="summary-value">{{ head_to_head_stats.club_b_wins }}</div>
+                    </div>
+                    <div class="h2h-stat">
+                        <div class="summary-label">Draws</div>
+                        <div class="summary-value">{{ head_to_head_stats.draws }}</div>
+                    </div>
+                    <div class="h2h-stat">
+                        <div class="summary-label">Goals (A / B)</div>
+                        <div class="summary-value">{{ head_to_head_stats.club_a_goals }} / {{ head_to_head_stats.club_b_goals }}</div>
+                    </div>
+                    <div class="h2h-stat">
+                        <div class="summary-label">Avg goal diff</div>
+                        <div class="summary-value">
+                            {% if head_to_head_stats.avg_goal_diff is not none %}
+                                {{ "%.2f"|format(head_to_head_stats.avg_goal_diff) }}
+                            {% else %}-{% endif %}
+                        </div>
+                    </div>
+                    <div class="h2h-stat">
+                        <div class="summary-label">Last match</div>
+                        <div class="summary-value">
+                            {% if head_to_head_stats.last_match_date %}{{ head_to_head_stats.last_match_date }}{% else %}-{% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% if head_to_head_matches %}
+                    <div class="h2h-badge" style="margin-bottom:8px;">Last {{ head_to_head_matches|length }} matches</div>
+                    <div class="h2h-matches">
+                        {% for match in head_to_head_matches %}
+                            <div class="h2h-match">
+                                <div class="scoreline">
+                                    <span>{{ match.home_club_name or 'Home' }}</span>
+                                    <span>{{ match.home_club_goals if match.home_club_goals is not none else '-' }} - {{ match.away_club_goals if match.away_club_goals is not none else '-' }}</span>
+                                    <span>{{ match.away_club_name or 'Away' }}</span>
+                                </div>
+                                <div class="meta">
+                                    {{ match.game_date or 'No date' }} · {{ match.competition_name or 'Competition' }}
+                                    {% if match.competition_country %} ({{ match.competition_country }}){% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% elif head_to_head_stats.match_count == 0 %}
+                    <div class="info-banner" style="margin-top:8px;">No recorded matches between these clubs.</div>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
 
     {% if games %}
     <div class="filter-bar">
@@ -484,4 +764,84 @@
     });
 </script>
 {% endif %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const clubASelect = document.getElementById("club_a");
+        const clubBSelect = document.getElementById("club_b");
+        if (!clubASelect || !clubBSelect) return;
+
+        const renderOpponents = (options, selectedId = "") => {
+            clubBSelect.innerHTML = "";
+            const placeholder = document.createElement("option");
+            placeholder.value = "";
+            placeholder.disabled = true;
+            placeholder.textContent = options.length ? "Choose opponent" : "No opponents found";
+            placeholder.selected = !selectedId;
+            clubBSelect.appendChild(placeholder);
+
+            options.forEach((opt) => {
+                const option = document.createElement("option");
+                option.value = opt.club_id;
+                option.textContent = opt.name;
+                if (selectedId && String(selectedId) === String(opt.club_id)) {
+                    option.selected = true;
+                }
+                clubBSelect.appendChild(option);
+            });
+
+            clubBSelect.disabled = options.length === 0;
+        };
+
+        const loadOpponents = async (clubId, preselected = "") => {
+            if (!clubId) {
+                clubBSelect.innerHTML = "";
+                const opt = document.createElement("option");
+                opt.value = "";
+                opt.disabled = true;
+                opt.selected = true;
+                opt.textContent = "Select Team A first";
+                clubBSelect.appendChild(opt);
+                clubBSelect.disabled = true;
+                return;
+            }
+
+            clubBSelect.disabled = true;
+            clubBSelect.innerHTML = "";
+            const loading = document.createElement("option");
+            loading.value = "";
+            loading.disabled = true;
+            loading.selected = true;
+            loading.textContent = "Loading...";
+            clubBSelect.appendChild(loading);
+
+            try {
+                const res = await fetch(`/games/${clubId}/opponents`);
+                if (!res.ok) throw new Error("failed");
+                const data = await res.json();
+                renderOpponents(data.opponents || [], preselected);
+            } catch (err) {
+                renderOpponents([], "");
+            }
+        };
+
+        const initialSelectedB = clubBSelect.dataset.selected || "";
+        if (clubASelect.value) {
+            // If server did not pre-populate options, fetch; otherwise just ensure disabled state is correct.
+            const hasServerOpponents = clubBSelect.options.length > 1;
+            if (!hasServerOpponents) {
+                loadOpponents(clubASelect.value, initialSelectedB);
+            } else {
+                clubBSelect.disabled = clubBSelect.options.length <= 1;
+            }
+        } else {
+            clubBSelect.disabled = true;
+        }
+
+        clubASelect.addEventListener("change", () => {
+            const selectedClub = clubASelect.value;
+            clubBSelect.dataset.selected = "";
+            loadOpponents(selectedClub, "");
+        });
+    });
+</script>
 {% endblock %}

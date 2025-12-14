@@ -38,6 +38,13 @@
             </div>
         </div>
         <div class="stat-card">
+            <div class="stat-icon">⚽</div>
+            <div class="stat-content">
+                <div class="stat-number">{{ stats.total_games|default(0) }}</div>
+                <div class="stat-label">Games</div>
+            </div>
+        </div>
+        <div class="stat-card">
             <div class="stat-icon">🔄</div>
             <div class="stat-content">
                 <div class="stat-number">{{ stats.total_transfers|default(0) }}</div>

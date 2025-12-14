@@ -16,6 +16,232 @@ def _game_sort_clause(sort_by: str) -> str:
         return "ORDER BY goal_difference ASC NULLS LAST, g.date ASC, g.game_id ASC"
     return "ORDER BY g.date ASC, g.game_id ASC"
 
+def get_club_options():
+    """Kulüp seçim listesi için sadece id ve isim döner."""
+    conn = None
+    try:
+        conn = get_conn()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute(
+            """
+            SELECT club_id, name
+            FROM clubs
+            WHERE name IS NOT NULL
+            ORDER BY name ASC
+            """
+        )
+        clubs = cur.fetchall()
+        cur.close()
+        return clubs
+    except Exception as e:
+        print(f"Database error (get_club_options): {e}")
+        return []
+    finally:
+        if conn:
+            conn.close()
+
+def get_opponents_for_club(club_id: int):
+    """Bir kulübün karşılaştığı rakipleri (id, isim) döner."""
+    if not club_id:
+        return []
+
+    conn = None
+    try:
+        conn = get_conn()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute(
+            """
+            WITH opponents AS (
+                SELECT DISTINCT
+                    CASE 
+                        WHEN g.home_club_id = %s THEN g.away_club_id
+                        ELSE g.home_club_id
+                    END AS opponent_id
+                FROM games g
+                WHERE g.home_club_id = %s OR g.away_club_id = %s
+            )
+            SELECT c.club_id, c.name
+            FROM opponents o
+            JOIN clubs c ON c.club_id = o.opponent_id
+            WHERE c.club_id IS NOT NULL
+            ORDER BY c.name ASC
+            """,
+            (club_id, club_id, club_id),
+        )
+        rows = cur.fetchall()
+        cur.close()
+        return rows
+    except Exception as e:
+        print(f"Database error (get_opponents_for_club): {e}")
+        return []
+    finally:
+        if conn:
+            conn.close()
+
+def get_game_year_summary(year: int):
+    """Belirli bir yılın maç istatistiklerini döner (toplam maç, goller, ortalamalar)."""
+    if not year:
+        return None
+
+    conn = None
+    try:
+        conn = get_conn()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute(
+            """
+            SELECT
+                COUNT(*) AS match_count,
+                SUM(COALESCE(g.home_club_goals, 0) + COALESCE(g.away_club_goals, 0)) AS total_goals,
+                AVG(
+                    CASE 
+                        WHEN g.home_club_goals IS NOT NULL AND g.away_club_goals IS NOT NULL 
+                        THEN g.home_club_goals + g.away_club_goals 
+                    END
+                ) AS avg_goals,
+                AVG(
+                    CASE 
+                        WHEN g.home_club_goals IS NOT NULL AND g.away_club_goals IS NOT NULL 
+                        THEN ABS(g.home_club_goals - g.away_club_goals) 
+                    END
+                ) AS avg_goal_diff,
+                SUM(CASE WHEN g.home_club_goals = g.away_club_goals AND g.home_club_goals IS NOT NULL THEN 1 ELSE 0 END) AS draws,
+                SUM(CASE WHEN g.home_club_goals > g.away_club_goals THEN 1 ELSE 0 END) AS home_wins,
+                SUM(CASE WHEN g.away_club_goals > g.home_club_goals THEN 1 ELSE 0 END) AS away_wins,
+                MAX(COALESCE(g.home_club_goals, 0) + COALESCE(g.away_club_goals, 0)) AS max_goals_single_match
+            FROM games g
+            WHERE g.date IS NOT NULL
+              AND EXTRACT(YEAR FROM g.date) = %s
+            """,
+            (year,),
+        )
+        row = cur.fetchone() or {}
+        cur.close()
+        if not row:
+            return None
+
+        def _maybe_float(value):
+            if value is None:
+                return None
+            try:
+                return float(value)
+            except Exception:
+                return value
+
+        return {
+            "match_count": row.get("match_count") or 0,
+            "total_goals": row.get("total_goals") or 0,
+            "avg_goals": _maybe_float(row.get("avg_goals")),
+            "avg_goal_diff": _maybe_float(row.get("avg_goal_diff")),
+            "draws": row.get("draws") or 0,
+            "home_wins": row.get("home_wins") or 0,
+            "away_wins": row.get("away_wins") or 0,
+            "max_goals_single_match": row.get("max_goals_single_match") or 0,
+        }
+    except Exception as e:
+        print(f"Database error (get_game_year_summary): {e}")
+        return None
+    finally:
+        if conn:
+            conn.close()
+
+def get_head_to_head(club_a_id: int, club_b_id: int, limit: int = 5):
+    """İki kulüp arasındaki head-to-head istatistiklerini ve son maçları döner."""
+    if not club_a_id or not club_b_id or club_a_id == club_b_id:
+        return None, []
+
+    conn = None
+    try:
+        conn = get_conn()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        params = {"a": club_a_id, "b": club_b_id}
+        cur.execute(
+            """
+            SELECT
+                COUNT(*) AS match_count,
+                SUM(CASE WHEN g.home_club_goals IS NOT NULL AND g.away_club_goals IS NOT NULL AND g.home_club_goals = g.away_club_goals THEN 1 ELSE 0 END) AS draws,
+                SUM(
+                    CASE 
+                        WHEN (g.home_club_id = %(a)s AND g.home_club_goals > g.away_club_goals)
+                          OR (g.away_club_id = %(a)s AND g.away_club_goals > g.home_club_goals) 
+                        THEN 1 ELSE 0 END
+                ) AS club_a_wins,
+                SUM(
+                    CASE 
+                        WHEN (g.home_club_id = %(b)s AND g.home_club_goals > g.away_club_goals)
+                          OR (g.away_club_id = %(b)s AND g.away_club_goals > g.home_club_goals) 
+                        THEN 1 ELSE 0 END
+                ) AS club_b_wins,
+                SUM(
+                    CASE WHEN g.home_club_id = %(a)s THEN COALESCE(g.home_club_goals, 0) ELSE COALESCE(g.away_club_goals, 0) END
+                ) AS club_a_goals,
+                SUM(
+                    CASE WHEN g.home_club_id = %(a)s THEN COALESCE(g.away_club_goals, 0) ELSE COALESCE(g.home_club_goals, 0) END
+                ) AS club_b_goals,
+                AVG(ABS(COALESCE(g.home_club_goals, 0) - COALESCE(g.away_club_goals, 0))) AS avg_goal_diff,
+                MAX(g.date) AS last_match_date
+            FROM games g
+            WHERE (g.home_club_id = %(a)s AND g.away_club_id = %(b)s)
+               OR (g.home_club_id = %(b)s AND g.away_club_id = %(a)s)
+            """,
+            params,
+        )
+        stats_row = cur.fetchone() or {}
+
+        cur.execute(
+            """
+            SELECT
+                g.game_id,
+                g.date AS game_date,
+                g.home_club_goals,
+                g.away_club_goals,
+                hc.name AS home_club_name,
+                ac.name AS away_club_name,
+                comp.name AS competition_name,
+                comp.country_name AS competition_country,
+                comp.is_major_national_league AS competition_is_major,
+                ABS(COALESCE(g.home_club_goals, 0) - COALESCE(g.away_club_goals, 0)) AS goal_difference
+            FROM games g
+            LEFT JOIN clubs hc ON g.home_club_id = hc.club_id
+            LEFT JOIN clubs ac ON g.away_club_id = ac.club_id
+            LEFT JOIN competitions comp ON g.competition_id = comp.competition_id
+            WHERE (g.home_club_id = %(a)s AND g.away_club_id = %(b)s)
+               OR (g.home_club_id = %(b)s AND g.away_club_id = %(a)s)
+            ORDER BY g.date DESC NULLS LAST, g.game_id DESC
+            LIMIT %(limit)s
+            """,
+            {"a": club_a_id, "b": club_b_id, "limit": limit},
+        )
+        matches = cur.fetchall()
+        cur.close()
+
+        def _maybe_float(val):
+            if val is None:
+                return None
+            try:
+                return float(val)
+            except Exception:
+                return val
+
+        stats = {
+            "match_count": stats_row.get("match_count") or 0,
+            "draws": stats_row.get("draws") or 0,
+            "club_a_wins": stats_row.get("club_a_wins") or 0,
+            "club_b_wins": stats_row.get("club_b_wins") or 0,
+            "club_a_goals": stats_row.get("club_a_goals") or 0,
+            "club_b_goals": stats_row.get("club_b_goals") or 0,
+            "avg_goal_diff": _maybe_float(stats_row.get("avg_goal_diff")),
+            "last_match_date": stats_row.get("last_match_date"),
+        }
+
+        return stats, matches
+    except Exception as e:
+        print(f"Database error (get_head_to_head): {e}")
+        return None, []
+    finally:
+        if conn:
+            conn.close()
+
 def get_conn():
     """PostgreSQL bağlantısını oluşturur."""
     DB_URL = os.getenv("DATABASE_URL")
@@ -740,6 +966,7 @@ def get_statistics():
                 (SELECT COUNT(*) FROM players) AS total_players,
                 (SELECT COUNT(*) FROM clubs) AS total_teams,
                 (SELECT COUNT(*) FROM competitions) AS total_leagues,
+                (SELECT COUNT(*) FROM games) AS total_games,
                 (SELECT COUNT(*) FROM transfers) AS total_transfers
         """
         
@@ -750,6 +977,7 @@ def get_statistics():
             "total_players": 0,
             "total_teams": 0,
             "total_leagues": 0,
+            "total_games": 0,
             "total_transfers": 0
         }
     except Exception as e:
@@ -758,6 +986,7 @@ def get_statistics():
             "total_players": 0,
             "total_teams": 0,
             "total_leagues": 0,
+            "total_games": 0,
             "total_transfers": 0
         }
     finally:

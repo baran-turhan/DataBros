@@ -173,12 +173,24 @@ def games_page():
     years = list(range(current_year, 2011, -1))
     
     selected_year = request.args.get("year", type=int)
+    club_a_id = request.args.get("club_a", type=int)
+    club_b_id = request.args.get("club_b", type=int)
     favorite_only_param = request.args.get("favorites")
     favorite_only = str(favorite_only_param).lower() in ("1", "true", "yes")
     sort_option = request.args.get("sort", "date")
     if sort_option not in ("date", "goal_diff_desc", "goal_diff_asc"):
         sort_option = "date"
     games = []
+    year_summary = None
+
+    # Kulüp listesi head-to-head formu için
+    club_options = database.get_club_options()
+    club_name_map = {c["club_id"]: c["name"] for c in club_options} if club_options else {}
+    opponent_options = []
+
+    head_to_head_stats = None
+    head_to_head_matches = []
+    head_to_head_error = None
 
     if favorite_only:
         if selected_year and 1900 <= selected_year <= current_year:
@@ -188,6 +200,7 @@ def games_page():
             games = database.get_favorite_games(sort_by=sort_option)
     elif selected_year and 1900 <= selected_year <= current_year:
         games = database.get_games_by_year(selected_year, sort_by=sort_option)
+        year_summary = database.get_game_year_summary(selected_year)
 
     # Gol farkı bilgisini önden hesaplayıp front-end'de filtreleme için saklıyoruz
     for game in games:
@@ -197,6 +210,28 @@ def games_page():
             if home_goals is not None and away_goals is not None:
                 game["goal_difference"] = abs(home_goals - away_goals)
 
+    if club_a_id:
+        opponent_options = database.get_opponents_for_club(club_a_id) or []
+        valid_opponent_ids = {row["club_id"] for row in opponent_options}
+    else:
+        valid_opponent_ids = set()
+
+    if club_a_id or club_b_id:
+        if not club_a_id or not club_b_id:
+            head_to_head_error = "Please select both teams."
+        elif club_a_id == club_b_id:
+            head_to_head_error = "You cannot compare the same club."
+        elif not valid_opponent_ids:
+            head_to_head_error = "No recorded opponents for Team A."
+        elif club_b_id not in valid_opponent_ids:
+            head_to_head_error = "Team B must be a club that has played against Team A."
+        else:
+            stats, matches = database.get_head_to_head(club_a_id, club_b_id, limit=5)
+            head_to_head_stats = stats
+            head_to_head_matches = matches
+            if not stats:
+                head_to_head_error = "No matches found between these clubs."
+
     return render_template(
         'games.html',
         years=years,
@@ -204,7 +239,21 @@ def games_page():
         games=games,
         favorite_only=favorite_only,
         sort_option=sort_option,
+        year_summary=year_summary,
+        club_options=club_options,
+        club_a_id=club_a_id,
+        club_b_id=club_b_id,
+        head_to_head_stats=head_to_head_stats,
+        head_to_head_matches=head_to_head_matches,
+        head_to_head_error=head_to_head_error,
+        club_name_map=club_name_map,
+        opponent_options=opponent_options,
     )
+
+def get_opponents_for_club_api(club_id: int):
+    """Return opponents for a given club as JSON."""
+    opponents = database.get_opponents_for_club(club_id)
+    return jsonify({"opponents": opponents or []})
 
 def update_game_favorite(game_id: int):
     """Bir maçı favori olarak işaretler."""

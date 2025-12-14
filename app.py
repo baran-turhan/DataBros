@@ -20,6 +20,11 @@ def create_app():
         view_func=router.update_game_favorite,
         methods=["POST"],
     )
+    app.add_url_rule(
+        "/games/<int:club_id>/opponents",
+        view_func=router.get_opponents_for_club_api,
+        methods=["GET"],
+    )
     app.add_url_rule("/clubs", view_func=router.clubs_page)
     app.add_url_rule("/clubs/<int:club_id>/players", view_func=router.club_players_api)
     app.add_url_rule("/competitions", view_func=router.competitions_page)
