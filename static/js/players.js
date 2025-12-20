@@ -1,25 +1,25 @@
 document.addEventListener('DOMContentLoaded', function() {
     
     // ============================================================
-    // 1. ARAMA (SEARCH BAR) MANTIĞI - SERVER SIDE
+    // 1. SEARCH (SEARCH BAR) LOGIC - SERVER SIDE
     // ============================================================
     const searchInput = document.getElementById('searchInput');
     const inputSearch = document.getElementById('inputSearch');
     const filterForm = document.getElementById('filterForm');
 
-    // Debounce Timer: Kullanıcı her harfe bastığında değil, 
-    // yazmayı bitirdikten 600ms sonra arama yapsın.
+    // Debounce timer: don't search on every keypress,
+    // search 600ms after typing stops.
     let typingTimer;
     const doneTypingInterval = 600; // ms
 
     if (searchInput) {
-        // Kullanıcı yazarken sayacı sıfırla
+        // Reset timer while user types
         searchInput.addEventListener('input', function() {
             clearTimeout(typingTimer);
             typingTimer = setTimeout(performSearch, doneTypingInterval);
         });
 
-        // Enter'a basarsa hemen ara
+        // Search immediately on Enter
         searchInput.addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
                 clearTimeout(typingTimer);
@@ -29,26 +29,26 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function performSearch() {
-        // 1. Search değerini gizli forma aktar
+        // 1. Copy search value into the hidden form
         if (inputSearch && searchInput) {
             inputSearch.value = searchInput.value;
         }
         
-        // 2. Foot ve Position verilerini hidden inputlara doldur (yardımcı fonk.)
+        // 2. Populate hidden inputs for Foot and Position (helper)
         refreshHiddenInputs();
 
-        // 3. Formu gönder (Sayfa yenilenecek ve veritabanından veri gelecek)
+        // 3. Submit the form (page reloads and data comes from the DB)
         if (filterForm) {
             filterForm.submit();
         }
     }
 
     // ============================================================
-    // 2. YAŞ FİLTRESİ (AGE SLIDER) MANTIĞI
+    // 2. AGE FILTER (AGE SLIDER) LOGIC
     // ============================================================
     const sliderContainer = document.getElementById('sliderContainer');
     
-    // Eğer sayfada slider yoksa (veri yoksa) slider kodlarını çalıştırma
+    // If the slider isn't on the page (no data), skip slider logic
     if (sliderContainer) {
         const sliderTrack = document.getElementById('sliderTrack');
         const sliderFill = document.getElementById('sliderFill');
@@ -60,11 +60,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const ageDropdownBtn = document.getElementById('ageDropdownBtn');
         const ageDropdown = document.getElementById('ageDropdown');
 
-        // Dinamik Sınırları HTML'den Oku (Global Min/Max)
+        // Read dynamic bounds from HTML (global min/max)
         const MIN_AGE = parseInt(sliderContainer.getAttribute('data-global-min')) || 15;
         const MAX_AGE = parseInt(sliderContainer.getAttribute('data-global-max')) || 45;
 
-        // Seçili yaşları al
+        // Get selected ages
         let selectedAges = [];
         const serverMin = sliderContainer.getAttribute('data-min');
         const serverMax = sliderContainer.getAttribute('data-max');
@@ -76,17 +76,17 @@ document.addEventListener('DOMContentLoaded', function() {
             selectedAges = [parseInt(serverMin)];
         }
 
-        // Sayfa yüklenince Slider'ı çiz
+        // Render the slider on page load
         updateSliderUI();
 
         // --- Event Listeners (Slider) ---
 
-        // Dropdown Aç/Kapa
+        // Toggle dropdown
         if (ageDropdownBtn) {
             ageDropdownBtn.addEventListener('click', function(e) {
                 e.stopPropagation();
                 ageDropdown.classList.toggle('show');
-                // Diğer dropdown açıksa kapat
+                // Close other open dropdowns
                 const footDrop = document.getElementById('footDropdown');
                 if(footDrop) footDrop.classList.remove('show');
                 const posDrop = document.getElementById('posDropdown');
@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
 
-        // Mouse Hareketi (Tooltip Gösterimi)
+        // Mouse move (show tooltip)
         sliderTrack.parentElement.addEventListener('mousemove', function(e) {
             const rect = sliderTrack.getBoundingClientRect();
             let percent = (e.clientX - rect.left) / rect.width;
@@ -115,20 +115,20 @@ document.addEventListener('DOMContentLoaded', function() {
             sliderTooltip.style.opacity = '0';
         });
 
-        // Tıklama Mantığı (Nokta Ekle/Çıkar/Kaydır)
+        // Click logic (add/remove/move point)
         sliderTrack.parentElement.addEventListener('click', function(e) {
-            e.stopPropagation(); // Dropdown kapanmasın
+            e.stopPropagation(); // Keep dropdown open
 
             const rect = sliderTrack.getBoundingClientRect();
             let percent = (e.clientX - rect.left) / rect.width;
             percent = Math.max(0, Math.min(1, percent));
             const clickedAge = Math.round(MIN_AGE + percent * (MAX_AGE - MIN_AGE));
 
-            // Tıklanan yaş zaten var mı?
+            // Is the clicked age already selected?
             const existingIndex = selectedAges.indexOf(clickedAge);
             
             if (existingIndex !== -1) {
-                // Varsa kaldır
+                // If yes, remove it
                 selectedAges.splice(existingIndex, 1);
             } 
             else {
@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     selectedAges.push(clickedAge);
                 }
                 else if (selectedAges.length === 2) {
-                    // İki nokta varsa, en yakındakini güncelle
+                    // If two points, update the nearest one
                     selectedAges.sort((a, b) => a - b);
                     const distToMin = Math.abs(clickedAge - selectedAges[0]);
                     const distToMax = Math.abs(clickedAge - selectedAges[1]);
@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     } else if (clickedAge > selectedAges[1]) {
                         selectedAges[1] = clickedAge;
                     } else {
-                        // Ortaya tıklandıysa yakına git
+                        // If clicked between, snap to nearest
                         if (distToMin <= distToMax) {
                             selectedAges[0] = clickedAge;
                         } else {
@@ -161,13 +161,13 @@ document.addEventListener('DOMContentLoaded', function() {
             updateSliderUI();
         });
 
-        // Slider UI Güncelleme Fonksiyonu
+        // Slider UI update function
         function updateSliderUI() {
             sliderPointsContainer.innerHTML = '';
-            selectedAges.sort((a, b) => a - b); // Küçükten büyüğe sırala
+            selectedAges.sort((a, b) => a - b); // Sort ascending
 
             if (selectedAges.length === 2) {
-                // Aralığı Boya
+                // Fill the range
                 const percent1 = ((selectedAges[0] - MIN_AGE) / (MAX_AGE - MIN_AGE)) * 100;
                 const percent2 = ((selectedAges[1] - MIN_AGE) / (MAX_AGE - MIN_AGE)) * 100;
                 sliderFill.style.left = percent1 + '%';
@@ -178,21 +178,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 inputMaxAge.value = selectedAges[1];
             } 
             else if (selectedAges.length === 1) {
-                // Tek nokta
+                // Single point
                 sliderFill.style.width = '0';
                 ageButtonLabel.innerText = `${selectedAges[0]}`;
                 inputMinAge.value = selectedAges[0];
                 inputMaxAge.value = selectedAges[0];
             } 
             else {
-                // Hiçbiri
+                // None
                 sliderFill.style.width = '0';
                 ageButtonLabel.innerText = 'All';
                 inputMinAge.value = '';
                 inputMaxAge.value = '';
             }
 
-            // Noktaları Çiz
+            // Render points
             selectedAges.forEach(age => {
                 let safeAge = Math.max(MIN_AGE, Math.min(MAX_AGE, age));
                 const percent = ((safeAge - MIN_AGE) / (MAX_AGE - MIN_AGE)) * 100;
@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ============================================================
-    // 3. AYAK FİLTRESİ (FOOT FILTER) MANTIĞI
+    // 3. FOOT FILTER LOGIC
     // ============================================================
     const footDropdownBtn = document.getElementById('footDropdownBtn');
     const footDropdown = document.getElementById('footDropdown');
@@ -216,7 +216,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const footHiddenInputsContainer = document.getElementById('footHiddenInputs');
     const applyBtn = document.getElementById('applyFilterBtn');
 
-    // Başlangıç Durumu Kontrolü (Serverdan gelen veriyi işle)
+    // Initial state check (process server data)
     const initialSelectedFeet = [];
     if (footHiddenInputsContainer) {
         const inputs = footHiddenInputsContainer.querySelectorAll('input');
@@ -232,18 +232,18 @@ document.addEventListener('DOMContentLoaded', function() {
         checkAllStatus();
         updateFootLabel();
     } else {
-        // Varsayılan olarak "All" seçili olsun
+        // Default to "All"
         if (footAllCheckbox) footAllCheckbox.checked = true;
         footOptions.forEach(opt => opt.checked = true);
         updateFootLabel();
     }
 
-    // Dropdown Aç/Kapa
+    // Toggle dropdown
     if (footDropdownBtn) {
         footDropdownBtn.addEventListener('click', function(e) {
             e.stopPropagation();
             footDropdown.classList.toggle('show');
-            // Age dropdown açıksa kapat
+            // Close age dropdown if open
             const ageDrop = document.getElementById('ageDropdown');
             if(ageDrop) ageDrop.classList.remove('show');
             const posDrop = document.getElementById('posDropdown');
@@ -255,7 +255,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // "All" Checkbox Mantığı
+    // "All" checkbox logic
     if (footAllCheckbox) {
         footAllCheckbox.addEventListener('change', function() {
             const isChecked = this.checked;
@@ -266,7 +266,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Alt Checkboxlar değişince
+    // When sub-checkboxes change
     footOptions.forEach(opt => {
         opt.addEventListener('change', function() {
             checkAllStatus();
@@ -295,7 +295,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ============================================================
-    // 4. POZİSYON FİLTRESİ (POSITION) MANTIĞI (YENİ)
+    // 4. POSITION FILTER LOGIC (NEW)
     // ============================================================
     const posDropdownBtn = document.getElementById('posDropdownBtn');
     const posDropdown = document.getElementById('posDropdown');
@@ -304,19 +304,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const posButtonLabel = document.getElementById('posButtonLabel');
     const posHiddenInputsContainer = document.getElementById('posHiddenInputs');
 
-    // Başlangıç Etiketi Güncelle
-    // (HTML tarafında 'checked' geldiği için sadece etiketi düzeltmemiz yeterli)
+    // Initialize label
+    // (Checked state comes from HTML, so only the label needs updating)
     if (posOptions.length > 0) {
         checkPosAllStatus();
         updatePosLabel();
     }
 
-    // Dropdown Aç/Kapa
+    // Toggle dropdown
     if (posDropdownBtn) {
         posDropdownBtn.addEventListener('click', function(e) {
             e.stopPropagation();
             posDropdown.classList.toggle('show');
-            // Diğerleri açıksa kapat
+            // Close other dropdowns if open
             if(document.getElementById('ageDropdown')) document.getElementById('ageDropdown').classList.remove('show');
             if(document.getElementById('footDropdown')) document.getElementById('footDropdown').classList.remove('show');
             if(document.getElementById('sortDropdown')) document.getElementById('sortDropdown').classList.remove('show');
@@ -324,7 +324,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // "All" Mantığı
+    // "All" logic
     if (posAllCheckbox) {
         posAllCheckbox.addEventListener('change', function() {
             const isChecked = this.checked;
@@ -333,7 +333,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Tekil Seçim Mantığı
+    // Single selection logic
     posOptions.forEach(opt => {
         opt.addEventListener('change', function() {
             checkPosAllStatus();
@@ -355,20 +355,20 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (checkedOpts.length === 0) {
             posButtonLabel.innerText = "None";
         } else if (checkedOpts.length === 1) {
-            // Sadece 1 tane seçiliyse ismini yaz
+            // If only one is selected, show its name
             posButtonLabel.innerText = checkedOpts[0].value;
         } else {
-            // Birden fazla ise sayı göster (Çok uzun olmasın diye)
+            // If multiple, show count (avoid long labels)
             posButtonLabel.innerText = `${checkedOpts.length} Selected`;
         }
     }
 
     // ============================================================
-    // 5. APPLY FILTER VE DIŞARI TIKLAMA (GÜNCELLENMİŞ)
+    // 5. APPLY FILTER AND OUTSIDE CLICK (UPDATED)
     // ============================================================
     if (applyBtn) {
         applyBtn.addEventListener('click', function() {
-            // A) Foot Verilerini Hazırla
+            // A) Prepare foot values
             if (footHiddenInputsContainer) {
                 footHiddenInputsContainer.innerHTML = '';
                 if (footAllCheckbox && !footAllCheckbox.checked) {
@@ -384,7 +384,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
-            // B) Position Verilerini Hazırla (YENİ)
+            // B) Prepare position values (NEW)
             if (posHiddenInputsContainer) {
                 posHiddenInputsContainer.innerHTML = '';
                 if (posAllCheckbox && !posAllCheckbox.checked) {
@@ -393,21 +393,21 @@ document.addEventListener('DOMContentLoaded', function() {
                         .forEach(opt => {
                             const input = document.createElement('input');
                             input.type = 'hidden';
-                            input.name = 'position'; // name='position' olmalı
+                            input.name = 'position'; // name must be 'position'
                             input.value = opt.value;
                             posHiddenInputsContainer.appendChild(input);
                         });
                 }
             }
 
-            // Formu Gönder
+            // Submit form
             const form = document.getElementById('filterForm');
             if (form) form.submit();
         });
     }
 
-    // Dışarı tıklayınca kapatma (Global)
-    // Tablodaki satirlari profil sayfasina yonlendir
+    // Close on outside click (global)
+    // Navigate table rows to the profile page
     const playerRows = document.querySelectorAll('.players-table .player-row[data-player-id]');
     playerRows.forEach((row) => {
         const playerId = row.getAttribute('data-player-id');
@@ -423,7 +423,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const dropdowns = [
             {box: document.getElementById('ageDropdown'), btn: document.getElementById('ageDropdownBtn')},
             {box: document.getElementById('footDropdown'), btn: document.getElementById('footDropdownBtn')},
-            {box: document.getElementById('posDropdown'), btn: document.getElementById('posDropdownBtn')}, // Yeni eklendi
+            {box: document.getElementById('posDropdown'), btn: document.getElementById('posDropdownBtn')}, // Newly added
             {box: document.getElementById('mvDropdown'), btn: document.getElementById('mvDropdownBtn')}, // Market Value
             {box: document.getElementById('sortDropdown'), btn: document.getElementById('sortDropdownBtn')}
         ];
@@ -436,17 +436,17 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // ============================================================
-    // 6. DIŞARI TIKLAYINCA KAPATMA (GLOBAL)
+    // 6. CLOSE ON OUTSIDE CLICK (GLOBAL)
     // ============================================================
     window.addEventListener('click', function(e) {
-        // Age Dropdown Kapatma
+        // Close age dropdown
         const ageDrop = document.getElementById('ageDropdown');
         const ageBtn = document.getElementById('ageDropdownBtn');
         if (ageDrop && ageBtn && !ageDrop.contains(e.target) && !ageBtn.contains(e.target)) {
             ageDrop.classList.remove('show');
         }
 
-        // Foot Dropdown Kapatma
+        // Close foot dropdown
         const footDrop = document.getElementById('footDropdown');
         const footBtn = document.getElementById('footDropdownBtn');
         if (footDrop && footBtn && !footDrop.contains(e.target) && !footBtn.contains(e.target)) {
@@ -455,7 +455,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // ============================================================
-    // 7. SIRALAMA (SORTING) MANTIĞI 
+    // 7. SORTING LOGIC
     // ============================================================
     const sortDropdownBtn = document.getElementById('sortDropdownBtn');
     const sortDropdown = document.getElementById('sortDropdown');
@@ -463,24 +463,24 @@ document.addEventListener('DOMContentLoaded', function() {
     const sortButtonLabel = document.getElementById('sortButtonLabel');
     const inputSort = document.getElementById('inputSort');
 
-    // Başlangıç Etiketini Ayarla
+    // Set initial label
     if (inputSort && inputSort.value) {
-        // Mevcut değere sahip item'ı bul ve etiketini al
+        // Find item with current value and read its label
         const currentItem = Array.from(sortItems).find(item => item.getAttribute('data-value') === inputSort.value);
         if (currentItem) {
             sortButtonLabel.innerText = currentItem.getAttribute('data-label');
-            // Seçili olana görsel bir stil ekleyebiliriz
+            // Add a visual style to the selected item
             currentItem.style.backgroundColor = '#f0f4f8';
             currentItem.style.fontWeight = 'bold';
         }
     }
 
-    // Dropdown Aç/Kapa
+    // Toggle dropdown
     if (sortDropdownBtn) {
         sortDropdownBtn.addEventListener('click', function(e) {
             e.stopPropagation();
             sortDropdown.classList.toggle('show');
-            // Diğerleri açıksa kapat
+            // Close other dropdowns if open
             if(document.getElementById('ageDropdown')) document.getElementById('ageDropdown').classList.remove('show');
             if(document.getElementById('footDropdown')) document.getElementById('footDropdown').classList.remove('show');
             if(document.getElementById('posDropdown')) document.getElementById('posDropdown').classList.remove('show');
@@ -488,28 +488,28 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Sıralama Seçimi
+    // Sorting selection
     sortItems.forEach(item => {
         item.addEventListener('click', function() {
             const value = this.getAttribute('data-value');
             
-            // Input'u güncelle
+            // Update input
             if (inputSort) inputSort.value = value;
             
-            // Formu hemen gönder (Sıralama genelde anlık olur)
-            // Ancak Apply Filter ile entegre olsun dersen burayı yorum satırı yapıp
-            // Apply butonuna basılmasını bekleyebilirsin.
-            // Kullanıcı deneyimi için sıralamanın hemen çalışması daha iyidir:
+            // Submit the form immediately (sorting is usually instant)
+            // If you want to integrate with Apply Filter, comment this out
+            // and wait for the Apply button.
+            // For UX, instant sorting is usually better:
             
-            // Foot ve Position verilerini hidden inputlara doldur (Form submit öncesi)
-            // (Aşağıdaki kod applyBtn logic'inin aynısıdır, formu göndermeden önce verileri tazeler)
+            // Fill hidden inputs for Foot and Position (before submit)
+            // (This mirrors applyBtn logic and refreshes data before submit)
             refreshHiddenInputs(); 
             
             document.getElementById('filterForm').submit();
         });
     });
 
-    // Yardımcı Fonksiyon: Formu göndermeden önce checkbox verilerini hidden inputlara doldurur
+    // Helper: populate hidden inputs from checkboxes before submit
     function refreshHiddenInputs() {
         const footContainer = document.getElementById('footHiddenInputs');
         const posContainer = document.getElementById('posHiddenInputs');
@@ -542,9 +542,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Dışarı tıklama olayına Sort dropdown'ı da ekle
+    // Include sort dropdown in outside click handling
     window.addEventListener('click', function(e) {
-        // ... (Eski kodlar) ...
+        // ... (Existing code) ...
         const sortDrop = document.getElementById('sortDropdown');
         const sortBtn = document.getElementById('sortDropdownBtn');
         if (sortDrop && sortBtn && !sortDrop.contains(e.target) && !sortBtn.contains(e.target)) {
@@ -553,18 +553,18 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     /* ============================================================
-    MARKET VALUE SLIDER MANTIĞI (Age Slider ile aynı yapı)
+    MARKET VALUE SLIDER LOGIC (same structure as Age Slider)
     ============================================================ */
     
     const mvContainer = document.getElementById('mvSliderContainer');
-    // if (!mvContainer) return; // BU SATIRI KALDIRDIM, diğer kodlar çalışsın diye.
+    // if (!mvContainer) return; // Keep disabled so the rest of the code runs.
 
-    // Verileri HTML data attribute'lardan al
+    // Read data from HTML data attributes
     if (mvContainer) {
         const gMin = parseInt(mvContainer.getAttribute('data-global-min')) || 0;
         const gMax = parseInt(mvContainer.getAttribute('data-global-max')) || 100000000;
         
-        // Seçili değerler yoksa global limitleri kullan
+        // If no selected values, use global limits
         let selMin = parseInt(mvContainer.getAttribute('data-min'));
         let selMax = parseInt(mvContainer.getAttribute('data-max'));
         if (isNaN(selMin)) selMin = gMin;
@@ -579,7 +579,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const inputMinMv = document.getElementById('inputMinMv');
         const inputMaxMv = document.getElementById('inputMaxMv');
         
-        // İki nokta oluştur (Min ve Max tutamaçları)
+        // Create two points (min/max handles)
         const pointMin = document.createElement('div');
         pointMin.className = 'slider-point';
         const pointMax = document.createElement('div');
@@ -588,12 +588,12 @@ document.addEventListener('DOMContentLoaded', function() {
         pointsContainer.appendChild(pointMin);
         pointsContainer.appendChild(pointMax);
 
-        // Sayıları formatlamak için yardımcı fonksiyon (1.000.000 gibi)
+        // Helper to format numbers (e.g. 1.000.000)
         function formatMoney(num) {
             return '€' + num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
         }
         
-        // Kısa format (1M, 500K gibi - Opsiyonel, buton etiketi için)
+        // Short format (1M, 500K - optional, for button label)
         function formatShort(num) {
             if(num >= 1000000) return (num/1000000).toFixed(1) + 'M';
             if(num >= 1000) return (num/1000).toFixed(0) + 'K';
@@ -605,15 +605,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const percentMin = ((selMin - gMin) / range) * 100;
             const percentMax = ((selMax - gMin) / range) * 100;
 
-            // Noktaların konumu (soldan yüzde)
+            // Point positions (percent from left)
             pointMin.style.left = percentMin + '%';
             pointMax.style.left = percentMax + '%';
 
-            // Aradaki dolgu çubuğu
+            // Fill bar between points
             fill.style.left = percentMin + '%';
             fill.style.width = (percentMax - percentMin) + '%';
 
-            // Buton etiketi güncelle
+            // Update button label
             if (selMin === gMin && selMax === gMax) {
                 labelBtn.innerText = "All";
                 inputMinMv.value = "";
@@ -625,7 +625,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        // Sürükleme Mantığı
+        // Drag logic
         let isDraggingMin = false;
         let isDraggingMax = false;
 
@@ -635,7 +635,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.addEventListener('mouseup', () => {
             isDraggingMin = false;
             isDraggingMax = false;
-            tooltip.style.opacity = '0'; // Bırakınca tooltip gizle
+            tooltip.style.opacity = '0'; // Hide tooltip on release
         });
 
         document.addEventListener('mousemove', (e) => {
@@ -643,7 +643,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const rect = track.getBoundingClientRect();
             let offsetX = e.clientX - rect.left;
-            // Sınırları koru
+            // Clamp to bounds
             if (offsetX < 0) offsetX = 0;
             if (offsetX > rect.width) offsetX = rect.width;
 
@@ -651,33 +651,33 @@ document.addEventListener('DOMContentLoaded', function() {
             const range = gMax - gMin;
             let value = Math.round(gMin + (range * percent));
 
-            // Adım aralığı (Step) ekleyelim (örneğin 100.000'er artsın)
+            // Apply step interval (e.g., 100,000 increments)
             const step = 100000;
             value = Math.round(value / step) * step;
 
             if (isDraggingMin) {
-                if (value >= selMax) value = selMax - step; // Max'ı geçemesin
+                if (value >= selMax) value = selMax - step; // Don't exceed max
                 if (value < gMin) value = gMin;
                 selMin = value;
             } else {
-                if (value <= selMin) value = selMin + step; // Min'den küçük olamasın
+                if (value <= selMin) value = selMin + step; // Don't go below min
                 if (value > gMax) value = gMax;
                 selMax = value;
             }
 
             updateUI();
             
-            // Tooltip güncelle
+            // Update tooltip
             tooltip.style.opacity = '1';
             tooltip.innerText = formatMoney(isDraggingMin ? selMin : selMax);
             tooltip.style.left = (isDraggingMin ? pointMin.style.left : pointMax.style.left);
         });
 
-        // İlk yüklemede UI güncelle
+        // Update UI on initial load
         updateUI();
     }
 
-    // Slider buton açma kapama (En sona taşıdım)
+    // Slider button toggle (moved to the end)
     const mvBtn = document.getElementById('mvDropdownBtn');
     const mvDrop = document.getElementById('mvDropdown');
     
@@ -685,7 +685,7 @@ document.addEventListener('DOMContentLoaded', function() {
         mvBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             mvDrop.classList.toggle('show');
-            // Diğer dropdownları kapat (Varsa)
+            // Close other dropdowns (if any)
             if(document.getElementById('ageDropdown')) document.getElementById('ageDropdown').classList.remove('show');
             if(document.getElementById('footDropdown')) document.getElementById('footDropdown').classList.remove('show');
             if(document.getElementById('posDropdown')) document.getElementById('posDropdown').classList.remove('show');

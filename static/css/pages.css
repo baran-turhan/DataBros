@@ -219,29 +219,29 @@ body {
 }
 
 /* -------------------------------------------------------- */
-/* --- FİLTRE VE SLIDER CSS KODLARI --- */
+/* --- FILTER AND SLIDER STYLES --- */
 /* -------------------------------------------------------- */
 
-/* GÜNCELLENEN KISIM: Filter Bar'ı ortalar ve küçültür */
+/* Updated section: centers and tightens the filter bar */
 .filter-bar {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 20px;
     
-    /* GÜNCELLENEN KISIM: Daha geniş ve sabit bir yapı */
-    width: 100%;           /* Container'a tam otursun */
-    max-width: 1100px;     /* Çok geniş ekranlarda da dağılmasın */
-    min-width: 600px;      /* İçerik değişince daralmayı önle */
+    /* Updated section: wider, stable layout */
+    width: 100%;           /* Fill the container */
+    max-width: 1100px;     /* Avoid spreading on very wide screens */
+    min-width: 600px;      /* Prevent shrinking when content changes */
     margin: 0 auto 30px;   
     flex-wrap: wrap;       
     
     background: white;
-    padding: 15px 30px;    /* Padding'i biraz artırdık */
+    padding: 15px 30px;    /* Slightly increased padding */
     border-radius: 15px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     
-    /* İçerik değişince titremeyi önlemek için min-height */
+    /* Min-height prevents jitter when content changes */
     min-height: 80px;      
 }
 
@@ -322,7 +322,7 @@ body {
     font-weight: 600;
 }
 
-/* Slider Noktası (İçi Dolu, Çizgi Üstünde) */
+/* Slider point (filled, above the track) */
 .slider-point {
     width: 14px;          
     height: 14px;
@@ -331,7 +331,7 @@ body {
     border-radius: 50%;
     position: absolute;
     
-    /* 20px padding + 2px (yarım çizgi) = 22px */
+    /* 20px padding + 2px (half-track) = 22px */
     top: 22px;             
     
     transform: translate(-50%, -50%);

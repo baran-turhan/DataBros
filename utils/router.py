@@ -12,7 +12,7 @@ def _json_safe(value):
     return value
 
 def base_page():
-    """Ana sayfa için verileri çeker ve render eder."""
+    """Fetches data for the home page and renders it."""
     # Major leagues (top 8 for featured section)
     major_leagues = database.get_all_competitions(is_major_league=True)[:8]
     
@@ -37,7 +37,7 @@ def transfers_page():
     player_query = (request.args.get("player_name") or "").strip()
     per_page = 20
 
-    # Sezonlar kısaltılmış formatta (ör: 24/25) tutuluyor
+    # Seasons are stored in short format (e.g. 24/25).
     seasons = [f"{str(y)[-2:]}/{str(y+1)[-2:]}" for y in range(2025, 2000, -1)]
 
     def _format_league_name(name: str) -> str:
@@ -146,7 +146,7 @@ def players_page():
     page = request.args.get('page', 1, type=int)
     per_page = 100
     
-    # Mevcut filtreler
+    # Current filters
     min_age = request.args.get('min_age', type=int)
     max_age = request.args.get('max_age', type=int)
     selected_feet = request.args.getlist('foot')
@@ -154,20 +154,20 @@ def players_page():
     sort_option = request.args.get('sort', 'name_asc')
     search_query = request.args.get('search', '')
     
-    # --- YENİ: Market Value filtrelerini al ---
+    # --- NEW: read market value filters ---
     min_mv = request.args.get('min_mv', type=int)
     max_mv = request.args.get('max_mv', type=int)
     # -----------------------------------------
     
-    # Veritabanı fonksiyonuna yeni parametreleri ekle
+    # Pass new parameters into the database function
     players, total_count = database.get_all_players(
         page, per_page, min_age, max_age, selected_feet, selected_positions, sort_option, search_query, 
-        min_mv, max_mv # <--- Yeni eklendi
+        min_mv, max_mv # <--- Newly added
     )
     
     global_min_age, global_max_age = database.get_age_limits()
     
-    # --- YENİ: Global Market Value limitlerini al ---
+    # --- NEW: read global market value limits ---
     global_min_mv, global_max_mv = database.get_market_value_limits()
     # -----------------------------------------------
     
@@ -188,7 +188,7 @@ def players_page():
         current_sort=sort_option,
         all_positions=all_positions,
         search_query=search_query,
-        # --- YENİLERİ HTML'E GÖNDER ---
+        # --- PASS NEW VALUES TO THE TEMPLATE ---
         selected_min_mv=min_mv,
         selected_max_mv=max_mv,
         global_min_mv=global_min_mv,
@@ -225,7 +225,7 @@ def games_page():
     year_summary = None
     total_results = 0
 
-    # Kulüp listesi head-to-head formu için
+    # Club list for the head-to-head form
     club_options = database.get_club_options()
     club_name_map = {c["club_id"]: c["name"] for c in club_options} if club_options else {}
     opponent_options = []
@@ -259,7 +259,7 @@ def games_page():
         )
         year_summary = database.get_game_year_summary(selected_year)
 
-    # Gol farkı bilgisini önden hesaplayıp front-end'de filtreleme için saklıyoruz
+    # Precompute goal difference for front-end filtering
     for game in games:
         if game.get("goal_difference") is None:
             home_goals = game.get("home_club_goals")
@@ -322,14 +322,14 @@ def get_opponents_for_club_api(club_id: int):
     return jsonify({"opponents": opponents or []})
 
 def update_game_favorite(game_id: int):
-    """Bir maçı favori olarak işaretler."""
+    """Marks a match as favorite."""
     success = database.set_game_favorite(game_id, True)
     if not success:
-        return jsonify({"success": False, "message": "Güncelleme yapılamadı."}), 500
+        return jsonify({"success": False, "message": "Update failed."}), 500
     return jsonify({"success": True, "is_favorite": True})
 
 def update_transfer(transfer_id: int):
-    """Transfer kaydını günceller."""
+    """Updates a transfer record."""
     payload = request.get_json(silent=True) or {}
 
     def _parse_int(val, field):
@@ -357,7 +357,7 @@ def update_transfer(transfer_id: int):
 
 
 def delete_transfer(transfer_id: int):
-    """Transfer kaydını siler."""
+    """Deletes a transfer record."""
     deleted = database.delete_transfer(transfer_id)
     if not deleted:
         return jsonify({"success": False, "message": "Delete failed."}), 404
@@ -365,7 +365,7 @@ def delete_transfer(transfer_id: int):
 
 
 def update_game(game_id: int):
-    """Maç verisini günceller."""
+    """Updates a match record."""
     payload = request.get_json(silent=True) or {}
 
     def _parse_int(val, field):
@@ -407,14 +407,14 @@ def update_game(game_id: int):
 
 
 def delete_game(game_id: int):
-    """Maç kaydını siler."""
+    """Deletes a match record."""
     deleted = database.delete_game(game_id)
     if not deleted:
         return jsonify({"success": False, "message": "Delete failed."}), 404
     return jsonify({"success": True})
 
 def update_competition(competition_id: str):
-    """Lig verisini günceller."""
+    """Updates a league record."""
     payload = request.get_json(silent=True) or {}
 
     def _parse_bool(val):
@@ -449,14 +449,14 @@ def update_competition(competition_id: str):
 
 
 def delete_competition(competition_id: str):
-    """Lig kaydını siler."""
+    """Deletes a league record."""
     deleted = database.delete_competition(competition_id)
     if not deleted:
         return jsonify({"success": False, "message": "Delete failed."}), 404
     return jsonify({"success": True})
 
 def competitions_page():
-    """Mücadeleler sayfasını render eder ve veritabanından mücadele verilerini çeker."""
+    """Renders the competitions page and fetches competition data from the database."""
     selected_country = request.args.get("country")
     is_major_league_param = request.args.get("is_major_league")
     countries = database.get_all_countries()
@@ -484,7 +484,7 @@ def competitions_page():
     )
 
 def competition_clubs_api(competition_id: str):
-    """Belirli bir ligdeki kulüpleri JSON olarak döner."""
+    """Returns clubs for a given league as JSON."""
     clubs = database.get_clubs_by_competition(competition_id)
     return jsonify({"clubs": clubs or []})
 
@@ -542,7 +542,7 @@ def admin_page():
     )
 
 def clubs_page():
-    """Kulüpler sayfasını render eder ve veritabanından kulüp verilerini çeker."""
+    """Renders the clubs page and fetches club data from the database."""
     filters_metadata = database.get_club_filter_metadata()
 
     search_query = (request.args.get("search") or "").strip()
@@ -611,14 +611,14 @@ def clubs_page():
 
 
 def club_players_api(club_id: int):
-    """Secilen kulup icin oyuncu listesini JSON olarak doner."""
+    """Returns player list for the selected club as JSON."""
     players = database.get_players_by_club(club_id)
     players = [{k: _json_safe(v) for k, v in row.items()} for row in (players or [])]
     return jsonify({"players": players, "count": len(players)})
 
 
 def club_detail_api(club_id: int):
-    """Tek bir kulüp satırını ve kolon şemasını JSON olarak döner (modal için)."""
+    """Returns a single club row and column schema as JSON (for the modal)."""
     club = database.get_club_by_id(club_id)
     if not club:
         return jsonify({"error": "Club not found."}), 404
@@ -629,7 +629,7 @@ def club_detail_api(club_id: int):
 
 
 def club_update_api(club_id: int):
-    """Kulüp satırını günceller."""
+    """Updates a club row."""
     payload = request.get_json(silent=True) or {}
     values = payload.get("values") or {}
     if not isinstance(values, dict):
@@ -672,11 +672,11 @@ def club_update_api(club_id: int):
 
 
 def club_delete_api(club_id: int):
-    """Kulüp satırını siler."""
+    """Deletes a club row."""
     ok, err = database.delete_club(club_id)
     if not ok:
         msg = err or "Delete failed."
-        # FK ihlali gibi durumlarda 409 daha uygun
+        # 409 is more appropriate for FK violations
         status = 409 if "foreign key" in msg.lower() else 400
         return jsonify({"error": msg}), status
     return jsonify({"success": True})

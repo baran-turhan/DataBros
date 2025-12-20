@@ -18,7 +18,7 @@ def _game_sort_clause(sort_by: str) -> str:
     return "ORDER BY g.date ASC, g.game_id ASC"
 
 def get_club_options():
-    """Kulüp seçim listesi için sadece id ve isim döner."""
+    """Returns only id and name for the club selection list."""
     conn = None
     try:
         conn = get_conn()
@@ -42,7 +42,7 @@ def get_club_options():
             conn.close()
 
 def get_player_options():
-    """Transfer düzenleme formu için oyuncu listesini döner."""
+    """Returns player list for the transfer edit form."""
     conn = None
     try:
         conn = get_conn()
@@ -66,7 +66,7 @@ def get_player_options():
             conn.close()
 
 def get_opponents_for_club(club_id: int):
-    """Bir kulübün karşılaştığı rakipleri (id, isim) döner."""
+    """Returns opponents a club has faced (id, name)."""
     if not club_id:
         return []
 
@@ -104,7 +104,7 @@ def get_opponents_for_club(club_id: int):
             conn.close()
 
 def get_game_year_summary(year: int):
-    """Belirli bir yılın maç istatistiklerini döner (toplam maç, goller, ortalamalar)."""
+    """Returns match stats for a given year (total matches, goals, averages)."""
     if not year:
         return None
 
@@ -170,7 +170,7 @@ def get_game_year_summary(year: int):
             conn.close()
 
 def get_head_to_head(club_a_id: int, club_b_id: int, limit: int = 5):
-    """İki kulüp arasındaki head-to-head istatistiklerini ve son maçları döner."""
+    """Returns head-to-head stats and recent matches between two clubs."""
     if not club_a_id or not club_b_id or club_a_id == club_b_id:
         return None, []
 
@@ -268,7 +268,7 @@ def get_head_to_head(club_a_id: int, club_b_id: int, limit: int = 5):
             conn.close()
 
 def get_conn():
-    """PostgreSQL bağlantısını oluşturur."""
+    """Creates a PostgreSQL connection."""
     DB_URL = os.getenv("DATABASE_URL")
     # print(DB_URL)
     if not DB_URL:
@@ -276,7 +276,7 @@ def get_conn():
     return psycopg2.connect(DB_URL)
 
 def get_all_clubs():
-    """Tüm kulüpleri veritabanından çeker."""
+    """Fetches all clubs from the database."""
     conn = None
     try:
         conn = get_conn()
@@ -332,7 +332,7 @@ def get_all_clubs():
             conn.close()
 
 def get_club_filter_metadata():
-    """Kulüp filtreleri için lig listesi ve min/max özetleri döner."""
+    """Returns league list and min/max summaries for club filters."""
     conn = None
     try:
         conn = get_conn()
@@ -383,7 +383,7 @@ def get_club_filter_metadata():
             conn.close()
 
 def get_clubs_filtered(search=None, league=None, min_age=None, max_age=None, min_capacity=None, max_capacity=None):
-    """Filtrelere göre kulüp verilerini döner."""
+    """Returns club data based on filters."""
     conn = None
     try:
         conn = get_conn()
@@ -466,7 +466,7 @@ def get_clubs_filtered(search=None, league=None, min_age=None, max_age=None, min
             conn.close()
 
 def get_club_by_id(club_id: int):
-    """Tek bir kulüp satırını (clubs tablosu) döner."""
+    """Returns a single club row (clubs table)."""
     if not club_id:
         return None
 
@@ -487,7 +487,7 @@ def get_club_by_id(club_id: int):
 
 
 def update_club(club_id: int, values: dict):
-    """clubs tablosunda tek bir satırı günceller ve güncellenmiş satırı döner."""
+    """Updates a single row in the clubs table and returns the updated row."""
     if not club_id or not values:
         return None
 
@@ -527,7 +527,7 @@ def update_club(club_id: int, values: dict):
 
 
 def delete_club(club_id: int):
-    """clubs tablosundan tek bir satırı siler."""
+    """Deletes a single row from the clubs table."""
     if not club_id:
         return False, "Invalid club id."
 
@@ -553,7 +553,7 @@ def delete_club(club_id: int):
 
 
 def get_clubs_by_competition(competition_id: str):
-    """Seçilen ligdeki kulüpleri döner."""
+    """Returns clubs in the selected league."""
     conn = None
     try:
         conn = get_conn()
@@ -586,7 +586,7 @@ def get_clubs_by_competition(competition_id: str):
             conn.close()
 
 def get_all_competitions(country_name=None, is_major_league=None):
-    """Tüm mücadeleleri veritabanından çeker. İsteğe bağlı olarak ülke adına ve major league durumuna göre filtreler."""
+    """Fetches all competitions, optionally filtered by country name and major league status."""
     conn = None
     try:
         conn = get_conn()
@@ -626,7 +626,7 @@ def get_all_competitions(country_name=None, is_major_league=None):
             conn.close()
 
 def get_all_countries():
-    """Tüm ülkeleri veritabanından çeker (mücadeleleri olan ülkeler)."""
+    """Fetches all countries from the database (countries with competitions)."""
     conn = None
     try:
         conn = get_conn()
@@ -651,7 +651,7 @@ def get_all_countries():
             conn.close()
 
 def get_transfer_leagues():
-    """Transfers için lig listesini ülkeye göre sıralı döner, 'Europa' hariç."""
+    """Returns transfer leagues sorted by country, excluding 'Europa'."""
     conn = None
     try:
         conn = get_conn()
@@ -685,7 +685,7 @@ def get_transfers(
     from_league=None,
     to_league=None,
 ):
-    """Transferleri isteğe göre filtreleyip sıralar, opsiyonel sayfalama uygular."""
+    """Filters and sorts transfers with optional pagination."""
     conn = None
     try:
         conn = get_conn()
@@ -778,7 +778,7 @@ def get_transfers(
 
 
 def get_transfers_by_player_name(player_name: str):
-    """Belirtilen oyuncu adını içeren transferleri kronolojik sıralı döner."""
+    """Returns transfers containing the given player name in chronological order."""
     if not player_name:
         return []
 
@@ -829,7 +829,7 @@ def get_transfers_by_player_name(player_name: str):
 
 
 def update_transfer(transfer_id: int, payload: dict) -> bool:
-    """Transfer kaydını günceller."""
+    """Updates a transfer record."""
     if not transfer_id:
         return False
 
@@ -868,7 +868,7 @@ def update_transfer(transfer_id: int, payload: dict) -> bool:
 
 
 def delete_transfer(transfer_id: int) -> bool:
-    """Transfer kaydını siler."""
+    """Deletes a transfer record."""
     if not transfer_id:
         return False
 
@@ -892,7 +892,7 @@ def delete_transfer(transfer_id: int) -> bool:
 
 
 def get_table_schemas():
-    """Public schema tablolarını ve sütun bilgilerini döner."""
+    """Returns public schema tables and column metadata."""
     conn = None
     try:
         conn = get_conn()
@@ -944,7 +944,7 @@ def get_table_schemas():
 
 
 def get_table_schema(table_name: str):
-    """Tek bir tablo için kolon şemasını döner."""
+    """Returns column schema for a single table."""
     if not table_name:
         return None
 
@@ -988,7 +988,7 @@ def get_table_schema(table_name: str):
 
 
 def insert_row(table_name: str, values: dict):
-    """Belirtilen tabloya satır ekler; sütunlar dinamik belirlenir."""
+    """Inserts a row into the specified table; columns are determined dynamically."""
     if not table_name or not values:
         return False
 
@@ -1017,7 +1017,7 @@ def insert_row(table_name: str, values: dict):
             conn.close()
 
 def get_games_by_year(year: int, sort_by: str = "date", page: int = 1, per_page: int = 100):
-    """Belirli bir yıl için maçları getirir (sayfalı)."""
+    """Fetches matches for a given year (paginated)."""
     if not year:
         return [], 0
 
@@ -1093,7 +1093,7 @@ def get_favorite_games(
     page: int = 1,
     per_page: int = 100,
 ):
-    """Favori olarak işaretlenmiş maçları getirir. İsteğe bağlı yıl filtresi uygular (sayfalı)."""
+    """Fetches favorited matches with optional year filter (paginated)."""
     conn = None
     try:
         conn = get_conn()
@@ -1170,7 +1170,7 @@ def get_favorite_games(
             conn.close()
 
 def set_game_favorite(game_id: int, is_favorite: bool = True) -> bool:
-    """Bir maçı favori olarak işaretler veya kaldırır."""
+    """Marks or unmarks a match as favorite."""
     conn = None
     try:
         conn = get_conn()
@@ -1193,7 +1193,7 @@ def set_game_favorite(game_id: int, is_favorite: bool = True) -> bool:
 
 
 def get_competition_options():
-    """Maç düzenleme formu için basit competition listesi döner."""
+    """Returns a basic competition list for the match edit form."""
     conn = None
     try:
         conn = get_conn()
@@ -1217,7 +1217,7 @@ def get_competition_options():
 
 
 def update_game(game_id: int, payload: dict) -> bool:
-    """Oyun kaydını günceller."""
+    """Updates a game record."""
     conn = None
     try:
         conn = get_conn()
@@ -1265,7 +1265,7 @@ def update_game(game_id: int, payload: dict) -> bool:
 
 
 def delete_game(game_id: int) -> bool:
-    """Oyun kaydını siler."""
+    """Deletes a game record."""
     conn = None
     try:
         conn = get_conn()
@@ -1285,7 +1285,7 @@ def delete_game(game_id: int) -> bool:
             conn.close()
 
 def update_competition(competition_id: str, payload: dict) -> bool:
-    """Lig kaydını günceller."""
+    """Updates a league record."""
     conn = None
     try:
         conn = get_conn()
@@ -1320,7 +1320,7 @@ def update_competition(competition_id: str, payload: dict) -> bool:
 
 
 def delete_competition(competition_id: str) -> bool:
-    """Lig kaydını siler."""
+    """Deletes a league record."""
     conn = None
     try:
         conn = get_conn()
@@ -1353,7 +1353,7 @@ def delete_competition(competition_id: str) -> bool:
 
 def get_all_players(page=1, per_page=100, min_age=None, max_age=None, feet=None, positions=None, sort_option="name_asc", search_query=None, min_mv=None, max_mv=None):
     """
-    Sayfa, yaş, ayak, pozisyon, sıralama ve ARAMA SORGUSUNA göre oyuncuları çeker.
+    Fetches players by page, age, foot, position, sort order, and search query.
     """
     conn = None
     try:
@@ -1363,14 +1363,14 @@ def get_all_players(page=1, per_page=100, min_age=None, max_age=None, feet=None,
         base_where = "WHERE 1=1"
         params = []
 
-        # --- YENİ EKLENEN: ARAMA SORGUSU ---
+        # --- NEW: SEARCH QUERY ---
         if search_query:
-            # ILIKE: Büyük/Küçük harf duyarsız 'içinde geçiyor mu' araması
+            # ILIKE: case-insensitive "contains" search
             base_where += " AND p.name ILIKE %s"
             params.append(f"%{search_query}%")
         # -----------------------------------
 
-        # 1. Filtreler (Mevcut kodlar)
+        # 1. Filters (existing logic)
         if min_age is not None:
             base_where += " AND DATE_PART('year', AGE(CURRENT_DATE, p.date_of_birth)) >= %s"
             params.append(min_age)
@@ -1399,24 +1399,24 @@ def get_all_players(page=1, per_page=100, min_age=None, max_age=None, feet=None,
                 base_where += " AND p.sub_position = ANY(%s)"
                 params.append(positions)
 
-        # 2. Sıralama
+        # 2. Sorting
         order_clause = "ORDER BY p.name ASC"
         if sort_option == "name_desc": order_clause = "ORDER BY p.name DESC"
         elif sort_option == "age_asc": order_clause = "ORDER BY p.date_of_birth DESC NULLS LAST"
         elif sort_option == "age_desc": order_clause = "ORDER BY p.date_of_birth ASC NULLS LAST"
         elif sort_option == "height_asc": order_clause = "ORDER BY p.height_in_cm ASC NULLS LAST"
         elif sort_option == "height_desc": order_clause = "ORDER BY p.height_in_cm DESC NULLS LAST"
-        elif sort_option == "mv_desc": # € High (Pahalıdan ucuza)
+        elif sort_option == "mv_desc": # € High (expensive to cheap)
             order_clause = "ORDER BY p.market_value_in_eur DESC NULLS LAST"
-        elif sort_option == "mv_asc":  # € Low (Ucuzdan pahalıya)
+        elif sort_option == "mv_asc":  # € Low (cheap to expensive)
             order_clause = "ORDER BY p.market_value_in_eur ASC NULLS LAST"
 
-        # 3. Toplam Sayı (Arama sonuçlarına göre toplam sayfa sayısını hesaplamak için önemli)
+        # 3. Total count (needed to compute total pages for search results)
         count_query = f"SELECT COUNT(*) as total FROM players p {base_where}"
         cur.execute(count_query, params)
         total_count = cur.fetchone()['total']
 
-        # 4. Veri Çekme
+        # 4. Data fetch
         offset = (page - 1) * per_page
         
         query = f"""
@@ -1456,7 +1456,7 @@ def get_all_players(page=1, per_page=100, min_age=None, max_age=None, feet=None,
 
 
 def get_players_by_club(club_id: int):
-    """Secilen kulup kadrosunu doner."""
+    """Returns the selected club roster."""
     if not club_id:
         return []
 
@@ -1501,7 +1501,7 @@ def get_players_by_club(club_id: int):
 
 
 def get_player_by_id(player_id: int):
-    """Tek bir oyuncu kaydini (kulup ve lig bilgisi ile) getirir."""
+    """Returns a single player record with club and league details."""
     if not player_id:
         return None
 
@@ -1543,13 +1543,13 @@ def get_player_by_id(player_id: int):
 
 
 def get_age_limits():
-    """Veritabanındaki en küçük ve en büyük yaşı hesaplar."""
+    """Computes the min and max age in the database."""
     conn = None
     try:
         conn = get_conn()
         cur = conn.cursor()
         
-        # En küçük ve en büyük yaşı hesaplayan sorgu
+        # Query to compute min and max age
         query = """
             SELECT 
                 MIN(DATE_PART('year', AGE(CURRENT_DATE, date_of_birth)))::INTEGER as min_age,
@@ -1562,7 +1562,7 @@ def get_age_limits():
         result = cur.fetchone()
         cur.close()
         
-        # Eğer veri yoksa varsayılan olarak 15-45 döndür
+        # If no data, default to 15-45
         if result and result[0] is not None:
             return result[0], result[1]
         return 15, 45
@@ -1575,13 +1575,13 @@ def get_age_limits():
             conn.close()
 
 def get_market_value_limits():
-    """Veritabanındaki en küçük ve en büyük piyasa değerini çeker."""
+    """Fetches the min and max market value in the database."""
     conn = None
     try:
         conn = get_conn()
         cur = conn.cursor()
         
-        # 0'dan büyük değerleri baz alalım
+        # Use values greater than 0
         query = """
             SELECT 
                 MIN(market_value_in_eur),
@@ -1594,10 +1594,10 @@ def get_market_value_limits():
         result = cur.fetchone()
         cur.close()
         
-        # Veri yoksa varsayılan değerler
+        # Default values when no data
         if result and result[0] is not None:
             return result[0], result[1]
-        return 0, 100000000 # Varsayılan 0 - 100M
+        return 0, 100000000 # Default 0 - 100M
         
     except Exception as e:
         print(f"Database error (get_market_value_limits): {e}")
@@ -1607,12 +1607,12 @@ def get_market_value_limits():
             conn.close()
 
 def get_all_positions():
-    """Veritabanındaki tüm benzersiz pozisyonları (sub_position) çeker."""
+    """Fetches all unique positions (sub_position) from the database."""
     conn = None
     try:
         conn = get_conn()
         print("1")
-        cur = conn.cursor() # Dict cursor gerekmez, sadece liste döneceğiz
+        cur = conn.cursor() # Dict cursor not needed; returning a list only
         
         query = """
             SELECT DISTINCT sub_position 
@@ -1633,7 +1633,7 @@ def get_all_positions():
             conn.close()
 
 def get_statistics():
-    """Ana sayfa için istatistikleri döner (toplam oyuncu, takım, lig, transfer sayıları)."""
+    """Returns stats for the home page (total players, teams, leagues, transfers)."""
     conn = None
     try:
         conn = get_conn()

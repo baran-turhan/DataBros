@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -10,11 +10,11 @@
     />
     {% block extra_head %}{% endblock %}
     <style>
-      /* Üst beyaz navbar */
+      /* Top white navbar */
       .navbar {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-        background-color: #fff; /* Şerit beyaz */
+        background-color: #fff; /* White strip */
         height: 70px;
         align-items: center;
         text-align: center;
@@ -27,10 +27,10 @@
         align-items: center;
         height: 100%;
         text-decoration: none;
-        background: #fff; /* Sekme zemini beyaz */
-        color: #1e3c72; /* Yazı rengi: arka plan paleti */
+        background: #fff; /* White tab background */
+        color: #1e3c72; /* Text color: background palette */
         font-size: 1.1rem;
-        font-weight: 500; /* normal (kalın değil) */
+        font-weight: 500; /* Normal (not bold) */
         transition: background 0.2s ease, color 0.2s ease;
       }
 
@@ -38,10 +38,10 @@
         background-color: rgba(30, 60, 114, 0.06);
       }
 
-      /* İlk sekme: yalnızca yazı kalın */
+      /* First tab: only text is bold */
       .navbar a.brand {
-        font-weight: 800; /* kalın */
-        color: #1e3c72; /* arka plan paleti ile aynı */
+        font-weight: 800; /* Bold */
+        color: #1e3c72; /* Same as background palette */
       }
     </style>
   </head>

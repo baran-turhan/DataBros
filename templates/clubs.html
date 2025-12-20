@@ -1,6 +1,6 @@
 ﻿{% extends 'layout.html' %}
 
-{% block title %}Kulüpler{% endblock %}
+{% block title %}Clubs{% endblock %}
 
 {% block extra_head %}
 <style>
@@ -864,8 +864,8 @@
 {% block content %}
 <div class="container clubs-page">
     <div class="page-hero">
-        <h1>⚽ Kulüpler Panosu</h1>
-        <p>Kadro, yaş ortalaması ve stat detaylarıyla dünya kulüplerini keşfedin.</p>
+        <h1>⚽ Clubs Dashboard</h1>
+        <p>Discover clubs worldwide with squad size, average age, and stadium details.</p>
     </div>
 
     {% set min_age_value = selected_min_age if selected_min_age is not none else (min_age if min_age is not none else 16) %}
@@ -877,39 +877,39 @@
         <input type="hidden" name="submitted" value="1">
         <div class="filters-grid">
             <div class="filter-group">
-                <label for="searchInput">Kulüp Ara</label>
-                <input type="text" id="searchInput" name="search" placeholder="Örn: Barcelona, Galatasaray, Arsenal..." value="{{ search_query or '' }}">
+                <label for="searchInput">Search Clubs</label>
+                <input type="text" id="searchInput" name="search" placeholder="e.g., Barcelona, Galatasaray, Arsenal..." value="{{ search_query or '' }}">
             </div>
             <div class="filter-group">
-                <label for="leagueFilter">Lig</label>
+                <label for="leagueFilter">League</label>
                 <select id="leagueFilter" name="league">
-                    <option value="">Tüm Ligler</option>
+                    <option value="">All Leagues</option>
                     {% for league in leagues %}
                         <option value="{{ league|lower }}" {% if selected_league and selected_league|lower == league|lower %}selected{% endif %}>{{ league }}</option>
                     {% endfor %}
                 </select>
             </div>
             <div class="filter-group">
-                <label>Ortalama Yaş</label>
+                <label>Average Age</label>
                 <div class="range-inputs">
                     <input type="number" id="minAge" name="min_age" step="0.1" min="0" value="{{ '%.1f'|format(min_age_value) }}">
                     <span class="range-sep">-</span>
                     <input type="number" id="maxAge" name="max_age" step="0.1" min="0" value="{{ '%.1f'|format(max_age_value) }}">
                 </div>
-                <div class="filter-note">Yaş ortalaması aralığını belirle</div>
+                <div class="filter-note">Set the average age range</div>
             </div>
             <div class="filter-group">
-                <label>Stadyum Kapasitesi</label>
+                <label>Stadium Capacity</label>
                 <div class="range-inputs">
                     <input type="number" id="minCapacity" name="min_capacity" min="0" value="{{ min_capacity_value }}">
                     <span class="range-sep">-</span>
                     <input type="number" id="maxCapacity" name="max_capacity" min="0" value="{{ max_capacity_value }}">
                 </div>
-                <div class="filter-note">Tribün büyüklüğüne göre filtrele</div>
+                <div class="filter-note">Filter by stadium size</div>
             </div>
         </div>
         <div class="filter-actions">
-            <button type="submit" id="applyFilters" class="apply-filters-btn">Filtreleri Uygula</button>
+            <button type="submit" id="applyFilters" class="apply-filters-btn">Apply Filters</button>
         </div>
     </form>
 
@@ -919,8 +919,8 @@
             <div 
                 class="club-card fade-in" 
                 data-club-id="{{ club.club_id }}"
-                data-club-name="{% if club.name %}{{ club.name|lower }}{% else %}bilinmeyen{% endif %}"
-                data-league="{{ (club.league_name or 'bilinmeyen lig')|lower }}"
+                data-club-name="{% if club.name %}{{ club.name|lower }}{% else %}unknown{% endif %}"
+                data-league="{{ (club.league_name or 'unknown league')|lower }}"
                 data-average-age="{{ club.average_age if club.average_age is not none else '' }}"
                 data-stadium-capacity="{{ club.stadium_capacity if club.stadium_capacity is not none else '' }}"
                 data-squad-size="{{ club.squad_size if club.squad_size is not none else '' }}"
@@ -941,9 +941,9 @@
                         {% endif %}
                     </div>
                     <div>
-                        <h2 class="club-name">{{ club.name or 'Bilinmeyen Kulüp' }}</h2>
+                        <h2 class="club-name">{{ club.name or 'Unknown Club' }}</h2>
                         <div class="league-badge">
-                            {{ club.league_name or 'Lig bilgisi yok' }}
+                            {{ club.league_name or 'No league info' }}
                             {% if club.league_country %}
                                 <small>({{ club.league_country }})</small>
                             {% endif %}
@@ -953,11 +953,11 @@
 
                 <div class="club-info">
                     <div class="info-item">
-                        <span class="info-label">Kadro Büyüklüğü</span>
+                        <span class="info-label">Squad Size</span>
                         <span class="info-value">{{ club.roster_player_count if club.roster_player_count is not none else (club.squad_size if club.squad_size else 'N/A') }}</span>
                     </div>
                     <div class="info-item">
-                        <span class="info-label">Ortalama Yaş</span>
+                        <span class="info-label">Average Age</span>
                         <span class="info-value">
                             {% if club.average_age %}
                                 {{ '%.1f'|format(club.average_age) }}
@@ -972,7 +972,7 @@
                 <div class="stadium-info">
                     <div class="stadium-name">🏟️ {{ club.stadium_name }}</div>
                     {% if club.stadium_capacity %}
-                    <div class="stadium-capacity">Kapasite: {{ '{:,}'.format(club.stadium_capacity) }} kişi</div>
+                    <div class="stadium-capacity">Capacity: {{ '{:,}'.format(club.stadium_capacity) }} seats</div>
                     {% endif %}
                 </div>
                 {% endif %}
@@ -980,17 +980,17 @@
                 <div class="stats-grid">
                     <div class="stat-item">
                         <div class="stat-value">{{ club.foreign_number if club.foreign_number else 0 }}</div>
-                        <div class="stat-label">Yabancı</div>
+                        <div class="stat-label">Foreign</div>
                     </div>
 	                    <div class="stat-item">
 	                        <div class="stat-value">{{ club.national_number if club.national_number else 0 }}</div>
-	                        <div class="stat-label">Milli</div>
+	                        <div class="stat-label">Domestic</div>
 	                    </div>
 	                    <div class="stat-item">
 	                        <div class="stat-value">
 	                            {{ club.roster_player_count if club.roster_player_count is not none else (club.squad_size if club.squad_size else 'N/A') }}
 	                        </div>
-	                        <div class="stat-label">Kadro</div>
+	                        <div class="stat-label">Squad</div>
 	                    </div>
                     <div class="stat-item">
                         <div class="stat-value">
@@ -1001,13 +1001,13 @@
                                 N/A
                             {% endif %}
                         </div>
-                        <div class="stat-label">En Degerli</div>
+                        <div class="stat-label">Top Value</div>
                     </div>
                 </div>
 
                 {% if club.most_valuable_player_name %}
                 <div class="stadium-info" style="margin-top: 10px;">
-                    <div class="stadium-name">En Degerli Oyuncu: {{ club.most_valuable_player_name }}</div>
+                    <div class="stadium-name">Most Valuable Player: {{ club.most_valuable_player_name }}</div>
                 </div>
                 {% endif %}
 
@@ -1017,11 +1017,11 @@
         </div>
     {% elif filter_applied %}
         <div class="no-results">
-            <p>Filtrelere uyan kulüp bulunamadı.</p>
+            <p>No clubs match your filters.</p>
         </div>
     {% else %}
         <div class="no-results">
-            <p>Kulüpleri görmek için filtreleri uygulayın.</p>
+            <p>Apply filters to see clubs.</p>
         </div>
     {% endif %}
 </div>
@@ -1094,7 +1094,7 @@
 
 	            try {
 	                const res = await fetch(`/api/clubs/${encodeURIComponent(clubId)}`);
-	                if (!res.ok) throw new Error("Detay alinmadi");
+	                if (!res.ok) throw new Error("Details not received.");
 	                const data = await res.json();
 
 	                const club = data.club || {};
@@ -1129,16 +1129,16 @@
 	                });
 	            } catch (e) {
 	                console.error("Edit modal load failed:", e);
-	                showEditError("Kulup bilgisi yuklenemedi.");
+	                showEditError("Could not load club details.");
 	            }
 	        };
 
-        // Tüm oyuncu linklerini document seviyesinde yakala (event delegation) - EN ÜSTTE ÇALIŞSIN
+        // Capture all player links at the document level (event delegation) - run first
         document.addEventListener("click", (event) => {
-            // Linkin kendisine veya içindeki herhangi bir elemente tıklanırsa
+            // If the link itself or any inner element is clicked
             const playerLink = event.target.closest("a.player-name-link");
             if (playerLink) {
-                console.log("Oyuncu linkine tıklandı:", playerLink.href); // Debug için
+                console.log("Player link clicked:", playerLink.href); // Debug only
                 event.preventDefault();
                 event.stopPropagation();
                 event.stopImmediatePropagation();
@@ -1148,12 +1148,12 @@
                 }
                 return false;
             }
-        }, true); // Capture fazında - EN ÖNCE ÇALIŞIR
+        }, true); // Capture phase - runs first
 
         const createBackButton = (slotEl) => {
             const backBtn = document.createElement("button");
             backBtn.className = "players-back-btn";
-            backBtn.textContent = "Listeye Dön";
+            backBtn.textContent = "Back to list";
             backBtn.type = "button";
             backBtn.addEventListener("click", (e) => {
                 e.stopPropagation();
@@ -1177,7 +1177,7 @@
                 
                 const emptyMsg = document.createElement("div");
                 emptyMsg.className = "players-empty";
-                emptyMsg.textContent = "Bu kulup icin oyuncu bulunamadi.";
+                emptyMsg.textContent = "No players found for this club.";
                 panel.appendChild(emptyMsg);
                 
                 slotEl.innerHTML = "";
@@ -1185,17 +1185,17 @@
                 return;
             }
 
-            // DOM API kullanarak oyuncuları oluştur (innerHTML yerine)
+            // Build players using the DOM API (instead of innerHTML)
             const panel = document.createElement("div");
             panel.className = "club-players-panel";
 
-                // Geri butonu
+                // Back button
             const backBtn = createBackButton(slotEl);
             panel.appendChild(backBtn);
 
             const header = document.createElement("div");
             header.className = "players-header";
-            header.innerHTML = `<div>Kadro</div><span>${players.length} oyuncu</span>`;
+            header.innerHTML = `<div>Squad</div><span>${players.length} players</span>`;
             panel.appendChild(header);
 
             const playersList = document.createElement("div");
@@ -1212,19 +1212,19 @@
             const formatEur = (val) => {
                 const n = Number(val);
                 if (!Number.isFinite(n) || n <= 0) return null;
-                return `${new Intl.NumberFormat("tr-TR").format(Math.round(n))} EUR`;
+                return `${new Intl.NumberFormat("en-US").format(Math.round(n))} EUR`;
             };
 
             players.forEach((p, index) => {
                 const metaParts = [];
-                if (p.age) metaParts.push(`${p.age} yas`);
+                if (p.age) metaParts.push(`${p.age} yrs`);
                 if (p.sub_position) metaParts.push(p.sub_position);
                 if (p.country_of_citizenship) metaParts.push(p.country_of_citizenship);
-                const meta = metaParts.join(" | ") || "Bilgi yok";
+                const meta = metaParts.join(" | ") || "No info";
 
                 const heightVal = typeof p.height_in_cm === "number" ? Math.round(p.height_in_cm) : null;
 
-                // Player row oluştur
+                // Build player row
                 const playerRow = document.createElement("div");
                 playerRow.className = "player-row";
                 if (index === 0) {
@@ -1236,23 +1236,23 @@
                 const playerMain = document.createElement("div");
                 playerMain.className = "player-main";
 
-                // Oyuncu ismi - DOM API ile link oluştur
+                // Player name - build link with DOM API
                 if (p.name) {
                     const playerLink = document.createElement("a");
                     playerLink.className = "player-name player-name-link";
                     playerLink.href = `/players?search=${encodeURIComponent(p.name)}`;
                     playerLink.textContent = p.name;
-                    // Event listener ekleme - document seviyesinde yakalanıyor
+                    // Listener is attached at the document level
                     playerMain.appendChild(playerLink);
                 } else {
                     const playerSpan = document.createElement("span");
                     playerSpan.className = "player-name";
                     playerSpan.style.cssText = "font-weight: 800; color: #0f172a;";
-                    playerSpan.textContent = "Bilinmeyen Oyuncu";
+                    playerSpan.textContent = "Unknown Player";
                     playerMain.appendChild(playerSpan);
                 }
 
-                // Meta bilgisi
+                // Meta info
                 const playerMeta = document.createElement("div");
                 playerMeta.className = "player-meta";
                 playerMeta.textContent = meta;
@@ -1286,7 +1286,7 @@
                     if (topValue > 0 && Number.isFinite(mvNum) && mvNum === topValue) {
                         const topBadge = document.createElement("span");
                         topBadge.className = "player-badge";
-                        topBadge.textContent = "En Degerli";
+                        topBadge.textContent = "Top Value";
                         playerTags.appendChild(topBadge);
                     }
                 }
@@ -1303,7 +1303,7 @@
         const createBackButton_DUPLICATE = (slotEl) => {
             const backBtn = document.createElement("button");
             backBtn.className = "players-back-btn";
-            backBtn.textContent = "Listeye Dön";
+            backBtn.textContent = "Back to list";
             backBtn.type = "button";
             backBtn.addEventListener("click", (e) => {
                 e.stopPropagation();
@@ -1326,7 +1326,7 @@
             
             const loadingMsg = document.createElement("div");
             loadingMsg.className = "players-loading";
-            loadingMsg.textContent = "Kadro yukleniyor";
+            loadingMsg.textContent = "Loading squad...";
             panel.appendChild(loadingMsg);
             
             slotEl.innerHTML = "";
@@ -1342,7 +1342,7 @@
             
             const errorMsg = document.createElement("div");
             errorMsg.className = "players-error";
-            errorMsg.textContent = "Kadro yuklenirken hata olustu.";
+            errorMsg.textContent = "Error loading squad.";
             panel.appendChild(errorMsg);
             
             slotEl.innerHTML = "";
@@ -1364,17 +1364,17 @@
                 if (event.target.closest(".club-edit-btn")) {
                     return;
                 }
-                // ÖNCE: Oyuncu linkine tıklanırsa HİÇBİR ŞEY YAPMA
+                // First: if a player link is clicked, do nothing
                 if (event.target.closest("a.player-name-link") || event.target.closest(".player-name-link")) {
-                    return; // Event delegation zaten hallediyor
+                    return; // Event delegation already handles it
                 }
 
-                // Oyuncular panelindeki diğer tıklamaları yoksay (geri butonu hariç)
+                // Ignore other clicks inside the players panel (except the back button)
                 if (event.target.closest(".club-players-panel") && !event.target.closest(".players-back-btn")) {
                     return;
                 }
                 
-                // Geri butonuna tıklanırsa zaten kendi handler'ı var
+                // Back button already has its own handler
                 if (event.target.closest(".players-back-btn")) {
                     return;
                 }
@@ -1402,7 +1402,7 @@
                     if (!players) {
                         const response = await fetch(`/clubs/${encodeURIComponent(clubId)}/players`);
                         if (!response.ok) {
-                            throw new Error("Yanit alinmadi");
+                            throw new Error("No response received.");
                         }
                         const data = await response.json();
                         players = data.players || [];
@@ -1422,7 +1422,7 @@
                     }
                     renderPlayers(slotEl, players);
                 } catch (error) {
-                    console.error("Kulup kadrosu yuklenemedi:", error);
+                    console.error("Club squad could not be loaded:", error);
                     showError(slotEl);
                 }
             });
@@ -1464,7 +1464,7 @@
                 window.location.reload();
             } catch (err) {
                 console.error("Club update failed:", err);
-                showEditError("Guncelleme basarisiz: " + (err.message || ""));
+                showEditError("Update failed: " + (err.message || ""));
             }
         });
 
@@ -1487,11 +1487,10 @@
                 closeModal();
             } catch (err) {
                 console.error("Club delete failed:", err);
-                showEditError("Silme basarisiz: " + (err.message || ""));
+                showEditError("Delete failed: " + (err.message || ""));
             }
         });
     });
 </script>
 
 {% endblock %}
-
