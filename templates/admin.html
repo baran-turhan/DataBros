@@ -118,7 +118,7 @@
   {% else %}
   <div class="admin-header">
     <h1>Administration</h1>
-    <p>Add new rows: pick a table, fill the fields you need, and save.</p>
+    <p>Manage database records securely.</p>
   </div>
 
   {% if message %}
@@ -128,24 +128,72 @@
   <div class="message error">{{ error }}</div>
   {% endif %}
 
-  <form class="admin-form" method="post" action="{{ url_for('admin_page') }}">
+  <form class="admin-form" method="post" action="{{ url_for('admin_page') }}" onsubmit="return false;"> 
     <input type="hidden" name="admin_password" value="{{ admin_password }}">
-    <div>
-      <label for="table_name">Table</label>
-      <select id="table_name" name="table_name" required>
-        <option value="">Select table</option>
-        {% for t in tables %}
-        <option value="{{ t.name }}">{{ t.name }}</option>
-        {% endfor %}
-      </select>
+    
+    <div style="display: flex; gap: 20px;">
+        <div style="flex: 1;">
+          <label for="table_name">Table</label>
+          <select id="table_name" name="table_name" required>
+            <option value="">Select table</option>
+            {% for t in tables %}
+            <option value="{{ t.name }}">{{ t.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        
+        <div style="flex: 1;">
+          <label for="mode">Mode</label>
+          <select id="mode" name="mode" required>
+            <option value="add" selected>Add</option>
+            <option value="update">Update</option>
+            <option value="delete">Delete</option>
+          </select>
+        </div>
     </div>
 
-    <div id="columns-container" class="columns-grid"></div>
-
-    <div class="submit-row">
-      <button class="admin-button" type="submit">Insert Row</button>
-      <span class="field-note">Fields left blank will use defaults or stay NULL.</span>
+    <div id="add-container">
+        <div id="columns-container" class="columns-grid"></div>
+        <div class="submit-row">
+          <button class="admin-button" type="button" onclick="submitAddForm()">Insert Row</button>
+          <span class="field-note">Fields left blank will use defaults or stay NULL.</span>
+        </div>
     </div>
+
+    <div id="update-container" style="display: none;">
+        <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <label id="search-label" style="display:block; margin-bottom: 8px;">Enter ID to Update</label>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="update-search-id" placeholder="ID...">
+                <button class="admin-button" type="button" style="width: auto; margin: 0;" onclick="loadDataForUpdate()">Find</button>
+            </div>
+            <div id="club-search-results" class="search-results" style="display: none;"></div>
+        </div>
+        
+        <div id="update-fields-container" class="columns-grid"></div>
+        
+        <div class="submit-row" id="update-btn-row" style="display: none;">
+             <button class="admin-button" type="button" onclick="submitUpdate()">Update Record</button>
+        </div>
+        
+        <div id="update-status-msg" style="margin-top: 10px;"></div>
+    </div>
+
+    <div id="delete-container" style="display: none;">
+        <div style="margin: 20px 0; padding: 20px; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px;">
+            <label id="delete-label" style="display:block; margin-bottom: 8px; color: #991b1b;">Enter ID to Delete</label>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="delete-input-id" placeholder="ID..." style="border-color: #fda4af;">
+                <button class="admin-button delete-btn" type="button" style="width: auto; margin: 0;" onclick="submitDelete()">Delete Record</button>
+            </div>
+        </div>
+        <div id="delete-status-msg" style="margin-top: 10px;"></div>
+    </div>
+
+    <div id="simulation-container" style="display: none; padding: 30px; text-align: center; font-weight: bold; font-size: 1.2rem; color: #555;">
+        <span id="simulation-text">Settings not available</span>
+    </div>
+
   </form>
   {% endif %}
 </div>
@@ -154,9 +202,108 @@
 <script>
   const tableSchemas = {{ tables | tojson }};
   const tableSelect = document.getElementById("table_name");
+  const modeSelect = document.getElementById("mode");
+  
+  // Containers
+  const addContainer = document.getElementById("add-container");
+  const updateContainer = document.getElementById("update-container");
+  const deleteContainer = document.getElementById("delete-container");
+  const simContainer = document.getElementById("simulation-container");
+  const simText = document.getElementById("simulation-text");
+  
+  // Add Elements
   const columnsContainer = document.getElementById("columns-container");
 
-  function renderColumns(tableName) {
+  // Update Elements
+  const searchInput = document.getElementById("update-search-id");
+  const searchLabel = document.getElementById("search-label");
+  const clubResults = document.getElementById("club-search-results"); // Kulüp arama sonuçları
+  const updateFieldsContainer = document.getElementById("update-fields-container");
+  const updateBtnRow = document.getElementById("update-btn-row");
+  const updateMsg = document.getElementById("update-status-msg");
+
+  // Delete Elements
+  const deleteInput = document.getElementById("delete-input-id");
+  const deleteLabel = document.getElementById("delete-label");
+  const deleteMsg = document.getElementById("delete-status-msg");
+
+  // Global ID tutucu (Update işlemi için)
+  let currentUpdateId = null; 
+
+  // --- CONFIG: Tablo Ayarları (Update & Delete için ortak kullanılabilir) ---
+  function getTableConfig(table) {
+      if (table === 'clubs') {
+          return {
+              idLabel: 'Club ID',
+              fields: [
+                  {key: 'name', label: 'Club Name'},
+                  {key: 'stadium_name', label: 'Stadium Name'},
+                  {key: 'stadium_seats', label: 'Stadium Seats', type: 'number'}
+              ],
+              endpoint: (id) => `/api/clubs/${id}`
+          };
+      }
+      if (table === 'competitions') {
+          return {
+              idLabel: 'Competition ID',
+              fields: [
+                  {key: 'competition_code', label: 'Code', readonly: true},
+                  {key: 'name', label: 'Name'},
+                  {key: 'country_name', label: 'Country'},
+                  {key: 'url', label: 'URL'},
+                  {key: 'is_major_league', label: 'Is Major League'}
+              ],
+              endpoint: (id) => `/competitions/${id}`
+          };
+      }
+      if (table === 'games') {
+          return {
+              idLabel: 'Game ID',
+              fields: [
+                  {key: 'date', label: 'Date'},
+                  {key: 'season', label: 'Season'},
+                  {key: 'home_club_id', label: 'Home Club ID'},
+                  {key: 'away_club_id', label: 'Away Club ID'},
+                  {key: 'home_club_goals', label: 'Home Goals'},
+                  {key: 'away_club_goals', label: 'Away Goals'},
+                  {key: 'competition_id', label: 'Competition ID'},
+                  {key: 'home_club_position', label: 'Home Pos'},
+                  {key: 'away_club_position', label: 'Away Pos'},
+                  {key: 'favorite', label: 'Favorite'}
+              ],
+              endpoint: (id) => `/games/${id}`
+          };
+      }
+      if (table === 'players') {
+          return {
+              idLabel: 'Player ID',
+              fields: [
+                  {key: 'date_of_birth', label: 'Date of Birth'},
+                  {key: 'foot', label: 'Foot'},
+                  {key: 'sub_position', label: 'Position'},
+                  {key: 'current_club_id', label: 'Club ID'},
+                  {key: 'market_value_in_eur', label: 'Market Value (€)'}
+              ],
+              endpoint: (id) => `/api/players/${id}`
+          };
+      }
+      if (table === 'transfers') {
+          return {
+              idLabel: 'Transfer ID',
+              fields: [
+                  {key: 'from_club_id', label: 'From Club ID'},
+                  {key: 'to_club_id', label: 'To Club ID'},
+                  {key: 'transfer_fee', label: 'Transfer Fee'},
+                  {key: 'market_value_in_eur', label: 'Market Value'}
+              ],
+              endpoint: (id) => `/transfers/${id}`
+          };
+      }
+      return null;
+  }
+
+  // --- ADD MODE ---
+  function renderAddColumns(tableName) {
     columnsContainer.innerHTML = "";
     const table = tableSchemas.find(t => t.name === tableName);
     if (!table) return;
@@ -184,7 +331,211 @@
     });
   }
 
-  tableSelect.addEventListener("change", (e) => renderColumns(e.target.value));
+  function submitAddForm() {
+      const form = document.querySelector('.admin-form');
+      form.submit();
+  }
+
+  // --- UPDATE LOGIC ---
+  function setupUpdateView() {
+      const table = tableSelect.value;
+      const config = getTableConfig(table);
+      
+      updateFieldsContainer.innerHTML = "";
+      updateBtnRow.style.display = "none";
+      searchInput.value = "";
+      updateMsg.innerHTML = "";
+      clubResults.style.display = 'none';
+
+      if (config) {
+          updateContainer.style.display = 'block';
+          simContainer.style.display = 'none';
+          searchLabel.textContent = `Enter ${config.idLabel}`;
+          
+          // Club Search Özel Durumu
+          if (table === 'clubs') {
+              searchLabel.textContent = "Search Club Name (or Enter ID)";
+              searchInput.oninput = function() {
+                  if(this.value.length > 2) fetchClubNames(this.value);
+                  else clubResults.style.display = 'none';
+              };
+          } else {
+              searchInput.oninput = null;
+          }
+      } else {
+          updateContainer.style.display = 'none';
+          simContainer.style.display = 'block';
+          simText.textContent = `There is no update setting for ${table} table`;
+      }
+  }
+
+  function fetchClubNames(query) {
+      fetch(`/api/admin/search_club?q=${query}`)
+        .then(res => res.json())
+        .then(data => {
+            clubResults.innerHTML = "";
+            if (data.length > 0) {
+                clubResults.style.display = 'block';
+                data.forEach(club => {
+                    const div = document.createElement("div");
+                    div.className = "search-item";
+                    div.textContent = club.name;
+                    div.onclick = () => {
+                        searchInput.value = club.club_id; // Update için ID lazım
+                        clubResults.style.display = 'none';
+                        loadDataForUpdate(); // Seçince otomatik getir
+                    };
+                    clubResults.appendChild(div);
+                });
+            } else {
+                clubResults.style.display = 'none';
+            }
+        });
+  }
+
+  function loadDataForUpdate() {
+      const table = tableSelect.value;
+      const id = searchInput.value;
+      if (!id) { alert("Please enter an ID"); return; }
+
+      fetch(`/api/admin/get_row/${table}/${id}`)
+        .then(res => {
+            if (!res.ok) throw new Error("Not found");
+            return res.json();
+        })
+        .then(data => {
+            currentUpdateId = id;
+            renderUpdateForm(table, data);
+            updateMsg.innerHTML = `<div class="message success">Data loaded. Edit and click Update.</div>`;
+        })
+        .catch(err => {
+            updateMsg.innerHTML = `<div class="message error">Record not found.</div>`;
+            updateFieldsContainer.innerHTML = "";
+            updateBtnRow.style.display = "none";
+        });
+  }
+
+  function renderUpdateForm(table, data) {
+      const config = getTableConfig(table);
+      updateFieldsContainer.innerHTML = "";
+      
+      config.fields.forEach(f => {
+          const wrap = document.createElement("div");
+          const label = document.createElement("label");
+          label.textContent = f.label;
+          const input = document.createElement("input");
+          input.id = `up_${f.key}`;
+          input.value = data[f.key] !== null ? data[f.key] : "";
+          if (f.type) input.type = f.type;
+          if (f.readonly) input.disabled = true;
+
+          wrap.appendChild(label);
+          wrap.appendChild(input);
+          updateFieldsContainer.appendChild(wrap);
+      });
+      updateBtnRow.style.display = "block";
+  }
+
+  function submitUpdate() {
+      const table = tableSelect.value;
+      const config = getTableConfig(table);
+      if (!currentUpdateId) return;
+
+      const data = {};
+      config.fields.forEach(f => {
+          if (!f.readonly) {
+              const val = document.getElementById(`up_${f.key}`).value;
+              data[f.key] = val;
+          }
+      });
+
+      fetch(config.endpoint(currentUpdateId), {
+          method: 'PATCH',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(data)
+      })
+      .then(res => res.json())
+      .then(resp => {
+          if (resp.error) updateMsg.innerHTML = `<div class="message error">Error: ${resp.error}</div>`;
+          else {
+              alert("Update successful!");
+              location.reload();
+          }
+      })
+      .catch(err => updateMsg.innerHTML = `<div class="message error">Update failed.</div>`);
+  }
+
+  // --- DELETE LOGIC ---
+  function setupDeleteView() {
+      const table = tableSelect.value;
+      const config = getTableConfig(table);
+      
+      deleteInput.value = "";
+      deleteMsg.innerHTML = "";
+
+      if (config) {
+          deleteContainer.style.display = 'block';
+          simContainer.style.display = 'none';
+          deleteLabel.textContent = `Enter ${config.idLabel} to Delete`;
+      } else {
+          deleteContainer.style.display = 'none';
+          simContainer.style.display = 'block';
+          simText.textContent = `There is no delete setting for ${table} table`;
+      }
+  }
+
+  function submitDelete() {
+      const table = tableSelect.value;
+      const id = deleteInput.value;
+      const config = getTableConfig(table);
+      
+      if (!id) { alert("Please enter ID"); return; }
+      
+      if (confirm(`Are you sure you want to DELETE this record (ID: ${id}) from ${table}? This cannot be undone.`)) {
+          fetch(config.endpoint(id), {
+              method: 'DELETE'
+          })
+          .then(res => res.json())
+          .then(resp => {
+              if (resp.error) deleteMsg.innerHTML = `<div class="message error">Error: ${resp.error}</div>`;
+              else {
+                  alert("Deleted successfully!");
+                  location.reload();
+              }
+          })
+          .catch(err => deleteMsg.innerHTML = `<div class="message error">Delete failed.</div>`);
+      }
+  }
+
+  // --- ANA GÖRÜNÜM YÖNETİCİSİ ---
+  function updateView() {
+      const mode = modeSelect.value;
+      const table = tableSelect.value;
+      
+      // Hepsini gizle
+      addContainer.style.display = 'none';
+      updateContainer.style.display = 'none';
+      deleteContainer.style.display = 'none';
+      simContainer.style.display = 'none';
+
+      if (mode === 'add') {
+          addContainer.style.display = 'block';
+          if (table && columnsContainer.innerHTML === "") renderAddColumns(table);
+      } 
+      else if (mode === 'update') {
+          if (table) setupUpdateView();
+      }
+      else if (mode === 'delete') {
+          if (table) setupDeleteView();
+      }
+  }
+
+  tableSelect.addEventListener("change", updateView);
+  modeSelect.addEventListener("change", updateView);
+
+  // Başlangıç
+  if (tableSelect.value) updateView();
+
 </script>
 {% endif %}
 {% endblock %}

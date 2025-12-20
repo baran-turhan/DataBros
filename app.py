@@ -63,6 +63,9 @@ def create_app():
         methods=["DELETE"],
     )
     app.add_url_rule("/admin", view_func=router.admin_page, methods=["GET", "POST"])
+    app.add_url_rule("/api/admin/get_row/<table_name>/<id_val>", view_func=router.admin_get_row_api)
+    app.add_url_rule("/api/players/<int:player_id>", view_func=router.update_player_api, methods=["PATCH"])
+    app.add_url_rule("/api/players/<int:player_id>", view_func=router.delete_player_api, methods=["DELETE"])
 
     return app
 

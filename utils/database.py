@@ -1704,3 +1704,76 @@ def get_top_expensive_players(limit=5):
     finally:
         if conn:
             conn.close()
+
+# --- ADMIN UPDATE HELPERS ---
+
+def update_player(player_id: int, data: dict):
+    """Oyuncu bilgilerini günceller."""
+    conn = None
+    try:
+        conn = get_conn()
+        cur = conn.cursor()
+        
+        set_parts = []
+        values = []
+        for key, val in data.items():
+            set_parts.append(sql.SQL("{} = %s").format(sql.Identifier(key)))
+            values.append(val)
+        
+        values.append(player_id)
+        
+        query = sql.SQL("UPDATE players SET {} WHERE player_id = %s").format(
+            sql.SQL(", ").join(set_parts)
+        )
+        
+        cur.execute(query, values)
+        conn.commit()
+        cur.close()
+        return True
+    except Exception as e:
+        print(f"Database error (update_player): {e}")
+        return False
+    finally:
+        if conn: conn.close()
+
+def get_row_by_id(table_name, id_col, id_val):
+    """Admin update ekranı için ID'ye göre tek satır veri çeker."""
+    conn = None
+    try:
+        conn = get_conn()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # SQL Injection koruması için sadece izin verilen tablolar
+        allowed_tables = ['clubs', 'competitions', 'games', 'players', 'transfers']
+        if table_name not in allowed_tables:
+            return None
+
+        query = sql.SQL("SELECT * FROM {} WHERE {} = %s").format(
+            sql.Identifier(table_name),
+            sql.Identifier(id_col)
+        )
+        cur.execute(query, (id_val,))
+        row = cur.fetchone()
+        cur.close()
+        return row
+    except Exception as e:
+        print(f"Error getting row: {e}")
+        return None
+    finally:
+        if conn: conn.close()
+
+def delete_player(player_id: int):
+    """Oyuncuyu veritabanından siler."""
+    conn = None
+    try:
+        conn = get_conn()
+        cur = conn.cursor()
+        cur.execute("DELETE FROM players WHERE player_id = %s", (player_id,))
+        conn.commit()
+        cur.close()
+        return True, None
+    except Exception as e:
+        print(f"Database error (delete_player): {e}")
+        return False, str(e)
+    finally:
+        if conn: conn.close()

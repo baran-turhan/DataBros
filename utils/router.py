@@ -682,3 +682,54 @@ def club_delete_api(club_id: int):
         status = 409 if "foreign key" in msg.lower() else 400
         return jsonify({"error": msg}), status
     return jsonify({"success": True})
+
+
+# --- ADMIN UPDATE ROUTES ---
+
+def admin_get_row_api(table_name, id_val):
+    """Update ekranında ID girilince verileri getiren API."""
+    # Tablo adına göre ID kolonunu belirle
+    id_map = {
+        'clubs': 'club_id',
+        'competitions': 'competition_id',
+        'games': 'game_id',
+        'players': 'player_id',
+        'transfers': 'transfer_id'
+    }
+    id_col = id_map.get(table_name)
+    
+    if not id_col:
+        return jsonify({"error": "Invalid table or no update settings"}), 400
+        
+    row = database.get_row_by_id(table_name, id_col, id_val)
+    
+    if row:
+        # Tarih ve Decimal verilerini JSON formatına uygun hale getir
+        row = {k: _json_safe(v) for k, v in row.items()}
+        return jsonify(row)
+    
+    return jsonify({"error": "Record not found"}), 404
+
+def update_player_api(player_id):
+    """Oyuncu güncelleme API'si."""
+    data = request.json
+    # Güvenlik: Sadece bu alanların değişmesine izin ver
+    allowed_fields = ['date_of_birth', 'foot', 'sub_position', 'current_club_id', 'market_value_in_eur']
+    
+    clean_data = {}
+    for k, v in data.items():
+        if k in allowed_fields:
+            clean_data[k] = v
+            
+    success = database.update_player(player_id, clean_data)
+    
+    if success:
+        return jsonify({"success": True})
+    return jsonify({"error": "Update failed"}), 400
+    
+def delete_player_api(player_id):
+    """Oyuncu silme API'si."""
+    success, error = database.delete_player(player_id)
+    if success:
+        return jsonify({"success": True})
+    return jsonify({"error": error or "Delete failed"}), 400
