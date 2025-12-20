@@ -168,6 +168,12 @@
                     {% endif %}
                 </div>
             </div>
+            <div class="profile-card">
+                <div class="label">Market Value(€)</div>
+                <div class="value">
+                    {{ "{:,}".format(player.market_value_in_eur).replace(',', '.') if player.market_value_in_eur else '-' }}
+                </div>
+            </div>
         </div>
     </div>
 </div>

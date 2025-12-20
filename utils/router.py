@@ -141,28 +141,36 @@ def transfers_page():
 
 
 
-# utils/router.py içindeki players_page fonksiyonunu GÜNCELLE:
 
 def players_page():
     page = request.args.get('page', 1, type=int)
     per_page = 100
     
-    # Filtreleri al
+    # Mevcut filtreler
     min_age = request.args.get('min_age', type=int)
     max_age = request.args.get('max_age', type=int)
     selected_feet = request.args.getlist('foot')
     selected_positions = request.args.getlist('position')
     sort_option = request.args.get('sort', 'name_asc')
-    
-    # YENİ: Arama sorgusunu al
     search_query = request.args.get('search', '')
     
-    # Veritabanına search_query'i de gönderiyoruz
+    # --- YENİ: Market Value filtrelerini al ---
+    min_mv = request.args.get('min_mv', type=int)
+    max_mv = request.args.get('max_mv', type=int)
+    # -----------------------------------------
+    
+    # Veritabanı fonksiyonuna yeni parametreleri ekle
     players, total_count = database.get_all_players(
-        page, per_page, min_age, max_age, selected_feet, selected_positions, sort_option, search_query
+        page, per_page, min_age, max_age, selected_feet, selected_positions, sort_option, search_query, 
+        min_mv, max_mv # <--- Yeni eklendi
     )
     
     global_min_age, global_max_age = database.get_age_limits()
+    
+    # --- YENİ: Global Market Value limitlerini al ---
+    global_min_mv, global_max_mv = database.get_market_value_limits()
+    # -----------------------------------------------
+    
     all_positions = database.get_all_positions()
     total_pages = (total_count + per_page - 1) // per_page
     
@@ -179,8 +187,12 @@ def players_page():
         selected_positions=selected_positions,
         current_sort=sort_option,
         all_positions=all_positions,
-        # YENI: Arama metnini sablona geri gonder (input icinde kalsin diye)
-        search_query=search_query
+        search_query=search_query,
+        # --- YENİLERİ HTML'E GÖNDER ---
+        selected_min_mv=min_mv,
+        selected_max_mv=max_mv,
+        global_min_mv=global_min_mv,
+        global_max_mv=global_max_mv
     )
 
 

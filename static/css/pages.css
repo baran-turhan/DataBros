@@ -226,19 +226,23 @@ body {
 .filter-bar {
     display: flex;
     align-items: center;
-    justify-content: center; /* İçindekileri ortala */
+    justify-content: center;
     gap: 20px;
     
-    /* Ortalamak ve içeriğe göre boyutlandırmak için: */
-    width: fit-content;    /* Sadece içerik kadar genişle */
-    margin: 0 auto 30px;   /* Yatayda ortala (auto), alttan 30px boşluk */
-    max-width: 100%;       /* Mobilde taşmayı önle */
-    flex-wrap: wrap;       /* Mobilde sığmazsa alt satıra geçsin */
+    /* GÜNCELLENEN KISIM: Daha geniş ve sabit bir yapı */
+    width: 100%;           /* Container'a tam otursun */
+    max-width: 1100px;     /* Çok geniş ekranlarda da dağılmasın */
+    min-width: 600px;      /* İçerik değişince daralmayı önle */
+    margin: 0 auto 30px;   
+    flex-wrap: wrap;       
     
     background: white;
-    padding: 15px 25px;
+    padding: 15px 30px;    /* Padding'i biraz artırdık */
     border-radius: 15px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    
+    /* İçerik değişince titremeyi önlemek için min-height */
+    min-height: 80px;      
 }
 
 .filter-group {

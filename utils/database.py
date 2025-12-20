@@ -1351,7 +1351,7 @@ def delete_competition(competition_id: str) -> bool:
 
 #----------------------------------PLAYERS------------------------------------------------
 
-def get_all_players(page=1, per_page=100, min_age=None, max_age=None, feet=None, positions=None, sort_option="name_asc", search_query=None):
+def get_all_players(page=1, per_page=100, min_age=None, max_age=None, feet=None, positions=None, sort_option="name_asc", search_query=None, min_mv=None, max_mv=None):
     """
     Sayfa, yaş, ayak, pozisyon, sıralama ve ARAMA SORGUSUNA göre oyuncuları çeker.
     """
@@ -1377,6 +1377,12 @@ def get_all_players(page=1, per_page=100, min_age=None, max_age=None, feet=None,
         if max_age is not None:
             base_where += " AND DATE_PART('year', AGE(CURRENT_DATE, p.date_of_birth)) <= %s"
             params.append(max_age)
+        if min_mv is not None:
+            base_where += " AND p.market_value_in_eur >= %s"
+            params.append(min_mv)
+        if max_mv is not None:
+            base_where += " AND p.market_value_in_eur <= %s"
+            params.append(max_mv)
         if feet and len(feet) > 0:
             foot_conditions = []
             if 'None' in feet:
@@ -1400,6 +1406,10 @@ def get_all_players(page=1, per_page=100, min_age=None, max_age=None, feet=None,
         elif sort_option == "age_desc": order_clause = "ORDER BY p.date_of_birth ASC NULLS LAST"
         elif sort_option == "height_asc": order_clause = "ORDER BY p.height_in_cm ASC NULLS LAST"
         elif sort_option == "height_desc": order_clause = "ORDER BY p.height_in_cm DESC NULLS LAST"
+        elif sort_option == "mv_desc": # € High (Pahalıdan ucuza)
+            order_clause = "ORDER BY p.market_value_in_eur DESC NULLS LAST"
+        elif sort_option == "mv_asc":  # € Low (Ucuzdan pahalıya)
+            order_clause = "ORDER BY p.market_value_in_eur ASC NULLS LAST"
 
         # 3. Toplam Sayı (Arama sonuçlarına göre toplam sayfa sayısını hesaplamak için önemli)
         count_query = f"SELECT COUNT(*) as total FROM players p {base_where}"
@@ -1420,7 +1430,8 @@ def get_all_players(page=1, per_page=100, min_age=None, max_age=None, feet=None,
                 p.foot,
                 p.height_in_cm,
                 p.country_of_citizenship,
-                c.name AS club_name
+                c.name AS club_name,
+                p.market_value_in_eur
             FROM players p
             LEFT JOIN clubs c ON p.current_club_id = c.club_id
             {base_where}
@@ -1503,6 +1514,7 @@ def get_player_by_id(player_id: int):
                 p.player_id,
                 p.name,
                 p.image_url,
+                p.market_value_in_eur,
                 p.date_of_birth,
                 DATE_PART('year', AGE(CURRENT_DATE, p.date_of_birth))::INTEGER AS age,
                 p.sub_position,
@@ -1558,6 +1570,38 @@ def get_age_limits():
     except Exception as e:
         print(f"Database error (get_age_limits): {e}")
         return 15, 45
+    finally:
+        if conn:
+            conn.close()
+
+def get_market_value_limits():
+    """Veritabanındaki en küçük ve en büyük piyasa değerini çeker."""
+    conn = None
+    try:
+        conn = get_conn()
+        cur = conn.cursor()
+        
+        # 0'dan büyük değerleri baz alalım
+        query = """
+            SELECT 
+                MIN(market_value_in_eur),
+                MAX(market_value_in_eur)
+            FROM players
+            WHERE market_value_in_eur > 0
+        """
+        
+        cur.execute(query)
+        result = cur.fetchone()
+        cur.close()
+        
+        # Veri yoksa varsayılan değerler
+        if result and result[0] is not None:
+            return result[0], result[1]
+        return 0, 100000000 # Varsayılan 0 - 100M
+        
+    except Exception as e:
+        print(f"Database error (get_market_value_limits): {e}")
+        return 0, 100000000
     finally:
         if conn:
             conn.close()

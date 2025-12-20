@@ -97,6 +97,36 @@
         </div>
 
         <div class="filter-group">
+            <button class="filter-btn" id="mvDropdownBtn">
+                Value (€): <span id="mvButtonLabel" style="margin-left: 5px; color: #2a5298;">All</span>
+            </button>
+            <div class="filter-dropdown" id="mvDropdown" style="width: 300px;">
+                 <div class="age-slider-container" id="mvSliderContainer"
+                     data-min="{{ selected_min_mv or '' }}"
+                     data-max="{{ selected_max_mv or '' }}"
+                     data-global-min="{{ global_min_mv }}"
+                     data-global-max="{{ global_max_mv }}">
+                    
+                    <div class="slider-tooltip" id="mvSliderTooltip"></div>
+                    
+                    <div class="slider-track-bg" id="mvSliderTrack">
+                        <div class="slider-track-fill" id="mvSliderFill" style="left: 0; width: 0;"></div>
+                    </div>
+                    
+                    <div id="mvSliderPoints"></div>
+                    
+                    <div class="slider-labels" style="justify-content: space-between; display: flex;">
+                        <span>€{{ "{:,}".format(global_min_mv).replace(',', '.') }}</span>
+                        <span>€{{ "{:,}".format(global_max_mv).replace(',', '.') }}</span>
+                    </div>
+                </div>
+                <div style="text-align: center; margin-top: 10px; font-size: 0.85rem; color: #718096;">
+                    Select value range
+                </div>
+            </div>
+        </div>
+        
+        <div class="filter-group">
             <button class="filter-btn" id="sortDropdownBtn" style="min-width: 160px;">
                 <span id="sortButtonLabel">▲ A-Z</span>
             </button>
@@ -123,6 +153,13 @@
                     <li class="sort-item" data-value="height_desc" data-label="▼ Height">
                         <span>▼ Height</span> <span class="sort-desc">(Tallest First)</span>
                     </li>
+                    <div class="separator"></div>
+                    <li class="sort-item" data-value="mv_desc" data-label="€ High">
+                        <span>€ High</span> <span class="sort-desc">(Most Valuable)</span>
+                    </li>
+                    <li class="sort-item" data-value="mv_asc" data-label="€ Low">
+                        <span>€ Low</span> <span class="sort-desc">(Least Valuable)</span>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -134,8 +171,10 @@
         <input type="hidden" name="min_age" id="inputMinAge" value="{{ selected_min_age or '' }}">
         <input type="hidden" name="max_age" id="inputMaxAge" value="{{ selected_max_age or '' }}">
         
+        <input type="hidden" name="min_mv" id="inputMinMv" value="{{ selected_min_mv or '' }}">
+        <input type="hidden" name="max_mv" id="inputMaxMv" value="{{ selected_max_mv or '' }}">
+        
         <input type="hidden" name="sort" id="inputSort" value="{{ current_sort }}">
-
         <input type="hidden" name="search" id="inputSearch" value="{{ search_query }}">
 
         <div id="footHiddenInputs">
@@ -164,6 +203,7 @@
                     <th>Position</th>
                     <th>Citizenship</th>
                     <th>Club</th>
+                    <th>Market Value (€)</th>
                 </tr>
             </thead>
             <tbody>
@@ -195,6 +235,7 @@
                     <td>{{ player.sub_position or 'N/A' }}</td>
                     <td>{{ player.country_of_citizenship or 'N/A' }}</td>
                     <td>{{ player.club_name or 'No Club' }}</td>
+                    <td>{{ "{:,}".format(player.market_value_in_eur).replace(',', '.') if player.market_value_in_eur else '-' }}</td>
                 </tr>
                 {% endfor %}
                 <tr id="noResultsRow" class="no-results-row" style="display: none;">
@@ -208,7 +249,7 @@
             <div class="pagination">
                 
                 {% if current_page > 1 %}
-                <a href="{{ url_for('players_page', page=current_page-1, min_age=selected_min_age, max_age=selected_max_age, foot=selected_feet, position=selected_positions, sort=current_sort, search=search_query) }}" class="page-link arrow">←</a>
+                <a href="{{ url_for('players_page', page=current_page-1, min_age=selected_min_age, max_age=selected_max_age, foot=selected_feet, position=selected_positions, sort=current_sort, search=search_query, min_mv=selected_min_mv, max_mv=selected_max_mv) }}" class="page-link arrow">←</a>
                 {% endif %}
 
                 {% set start_page = current_page - 2 %}
@@ -226,14 +267,14 @@
                 {% endif %}
 
                 {% if start_page > 1 %}
-                    <a href="{{ url_for('players_page', page=1, min_age=selected_min_age, max_age=selected_max_age, foot=selected_feet, position=selected_positions, sort=current_sort, search=search_query) }}" class="page-link">1</a>
+                    <a href="{{ url_for('players_page', page=1, min_age=selected_min_age, max_age=selected_max_age, foot=selected_feet, position=selected_positions, sort=current_sort, search=search_query, min_mv=selected_min_mv, max_mv=selected_max_mv) }}" class="page-link">1</a>
                     {% if start_page > 2 %}
                         <span class="dots">...</span>
                     {% endif %}
                 {% endif %}
 
                 {% for p in range(start_page, end_page + 1) %}
-                    <a href="{{ url_for('players_page', page=p, min_age=selected_min_age, max_age=selected_max_age, foot=selected_feet, position=selected_positions, sort=current_sort, search=search_query) }}" class="page-link {% if p == current_page %}active{% endif %}">
+                    <a href="{{ url_for('players_page', page=p, min_age=selected_min_age, max_age=selected_max_age, foot=selected_feet, position=selected_positions, sort=current_sort, search=search_query, min_mv=selected_min_mv, max_mv=selected_max_mv) }}" class="page-link {% if p == current_page %}active{% endif %}">
                         {{ p }}
                     </a>
                 {% endfor %}
@@ -242,11 +283,11 @@
                     {% if end_page < total_pages - 1 %}
                         <span class="dots">...</span>
                     {% endif %}
-                    <a href="{{ url_for('players_page', page=total_pages, min_age=selected_min_age, max_age=selected_max_age, foot=selected_feet, position=selected_positions, sort=current_sort, search=search_query) }}" class="page-link">{{ total_pages }}</a>
+                    <a href="{{ url_for('players_page', page=total_pages, min_age=selected_min_age, max_age=selected_max_age, foot=selected_feet, position=selected_positions, sort=current_sort, search=search_query, min_mv=selected_min_mv, max_mv=selected_max_mv) }}" class="page-link">{{ total_pages }}</a>
                 {% endif %}
 
                 {% if current_page < total_pages %}
-                <a href="{{ url_for('players_page', page=current_page+1, min_age=selected_min_age, max_age=selected_max_age, foot=selected_feet, position=selected_positions, sort=current_sort, search=search_query) }}" class="page-link arrow">→</a>
+                <a href="{{ url_for('players_page', page=current_page+1, min_age=selected_min_age, max_age=selected_max_age, foot=selected_feet, position=selected_positions, sort=current_sort, search=search_query, min_mv=selected_min_mv, max_mv=selected_max_mv) }}" class="page-link arrow">→</a>
                 {% endif %}
             </div>
         </div>

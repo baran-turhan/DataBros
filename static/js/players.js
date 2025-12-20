@@ -89,6 +89,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Diğer dropdown açıksa kapat
                 const footDrop = document.getElementById('footDropdown');
                 if(footDrop) footDrop.classList.remove('show');
+                const posDrop = document.getElementById('posDropdown');
+                if(posDrop) posDrop.classList.remove('show');
+                const sortDrop = document.getElementById('sortDropdown');
+                if(sortDrop) sortDrop.classList.remove('show');
+                const mvDrop = document.getElementById('mvDropdown');
+                if(mvDrop) mvDrop.classList.remove('show');
             });
         }
 
@@ -240,6 +246,12 @@ document.addEventListener('DOMContentLoaded', function() {
             // Age dropdown açıksa kapat
             const ageDrop = document.getElementById('ageDropdown');
             if(ageDrop) ageDrop.classList.remove('show');
+            const posDrop = document.getElementById('posDropdown');
+            if(posDrop) posDrop.classList.remove('show');
+            const sortDrop = document.getElementById('sortDropdown');
+            if(sortDrop) sortDrop.classList.remove('show');
+            const mvDrop = document.getElementById('mvDropdown');
+            if(mvDrop) mvDrop.classList.remove('show');
         });
     }
 
@@ -307,6 +319,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // Diğerleri açıksa kapat
             if(document.getElementById('ageDropdown')) document.getElementById('ageDropdown').classList.remove('show');
             if(document.getElementById('footDropdown')) document.getElementById('footDropdown').classList.remove('show');
+            if(document.getElementById('sortDropdown')) document.getElementById('sortDropdown').classList.remove('show');
+            if(document.getElementById('mvDropdown')) document.getElementById('mvDropdown').classList.remove('show');
         });
     }
 
@@ -409,7 +423,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const dropdowns = [
             {box: document.getElementById('ageDropdown'), btn: document.getElementById('ageDropdownBtn')},
             {box: document.getElementById('footDropdown'), btn: document.getElementById('footDropdownBtn')},
-            {box: document.getElementById('posDropdown'), btn: document.getElementById('posDropdownBtn')} // Yeni eklendi
+            {box: document.getElementById('posDropdown'), btn: document.getElementById('posDropdownBtn')}, // Yeni eklendi
+            {box: document.getElementById('mvDropdown'), btn: document.getElementById('mvDropdownBtn')}, // Market Value
+            {box: document.getElementById('sortDropdown'), btn: document.getElementById('sortDropdownBtn')}
         ];
 
         dropdowns.forEach(item => {
@@ -468,6 +484,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if(document.getElementById('ageDropdown')) document.getElementById('ageDropdown').classList.remove('show');
             if(document.getElementById('footDropdown')) document.getElementById('footDropdown').classList.remove('show');
             if(document.getElementById('posDropdown')) document.getElementById('posDropdown').classList.remove('show');
+            if(document.getElementById('mvDropdown')) document.getElementById('mvDropdown').classList.remove('show');
         });
     }
 
@@ -534,5 +551,146 @@ document.addEventListener('DOMContentLoaded', function() {
             sortDrop.classList.remove('show');
         }
     });
+
+    /* ============================================================
+    MARKET VALUE SLIDER MANTIĞI (Age Slider ile aynı yapı)
+    ============================================================ */
+    
+    const mvContainer = document.getElementById('mvSliderContainer');
+    // if (!mvContainer) return; // BU SATIRI KALDIRDIM, diğer kodlar çalışsın diye.
+
+    // Verileri HTML data attribute'lardan al
+    if (mvContainer) {
+        const gMin = parseInt(mvContainer.getAttribute('data-global-min')) || 0;
+        const gMax = parseInt(mvContainer.getAttribute('data-global-max')) || 100000000;
+        
+        // Seçili değerler yoksa global limitleri kullan
+        let selMin = parseInt(mvContainer.getAttribute('data-min'));
+        let selMax = parseInt(mvContainer.getAttribute('data-max'));
+        if (isNaN(selMin)) selMin = gMin;
+        if (isNaN(selMax)) selMax = gMax;
+
+        const track = document.getElementById('mvSliderTrack');
+        const fill = document.getElementById('mvSliderFill');
+        const tooltip = document.getElementById('mvSliderTooltip');
+        const pointsContainer = document.getElementById('mvSliderPoints');
+        
+        const labelBtn = document.getElementById('mvButtonLabel');
+        const inputMinMv = document.getElementById('inputMinMv');
+        const inputMaxMv = document.getElementById('inputMaxMv');
+        
+        // İki nokta oluştur (Min ve Max tutamaçları)
+        const pointMin = document.createElement('div');
+        pointMin.className = 'slider-point';
+        const pointMax = document.createElement('div');
+        pointMax.className = 'slider-point';
+        
+        pointsContainer.appendChild(pointMin);
+        pointsContainer.appendChild(pointMax);
+
+        // Sayıları formatlamak için yardımcı fonksiyon (1.000.000 gibi)
+        function formatMoney(num) {
+            return '€' + num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
+        
+        // Kısa format (1M, 500K gibi - Opsiyonel, buton etiketi için)
+        function formatShort(num) {
+            if(num >= 1000000) return (num/1000000).toFixed(1) + 'M';
+            if(num >= 1000) return (num/1000).toFixed(0) + 'K';
+            return num;
+        }
+
+        function updateUI() {
+            const range = gMax - gMin;
+            const percentMin = ((selMin - gMin) / range) * 100;
+            const percentMax = ((selMax - gMin) / range) * 100;
+
+            // Noktaların konumu (soldan yüzde)
+            pointMin.style.left = percentMin + '%';
+            pointMax.style.left = percentMax + '%';
+
+            // Aradaki dolgu çubuğu
+            fill.style.left = percentMin + '%';
+            fill.style.width = (percentMax - percentMin) + '%';
+
+            // Buton etiketi güncelle
+            if (selMin === gMin && selMax === gMax) {
+                labelBtn.innerText = "All";
+                inputMinMv.value = "";
+                inputMaxMv.value = "";
+            } else {
+                labelBtn.innerText = formatShort(selMin) + " - " + formatShort(selMax);
+                inputMinMv.value = selMin;
+                inputMaxMv.value = selMax;
+            }
+        }
+
+        // Sürükleme Mantığı
+        let isDraggingMin = false;
+        let isDraggingMax = false;
+
+        pointMin.addEventListener('mousedown', (e) => { isDraggingMin = true; e.preventDefault(); });
+        pointMax.addEventListener('mousedown', (e) => { isDraggingMax = true; e.preventDefault(); });
+
+        document.addEventListener('mouseup', () => {
+            isDraggingMin = false;
+            isDraggingMax = false;
+            tooltip.style.opacity = '0'; // Bırakınca tooltip gizle
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDraggingMin && !isDraggingMax) return;
+
+            const rect = track.getBoundingClientRect();
+            let offsetX = e.clientX - rect.left;
+            // Sınırları koru
+            if (offsetX < 0) offsetX = 0;
+            if (offsetX > rect.width) offsetX = rect.width;
+
+            const percent = offsetX / rect.width;
+            const range = gMax - gMin;
+            let value = Math.round(gMin + (range * percent));
+
+            // Adım aralığı (Step) ekleyelim (örneğin 100.000'er artsın)
+            const step = 100000;
+            value = Math.round(value / step) * step;
+
+            if (isDraggingMin) {
+                if (value >= selMax) value = selMax - step; // Max'ı geçemesin
+                if (value < gMin) value = gMin;
+                selMin = value;
+            } else {
+                if (value <= selMin) value = selMin + step; // Min'den küçük olamasın
+                if (value > gMax) value = gMax;
+                selMax = value;
+            }
+
+            updateUI();
+            
+            // Tooltip güncelle
+            tooltip.style.opacity = '1';
+            tooltip.innerText = formatMoney(isDraggingMin ? selMin : selMax);
+            tooltip.style.left = (isDraggingMin ? pointMin.style.left : pointMax.style.left);
+        });
+
+        // İlk yüklemede UI güncelle
+        updateUI();
+    }
+
+    // Slider buton açma kapama (En sona taşıdım)
+    const mvBtn = document.getElementById('mvDropdownBtn');
+    const mvDrop = document.getElementById('mvDropdown');
+    
+    if(mvBtn) {
+        mvBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            mvDrop.classList.toggle('show');
+            // Diğer dropdownları kapat (Varsa)
+            if(document.getElementById('ageDropdown')) document.getElementById('ageDropdown').classList.remove('show');
+            if(document.getElementById('footDropdown')) document.getElementById('footDropdown').classList.remove('show');
+            if(document.getElementById('posDropdown')) document.getElementById('posDropdown').classList.remove('show');
+            if(document.getElementById('sortDropdown')) document.getElementById('sortDropdown').classList.remove('show');
+        });
+    }
 
 });
