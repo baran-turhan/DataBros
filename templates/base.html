@@ -53,49 +53,80 @@
         </div>
     </div>
 
-    <!-- Leagues & Teams Section -->
+
+    <div class="leagues-teams-section fade-in">
+        <a href="{{ url_for('players_page') }}" class="leagues-teams-card">
+            <div class="leagues-teams-icon">👤</div>
+            <div class="leagues-teams-content">
+                <h2 class="leagues-teams-title">Players</h2>
+                <p class="leagues-teams-description">Browse and search through our extensive player database</p>
+            </div>
+            <div class="leagues-teams-arrow">→</div>
+        </a>
+    </div>
+    <div class="leagues-teams-section fade-in">
+        <a href="{{ url_for('clubs_page') }}" class="leagues-teams-card">
+            <div class="leagues-teams-icon">🏟️</div>
+            <div class="leagues-teams-content">
+                <h2 class="leagues-teams-title">Clubs</h2>
+                <p class="leagues-teams-description">Discover teams, their stats, and squad information</p>
+            </div>
+            <div class="leagues-teams-arrow">→</div>
+        </a>
+    </div>
+    <div class="leagues-teams-section fade-in">
+        <a href="{{ url_for('transfers_page') }}" class="leagues-teams-card">
+            <div class="leagues-teams-icon">🔄</div>
+            <div class="leagues-teams-content">
+                <h2 class="leagues-teams-title">Transfers</h2>
+                <p class="leagues-teams-description">Track player transfers and market movements</p>
+            </div>
+            <div class="leagues-teams-arrow">→</div>
+        </a>
+    </div>
     <div class="leagues-teams-section fade-in">
         <a href="{{ url_for('competitions_page') }}" class="leagues-teams-card">
             <div class="leagues-teams-icon">🏆</div>
             <div class="leagues-teams-content">
                 <h2 class="leagues-teams-title">Leagues & Teams</h2>
-                <p class="leagues-teams-description">Explore all leagues and teams related </p>
+                <p class="leagues-teams-description">Explore all leagues, cups and tournaments</p>
+            </div>
+            <div class="leagues-teams-arrow">→</div>
+        </a>
+    </div>
+    <div class="leagues-teams-section fade-in">
+        <a href="{{ url_for('games_page') }}" class="leagues-teams-card">
+            <div class="leagues-teams-icon">⚽</div>
+            <div class="leagues-teams-content">
+                <h2 class="leagues-teams-title">Games</h2>
+                <p class="leagues-teams-description">View match results and game statistics</p>
             </div>
             <div class="leagues-teams-arrow">→</div>
         </a>
     </div>
 
-    <!-- Quick Navigation Cards -->
-    <div class="quick-nav-section fade-in">
-        <h2 class="section-title">Quick Navigation</h2>
-        <div class="quick-nav-grid">
-            <a href="{{ url_for('players_page') }}" class="quick-nav-card">
-                <div class="quick-nav-icon">👤</div>
-                <h3 class="quick-nav-title">Players</h3>
-                <p class="quick-nav-description">Browse and search through our extensive player database</p>
+
+    <!-- Top Expensive Players -->
+    {% if top_players %}
+    <div class="featured-leagues-section fade-in">
+        <h2 class="section-title">Top Expensive Players</h2>
+        <div class="featured-leagues-grid">
+            {% for player in top_players %}
+            <a href="{{ url_for('player_profile_page', player_id=player.player_id) }}" class="featured-league-card">
+                <div class="featured-league-header">
+                    <div class="featured-league-avatar">
+                        <img src="{{ player.image_url }}" class="card-img-top" alt="{{ player.name }}" style="height: 80px; object-fit: cover; object-position: top;">
+                    </div>
+                    <h3 class="featured-league-name">{{ player.name or 'Unknown Player' }}</h3>
+                </div>
+                <div class="featured-league-info">
+                    <div class="featured-league-country">💰 {{ "{:,}".format(player.market_value_in_eur).replace(',', '.') if player.market_value_in_eur else '-' }} €</div>
+                </div>
             </a>
-            <a href="{{ url_for('clubs_page') }}" class="quick-nav-card">
-                <div class="quick-nav-icon">🏟️</div>
-                <h3 class="quick-nav-title">Teams</h3>
-                <p class="quick-nav-description">Discover teams, their stats, and squad information</p>
-            </a>
-            <a href="{{ url_for('transfers_page') }}" class="quick-nav-card">
-                <div class="quick-nav-icon">🔄</div>
-                <h3 class="quick-nav-title">Transfers</h3>
-                <p class="quick-nav-description">Track player transfers and market movements</p>
-            </a>
-            <a href="{{ url_for('competitions_page') }}" class="quick-nav-card">
-                <div class="quick-nav-icon">🏆</div>
-                <h3 class="quick-nav-title">Leagues</h3>
-                <p class="quick-nav-description">Explore all leagues, cups and tournaments</p>
-            </a>
-            <a href="{{ url_for('games_page') }}" class="quick-nav-card">
-                <div class="quick-nav-icon">⚽</div>
-                <h3 class="quick-nav-title">Games</h3>
-                <p class="quick-nav-description">View match results and game statistics</p>
-            </a>
+            {% endfor %}
         </div>
     </div>
+    {% endif %}
 
     <!-- Featured Major Leagues -->
     {% if major_leagues %}

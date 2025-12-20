@@ -1672,3 +1672,35 @@ def get_statistics():
             conn.close()
 
 #-----------------------------------------------------------------------------------------
+
+def get_top_expensive_players(limit=5):
+    """Piyasa değeri en yüksek oyuncuları çeker."""
+    conn = None
+    try:
+        conn = get_conn()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        query = """
+            SELECT 
+                p.player_id,
+                p.name,
+                p.image_url,
+                p.market_value_in_eur,
+                p.sub_position,
+                c.name AS club_name
+            FROM players p
+            LEFT JOIN clubs c ON p.current_club_id = c.club_id
+            WHERE p.market_value_in_eur IS NOT NULL
+            ORDER BY p.market_value_in_eur DESC
+            LIMIT %s
+        """
+        cur.execute(query, (limit,))
+        players = cur.fetchall()
+        cur.close()
+        return players
+    except Exception as e:
+        print(f"Database error (get_top_expensive_players): {e}")
+        return []
+    finally:
+        if conn:
+            conn.close()

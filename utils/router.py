@@ -15,6 +15,7 @@ def base_page():
     """Fetches data for the home page and renders it."""
     # Major leagues (top 8 for featured section)
     major_leagues = database.get_all_competitions(is_major_league=True)[:8]
+    top_players = database.get_top_expensive_players(5)
     
     # Statistics for quick stats cards
     stats = database.get_statistics()
@@ -22,6 +23,7 @@ def base_page():
     return render_template(
         'base.html',
         major_leagues=major_leagues,
+        top_players=top_players,
         stats=stats
     )
 
