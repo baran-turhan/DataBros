@@ -354,6 +354,52 @@ def delete_game(game_id: int):
         return jsonify({"success": False, "message": "Delete failed."}), 404
     return jsonify({"success": True})
 
+def update_competition(competition_id: str):
+    """Lig verisini günceller."""
+    payload = request.get_json(silent=True) or {}
+
+    def _parse_text(val, field):
+        text = (val or "").strip()
+        if not text:
+            raise ValueError(f"{field} is required.")
+        return text
+
+    def _parse_bool(val):
+        if isinstance(val, bool):
+            return val
+        if val is None or val == "":
+            raise ValueError("Major league flag is required.")
+        lowered = str(val).strip().lower()
+        if lowered in ("true", "1", "yes"):
+            return True
+        if lowered in ("false", "0", "no"):
+            return False
+        raise ValueError("Invalid major league flag.")
+
+    try:
+        parsed = {
+            "competition_id": _parse_text(payload.get("competition_id"), "League ID"),
+            "name": _parse_text(payload.get("name"), "League name"),
+            "country_name": _parse_text(payload.get("country_name"), "Country"),
+            "url": (payload.get("url") or "").strip() or None,
+            "is_major_league": _parse_bool(payload.get("is_major_league")),
+        }
+    except ValueError as exc:
+        return jsonify({"success": False, "message": str(exc)}), 400
+
+    success = database.update_competition(competition_id, parsed)
+    if not success:
+        return jsonify({"success": False, "message": "Update failed."}), 500
+    return jsonify({"success": True})
+
+
+def delete_competition(competition_id: str):
+    """Lig kaydını siler."""
+    deleted = database.delete_competition(competition_id)
+    if not deleted:
+        return jsonify({"success": False, "message": "Delete failed."}), 404
+    return jsonify({"success": True})
+
 def competitions_page():
     """Mücadeleler sayfasını render eder ve veritabanından mücadele verilerini çeker."""
     selected_country = request.args.get("country")

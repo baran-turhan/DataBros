@@ -182,7 +182,152 @@ document.addEventListener('DOMContentLoaded', function() {
     leagueRows.forEach((row) => {
         row.addEventListener('click', (event) => {
             if (event.target.closest('a')) return; // let the link behave normally
+            if (event.target.closest('.league-edit-btn')) return;
             toggleLeagueRow(row);
         });
+    });
+
+    const editModal = document.getElementById('league-edit-modal');
+    const editForm = document.getElementById('league-edit-form');
+    const editClose = document.getElementById('league-edit-close');
+    const editCancel = document.getElementById('league-edit-cancel');
+    const editError = document.getElementById('league-edit-error');
+    const deleteBtn = document.getElementById('league-delete-btn');
+    const saveBtn = document.getElementById('league-edit-save');
+    const editButtons = Array.from(document.querySelectorAll('.league-edit-btn'));
+
+    const editIdInput = document.getElementById('edit-league-id');
+    const editNameInput = document.getElementById('edit-league-name');
+    const editCountryInput = document.getElementById('edit-league-country');
+    const editMajorInput = document.getElementById('edit-league-major');
+    const editUrlInput = document.getElementById('edit-league-url');
+
+    let activeCompetitionId = null;
+
+    const showEditError = (msg) => {
+        if (!editError) return;
+        if (msg) {
+            editError.textContent = msg;
+            editError.style.display = 'block';
+        } else {
+            editError.textContent = '';
+            editError.style.display = 'none';
+        }
+    };
+
+    const openEditModal = (btn) => {
+        if (!editModal) return;
+        activeCompetitionId = btn.dataset.competitionId || null;
+        editIdInput.value = btn.dataset.competitionId || '';
+        editNameInput.value = btn.dataset.competitionName || '';
+        editCountryInput.value = btn.dataset.competitionCountry || '';
+        editMajorInput.value = btn.dataset.competitionMajor || 'false';
+        editUrlInput.value = btn.dataset.competitionUrl || '';
+        showEditError('');
+        editModal.classList.add('active');
+        editModal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+    };
+
+    const closeEditModal = () => {
+        if (!editModal) return;
+        editModal.classList.remove('active');
+        editModal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+        activeCompetitionId = null;
+    };
+
+    editButtons.forEach((btn) => {
+        btn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            openEditModal(btn);
+        });
+    });
+
+    editClose?.addEventListener('click', closeEditModal);
+    editCancel?.addEventListener('click', closeEditModal);
+    editModal?.addEventListener('click', (event) => {
+        if (event.target === editModal) closeEditModal();
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && editModal?.classList.contains('active')) {
+            closeEditModal();
+        }
+    });
+
+    editForm?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!activeCompetitionId) return;
+        showEditError('');
+
+        const competitionId = (editIdInput.value || '').trim();
+        const name = (editNameInput.value || '').trim();
+        const country = editCountryInput.value || '';
+
+        if (!competitionId) {
+            showEditError('League ID is required.');
+            return;
+        }
+        if (!name) {
+            showEditError('League name is required.');
+            return;
+        }
+        if (!country) {
+            showEditError('Country is required.');
+            return;
+        }
+
+        const payload = {
+            competition_id: competitionId,
+            name: name,
+            country_name: country,
+            is_major_league: editMajorInput.value === 'true',
+            url: (editUrlInput.value || '').trim() || null
+        };
+
+        editForm.querySelectorAll('button').forEach((btn) => (btn.disabled = true));
+        saveBtn?.classList.add('loading');
+        try {
+            const res = await fetch(`/competitions/${encodeURIComponent(activeCompetitionId)}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) {
+                throw new Error(data.message || 'Update failed.');
+            }
+            window.location.reload();
+        } catch (err) {
+            showEditError(err.message || 'Update failed.');
+        } finally {
+            editForm.querySelectorAll('button').forEach((btn) => (btn.disabled = false));
+            saveBtn?.classList.remove('loading');
+        }
+    });
+
+    deleteBtn?.addEventListener('click', async () => {
+        if (!activeCompetitionId) return;
+        const confirmed = confirm('are you sure ?');
+        if (!confirmed) return;
+
+        deleteBtn.disabled = true;
+        deleteBtn.classList.add('loading');
+        try {
+            const res = await fetch(`/competitions/${encodeURIComponent(activeCompetitionId)}`, {
+                method: 'DELETE'
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) {
+                throw new Error(data.message || 'Delete failed.');
+            }
+            window.location.reload();
+        } catch (err) {
+            showEditError(err.message || 'Delete failed.');
+        } finally {
+            deleteBtn.disabled = false;
+            deleteBtn.classList.remove('loading');
+        }
     });
 });

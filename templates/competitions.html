@@ -73,6 +73,7 @@
                         <div class="league-cell id-col">League ID</div>
                         <div class="league-cell major-col">Major League?</div>
                         <div class="league-cell url-col">URL</div>
+                        <div class="league-cell edit-col">Edit</div>
                     </div>
                     <div class="leagues-body">
                         {% for comp in competitions %}
@@ -109,9 +110,80 @@
                                     —
                                 {% endif %}
                             </div>
+                            <div class="league-cell edit-col text-center">
+                                <button
+                                    type="button"
+                                    class="edit-btn league-edit-btn"
+                                    data-competition-id="{{ comp.competition_id }}"
+                                    data-competition-name="{{ comp.name or '' }}"
+                                    data-competition-country="{{ comp.country_name or '' }}"
+                                    data-competition-url="{{ comp.url or '' }}"
+                                    data-competition-major="{{ 'true' if comp.is_major_league else 'false' }}"
+                                    aria-label="Edit league"
+                                >
+                                    ✏️
+                                </button>
+                            </div>
                         </div>
                         {% endfor %}
                     </div>
+                </div>
+            </div>
+            <div class="modal-overlay" id="league-edit-modal" aria-hidden="true">
+                <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="league-edit-title">
+                    <div class="modal-header">
+                        <div class="modal-title" id="league-edit-title">Edit league</div>
+                        <button type="button" class="modal-close" id="league-edit-close">Close</button>
+                    </div>
+                    <form id="league-edit-form">
+                        <div class="modal-body">
+                            <div class="form-grid">
+                                <div class="modal-field">
+                                    <label for="edit-league-id">League ID</label>
+                                    <input type="text" id="edit-league-id" name="competition_id" required />
+                                </div>
+                                <div class="modal-field">
+                                    <label for="edit-league-name">League name</label>
+                                    <input type="text" id="edit-league-name" name="name" required />
+                                </div>
+                                <div class="modal-field">
+                                    <label for="edit-league-country">Country</label>
+                                    <select id="edit-league-country" name="country_name" required>
+                                        <option value="">Select country</option>
+                                        {% for country in countries %}
+                                            <option value="{{ country }}">{{ country }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="modal-field">
+                                    <label for="edit-league-major">Major league?</label>
+                                    <select id="edit-league-major" name="is_major_league">
+                                        <option value="true">Yes</option>
+                                        <option value="false">No</option>
+                                    </select>
+                                </div>
+                                <div class="modal-field">
+                                    <label for="edit-league-url">URL</label>
+                                    <input type="text" id="edit-league-url" name="url" placeholder="https://..." />
+                                </div>
+                            </div>
+                            <div id="league-edit-error" class="form-error" style="display:none;"></div>
+                            <div class="modal-actions">
+                                <button type="button" class="ghost" id="league-edit-cancel">Cancel</button>
+                                <button type="submit" class="primary" id="league-edit-save">
+                                    Save
+                                    <span class="spinner" aria-hidden="true"></span>
+                                </button>
+                            </div>
+                            <div class="modal-danger">
+                                <span class="modal-helper">Delete this league permanently.</span>
+                                <button type="button" class="delete-btn" id="league-delete-btn">
+                                    Delete
+                                    <span class="spinner" aria-hidden="true"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
         {% else %}
