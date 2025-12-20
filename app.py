@@ -52,6 +52,16 @@ def create_app():
     app.add_url_rule("/api/clubs/<int:club_id>", view_func=router.club_delete_api, methods=["DELETE"])
     app.add_url_rule("/competitions", view_func=router.competitions_page)
     app.add_url_rule("/competitions/<competition_id>/clubs", view_func=router.competition_clubs_api)
+    app.add_url_rule(
+        "/competitions/<competition_id>",
+        view_func=router.update_competition,
+        methods=["PATCH"],
+    )
+    app.add_url_rule(
+        "/competitions/<competition_id>",
+        view_func=router.delete_competition,
+        methods=["DELETE"],
+    )
     app.add_url_rule("/admin", view_func=router.admin_page, methods=["GET", "POST"])
 
     return app
