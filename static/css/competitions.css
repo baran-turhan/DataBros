@@ -1,96 +1,122 @@
-/* Competition Card Styles */
-.leagues-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 22px;
-    margin-bottom: 30px;
-}
-
-.league-card {
-    background: rgba(255, 255, 255, 0.94);
+/* Competition List Styles */
+.leagues-table-wrapper {
     border-radius: 16px;
-    padding: 24px;
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    margin-top: 10px;
+    margin-left: 20px;
+    margin-right: 20px;
+    margin-bottom: 20px;
+    overflow-x: auto;
 }
 
-.league-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22);
+.leagues-list {
+    min-width: 960px;
 }
 
-.league-header {
+.leagues-header,
+.leagues-row {
     display: flex;
     align-items: center;
-    gap: 16px;
-    margin-bottom: 20px;
-    padding-bottom: 16px;
-    border-bottom: 2px solid #e8eef6;
+    gap: 12px;
 }
 
-.league-avatar {
-    width: 56px;
-    height: 56px;
+.leagues-header {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+    padding: 12px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+.leagues-header .league-cell {
+    color: #fff;
+    font-weight: 700;
+}
+
+.leagues-body .leagues-row {
+    padding: 14px 16px;
+    border-bottom: 1px solid #e8eef6;
+    background: #fff;
+    transition: background 0.15s ease;
+    cursor: pointer;
+}
+
+.leagues-body .leagues-row:nth-child(even) {
+    background: #f7fbff;
+}
+
+.leagues-body .leagues-row:hover {
+    background: #eef5ff;
+}
+
+.league-cell {
+    flex: 1;
+}
+
+.name-col {
+    flex: 2.5;
+    min-width: 280px;
+}
+
+.country-col,
+.id-col,
+.major-col,
+.url-col {
+    flex: 1;
+}
+
+.league-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.league-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.league-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1e3c72;
+}
+
+.league-name-link {
+    color: #1e3c72;
+    text-decoration: none;
+}
+
+.league-name-link:hover {
+    text-decoration: underline;
+}
+
+.league-sub {
+    font-size: 0.85rem;
+    color: #5a6c84;
+}
+
+.leagues-row.clubs-open {
+    background: #eef5ff;
+    border-left: 4px solid #2a5298;
+}
+
+.league-mini-avatar {
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
     color: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
+    font-size: 1.1rem;
     font-weight: 800;
-    box-shadow: 0 6px 14px rgba(0,0,0,0.18);
     flex-shrink: 0;
-}
-
-.league-name {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: #1e3c72;
-    margin: 0;
-}
-
-.league-name-link {
-    color: #1e3c72;
-    text-decoration: none;
-    transition: color 0.2s ease;
-    cursor: pointer;
-}
-
-.league-name-link:hover {
-    color: #2a5298;
-    text-decoration: underline;
-}
-
-.league-info {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.info-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px solid #f1f5f9;
-}
-
-.info-item:last-child {
-    border-bottom: none;
-}
-
-.info-label {
-    font-weight: 600;
-    color: #718096;
-    font-size: 0.9rem;
-}
-
-.info-value {
-    font-weight: 700;
-    color: #1f2d3d;
-    font-size: 1rem;
 }
 
 .value-highlight {
@@ -98,16 +124,23 @@
     background: rgba(42, 82, 152, 0.1);
     padding: 4px 10px;
     border-radius: 6px;
+    font-weight: 600;
 }
 
-.info-item a {
+.text-center {
+    text-align: center;
+    color: #1f2d3d;
+    font-weight: 600;
+}
+
+.url-link {
     color: #2a5298;
     font-weight: 700;
     text-decoration: none;
     transition: color 0.2s ease;
 }
 
-.info-item a:hover {
+.url-link:hover {
     color: #1e3c72;
     text-decoration: underline;
 }
@@ -146,3 +179,130 @@
     width: 180px;
 }
 
+.league-clubs-row {
+    display: flex;
+    background: #f3f7ff;
+    border-bottom: 1px solid #dfe8f5;
+    padding: 16px 20px;
+    animation: fadeIn 0.15s ease-in-out;
+}
+
+.league-clubs-card {
+    width: 100%;
+    background: #fff;
+    border: 1px solid #dbe5f4;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 12px 25px rgba(30, 60, 114, 0.08);
+}
+
+.clubs-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.clubs-title {
+    font-weight: 800;
+    color: #1e3c72;
+}
+
+.clubs-subtitle {
+    color: #4b5b73;
+    font-size: 0.95rem;
+}
+
+.clubs-body {
+    min-height: 64px;
+}
+
+.clubs-loading {
+    color: #1e3c72;
+    font-weight: 700;
+}
+
+.clubs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.club-row {
+    display: grid;
+    grid-template-columns: 2fr 2fr 3fr;
+    align-items: center;
+    padding: 12px 14px;
+    background: #fff;
+    border: 1px solid #e4ebf7;
+    border-radius: 10px;
+    box-shadow: 0 8px 18px rgba(30, 60, 114, 0.05);
+}
+
+.club-name {
+    font-weight: 800;
+    color: #1e3c72;
+}
+
+.club-meta {
+    color: #4b5b73;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.club-meta .dot {
+    color: #b0bfd7;
+}
+
+.club-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.chip {
+    background: #eef5ff;
+    color: #1e3c72;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+@media (max-width: 900px) {
+    .club-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+        align-items: flex-start;
+    }
+}
+
+.club-empty {
+    padding: 12px;
+    border: 1px dashed #c8d6ed;
+    border-radius: 10px;
+    text-align: center;
+    color: #4b5b73;
+}
+
+.club-empty-title {
+    font-weight: 800;
+    color: #1e3c72;
+    margin-bottom: 4px;
+}
+
+.club-empty-subtitle {
+    font-size: 0.95rem;
+}
+
+.club-empty.error {
+    border-color: #f3b8b8;
+    color: #a83232;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
