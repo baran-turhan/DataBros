@@ -1252,56 +1252,21 @@ def update_competition(competition_id: str, payload: dict) -> bool:
     try:
         conn = get_conn()
         cur = conn.cursor()
-
-        new_id = payload.get("competition_id") or competition_id
         name = payload.get("name")
         url = payload.get("url")
         is_major = payload.get("is_major_league")
-        country_name = payload.get("country_name")
 
-        if new_id != competition_id:
-            cur.execute(
-                "SELECT 1 FROM competitions WHERE competition_id = %s",
-                (new_id,),
-            )
-            if cur.fetchone():
-                conn.rollback()
-                cur.close()
-                return False
-
-            cur.execute(
-                """
-                INSERT INTO competitions (competition_id, name, url, is_major_national_league, country_name)
-                VALUES (%s, %s, %s, %s, %s)
-                """,
-                (new_id, name, url, is_major, country_name),
-            )
-            cur.execute(
-                "UPDATE games SET competition_id = %s WHERE competition_id = %s",
-                (new_id, competition_id),
-            )
-            cur.execute(
-                "UPDATE clubs SET domestic_competition_id = %s WHERE domestic_competition_id = %s",
-                (new_id, competition_id),
-            )
-            cur.execute(
-                "DELETE FROM competitions WHERE competition_id = %s",
-                (competition_id,),
-            )
-            updated = cur.rowcount > 0
-        else:
-            cur.execute(
-                """
-                UPDATE competitions
-                SET name = %s,
-                    url = %s,
-                    is_major_national_league = %s,
-                    country_name = %s
-                WHERE competition_id = %s
-                """,
-                (name, url, is_major, country_name, competition_id),
-            )
-            updated = cur.rowcount > 0
+        cur.execute(
+            """
+            UPDATE competitions
+            SET name = %s,
+                url = %s,
+                is_major_national_league = %s
+            WHERE competition_id = %s
+            """,
+            (name, url, is_major, competition_id),
+        )
+        updated = cur.rowcount > 0
 
         conn.commit()
         cur.close()

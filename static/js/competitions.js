@@ -261,27 +261,14 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!activeCompetitionId) return;
         showEditError('');
 
-        const competitionId = (editIdInput.value || '').trim();
         const name = (editNameInput.value || '').trim();
-        const country = editCountryInput.value || '';
-
-        if (!competitionId) {
-            showEditError('League ID is required.');
-            return;
-        }
         if (!name) {
             showEditError('League name is required.');
             return;
         }
-        if (!country) {
-            showEditError('Country is required.');
-            return;
-        }
 
         const payload = {
-            competition_id: competitionId,
             name: name,
-            country_name: country,
             is_major_league: editMajorInput.value === 'true',
             url: (editUrlInput.value || '').trim() || null
         };

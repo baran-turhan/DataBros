@@ -77,10 +77,11 @@
                     </div>
                     <div class="leagues-body">
                         {% for comp in competitions %}
-                        {% set league_name = comp.name or 'Unknown League' %}
+                        {% set raw_league_name = comp.name or 'Unknown League' %}
+                        {% set league_display = raw_league_name|replace('_', ' ')|replace('-', ' ')|title %}
                         <div class="leagues-row fade-in league-row-trigger" 
                              data-competition-id="{{ comp.competition_id }}" 
-                             data-league-name="{{ league_name }}">
+                             data-league-name="{{ league_display }}">
                             <div class="league-cell name-col">
                                 <div class="league-item">
                                     <div class="league-mini-avatar">
@@ -88,7 +89,7 @@
                                     </div>
                                     <div class="league-meta">
                                         <a class="league-name league-name-link" href="{{ url_for('clubs_page', league=comp.name|lower, submitted=1) }}">
-                                            {{ league_name }}
+                                            {{ league_display }}
                                         </a>
                                         <span class="league-sub">Click row to preview clubs</span>
                                     </div>
@@ -140,7 +141,7 @@
                             <div class="form-grid">
                                 <div class="modal-field">
                                     <label for="edit-league-id">League ID</label>
-                                    <input type="text" id="edit-league-id" name="competition_id" required />
+                                    <input type="text" id="edit-league-id" name="competition_id" required readonly disabled />
                                 </div>
                                 <div class="modal-field">
                                     <label for="edit-league-name">League name</label>
@@ -148,7 +149,7 @@
                                 </div>
                                 <div class="modal-field">
                                     <label for="edit-league-country">Country</label>
-                                    <select id="edit-league-country" name="country_name" required>
+                                    <select id="edit-league-country" name="country_name" required disabled>
                                         <option value="">Select country</option>
                                         {% for country in countries %}
                                             <option value="{{ country }}">{{ country }}</option>

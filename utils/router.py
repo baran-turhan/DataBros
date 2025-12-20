@@ -405,12 +405,6 @@ def update_competition(competition_id: str):
     """Lig verisini günceller."""
     payload = request.get_json(silent=True) or {}
 
-    def _parse_text(val, field):
-        text = (val or "").strip()
-        if not text:
-            raise ValueError(f"{field} is required.")
-        return text
-
     def _parse_bool(val):
         if isinstance(val, bool):
             return val
@@ -424,10 +418,12 @@ def update_competition(competition_id: str):
         raise ValueError("Invalid major league flag.")
 
     try:
+        name = (payload.get("name") or "").strip()
+        if not name:
+            raise ValueError("League name is required.")
+
         parsed = {
-            "competition_id": _parse_text(payload.get("competition_id"), "League ID"),
-            "name": _parse_text(payload.get("name"), "League name"),
-            "country_name": _parse_text(payload.get("country_name"), "Country"),
+            "name": name,
             "url": (payload.get("url") or "").strip() or None,
             "is_major_league": _parse_bool(payload.get("is_major_league")),
         }
