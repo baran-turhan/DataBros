@@ -21,6 +21,16 @@ def create_app():
         methods=["POST"],
     )
     app.add_url_rule(
+        "/games/<int:game_id>",
+        view_func=router.update_game,
+        methods=["PATCH"],
+    )
+    app.add_url_rule(
+        "/games/<int:game_id>",
+        view_func=router.delete_game,
+        methods=["DELETE"],
+    )
+    app.add_url_rule(
         "/games/<int:club_id>/opponents",
         view_func=router.get_opponents_for_club_api,
         methods=["GET"],

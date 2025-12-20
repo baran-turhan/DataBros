@@ -68,32 +68,116 @@
         text-align: center;
     }
 
-    .games-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-        gap: 20px;
+    .games-table-wrapper {
+        margin-top: 10px;
+        overflow-x: auto;
     }
 
-    .game-card {
-        background: white;
-        border-radius: 18px;
-        padding: 22px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        border: 1px solid rgba(255,255,255,0.4);
+    .games-list {
+        min-width: 1040px;
     }
 
-    .game-date {
-        font-size: 0.95rem;
-        color: #718096;
-        margin-bottom: 10px;
-    }
-
-    .game-row {
-        display: grid;
-        grid-template-columns: 1fr auto 1fr;
+    .games-header,
+    .games-row {
+        display: flex;
         align-items: center;
-        gap: 10px;
-        margin-bottom: 10px;
+        gap: 12px;
+    }
+
+    .games-header {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        color: #fff;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 700;
+        padding: 12px 16px;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+    }
+
+    .games-header .game-cell {
+        color: #fff;
+        font-weight: 700;
+    }
+
+    .games-body .games-row {
+        padding: 12px 16px;
+        border-bottom: 1px solid #e8eef6;
+        background: #fff;
+        transition: background 0.15s ease;
+    }
+
+    .games-body .games-row:nth-child(even) {
+        background: #f7fbff;
+    }
+
+    .games-body .games-row:hover {
+        background: #eef5ff;
+    }
+
+    .game-cell {
+        flex: 1;
+    }
+
+    .date-col {
+        flex: 1.1;
+        min-width: 120px;
+        color: #4a5568;
+        font-weight: 600;
+    }
+
+    .home-col,
+    .away-col {
+        flex: 1.6;
+        min-width: 170px;
+    }
+
+    .score-col {
+        flex: 0.9;
+        min-width: 90px;
+        text-align: center;
+    }
+
+    .competition-col {
+        flex: 2.2;
+        min-width: 240px;
+    }
+
+    .season-col {
+        flex: 0.8;
+        min-width: 90px;
+        text-align: center;
+        color: #1f2d3d;
+        font-weight: 600;
+    }
+
+    .table-col {
+        flex: 1;
+        min-width: 120px;
+        text-align: center;
+        color: #1f2d3d;
+        font-weight: 600;
+    }
+
+    .diff-col {
+        flex: 0.7;
+        min-width: 90px;
+        text-align: center;
+        color: #1f2d3d;
+        font-weight: 700;
+    }
+
+    .fav-col {
+        flex: 0.5;
+        min-width: 70px;
+        text-align: center;
+    }
+
+    .edit-col {
+        flex: 0.5;
+        min-width: 70px;
+        text-align: center;
     }
 
     .club {
@@ -111,19 +195,15 @@
         min-width: 72px;
     }
 
-    .game-meta {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        font-size: 0.95rem;
-        color: #4a5568;
-        margin-top: 8px;
+    .game-sub {
+        color: #718096;
+        font-size: 0.85rem;
+        margin-top: 4px;
     }
 
-    .game-meta span {
-        background: #f1f5f9;
-        padding: 6px 10px;
-        border-radius: 10px;
+    .league-name {
+        font-weight: 700;
+        color: #1e3c72;
     }
 
     .info-banner {
@@ -334,14 +414,7 @@
         box-shadow: 0 6px 16px rgba(255, 90, 138, 0.35);
     }
 
-    .game-card {
-        position: relative;
-    }
-
     .favorite-btn {
-        position: absolute;
-        top: 10px;
-        right: 10px;
         background: #f8fafc;
         border: 1px solid #e2e8f0;
         border-radius: 50%;
@@ -354,6 +427,7 @@
         color: #ff5a8a;
         cursor: pointer;
         transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+        margin: 0 auto;
     }
 
     .favorite-btn:hover {
@@ -366,6 +440,27 @@
         border-color: #ffb6d0;
         color: #ff2d71;
         box-shadow: 0 6px 14px rgba(255, 90, 138, 0.2);
+    }
+
+    .edit-btn {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 50%;
+        width: 38px;
+        height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        color: #1e3c72;
+        cursor: pointer;
+        transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+        margin: 0 auto;
+    }
+
+    .edit-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 14px rgba(30, 60, 114, 0.2);
     }
 
     .league-link {
@@ -388,6 +483,189 @@
         padding: 2px 10px;
         font-size: 0.85rem;
         font-weight: 600;
+    }
+
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.65);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        z-index: 50;
+    }
+
+    .modal-overlay.active {
+        display: flex;
+    }
+
+    .modal-card {
+        background: #fff;
+        color: #1a202c;
+        border-radius: 18px;
+        width: min(720px, 100%);
+        box-shadow: 0 20px 60px rgba(15, 23, 42, 0.35);
+        overflow: hidden;
+    }
+
+    .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .modal-title {
+        font-weight: 800;
+        color: #1e3c72;
+        font-size: 1.1rem;
+    }
+
+    .modal-close {
+        background: transparent;
+        border: none;
+        font-weight: 700;
+        color: #4a5568;
+        cursor: pointer;
+        padding: 6px 10px;
+        border-radius: 10px;
+    }
+
+    .modal-close:hover {
+        background: #edf2f7;
+    }
+
+    .modal-body {
+        padding: 16px 20px 20px;
+        display: grid;
+        gap: 12px;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 12px;
+    }
+
+    .modal-field label {
+        display: block;
+        font-weight: 700;
+        margin-bottom: 6px;
+        color: #1f2937;
+    }
+
+    .modal-field input,
+    .modal-field select {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        font-size: 0.95rem;
+        color: #1a202c;
+        background: #f8fafc;
+    }
+
+    .modal-field input:focus,
+    .modal-field select:focus {
+        outline: none;
+        border-color: #3182ce;
+        box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.15);
+        background: #fff;
+    }
+
+    .modal-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+    }
+
+    .modal-actions button {
+        padding: 10px 16px;
+        border-radius: 12px;
+        border: none;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .modal-actions .primary {
+        background: linear-gradient(135deg, #1e3c72, #2a5298);
+        color: #fff;
+    }
+
+    .modal-actions .ghost {
+        background: #e2e8f0;
+        color: #1e3c72;
+    }
+
+    .modal-danger {
+        margin-top: 6px;
+        border: 1px solid #fed7d7;
+        background: #fff5f5;
+        padding: 12px 14px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .delete-btn {
+        background: #e53e3e;
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        padding: 8px 14px;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .spinner {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        border: 2px solid currentColor;
+        border-top-color: transparent;
+        display: none;
+        animation: spin 0.8s linear infinite;
+    }
+
+    button.loading {
+        opacity: 0.8;
+        cursor: wait;
+    }
+
+    button.loading .spinner {
+        display: inline-block;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .modal-helper {
+        color: #6b7280;
+        font-size: 0.9rem;
+    }
+
+    .modal-inline {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .modal-inline input[type="checkbox"] {
+        width: auto;
+        margin: 0;
     }
 </style>
 {% endblock %}
@@ -597,36 +875,43 @@
     {% endif %}
 
     {% if games %}
-        <div class="games-grid">
+        <div class="games-table-wrapper">
+            <div class="games-list">
+                <div class="games-header games-row">
+                    <div class="game-cell date-col">Date</div>
+                    <div class="game-cell home-col">Home</div>
+                    <div class="game-cell score-col">Score</div>
+                    <div class="game-cell away-col">Away</div>
+                    <div class="game-cell competition-col">Competition</div>
+                    <div class="game-cell season-col">Season</div>
+                    <div class="game-cell table-col">Table</div>
+                    <div class="game-cell diff-col">Goal diff</div>
+                    <div class="game-cell fav-col">Fav</div>
+                    <div class="game-cell edit-col">Edit</div>
+                </div>
+                <div class="games-body">
             {% for game in games %}
-            <div class="game-card fade-in" data-goal-diff="{{ game.goal_difference if game.goal_difference is not none else '' }}">
-                <button
-                    type="button"
-                    class="favorite-btn {% if game.is_favorite %}active{% endif %}"
-                    data-game-id="{{ game.game_id }}"
-                    aria-label="Add this match to favorites"
-                >
-                    {% if game.is_favorite %}♥{% else %}♡{% endif %}
-                </button>
-                <div class="game-date">{{ game.game_date or 'No date' }}</div>
-                <div class="game-row">
-                    <span class="club">{{ game.home_club_name or 'Home' }}</span>
+            <div class="games-row game-item fade-in" data-goal-diff="{{ game.goal_difference if game.goal_difference is not none else '' }}">
+                <div class="game-cell date-col">{{ game.game_date or 'No date' }}</div>
+                <div class="game-cell home-col club">{{ game.home_club_name or 'Home' }}</div>
+                <div class="game-cell score-col">
                     <span class="score">
                         {{ game.home_club_goals if game.home_club_goals is not none else '-' }}
                         -
                         {{ game.away_club_goals if game.away_club_goals is not none else '-' }}
                     </span>
-                    <span class="club">{{ game.away_club_name or 'Away' }}</span>
                 </div>
-                <div class="game-meta">
+                <div class="game-cell away-col club">{{ game.away_club_name or 'Away' }}</div>
+                <div class="game-cell competition-col">
                     {% set league_link = url_for(
                         'competitions_page',
                         country=game.competition_country,
                         is_major_league='true' if game.competition_is_major else 'false'
                     ) if game.competition_country else None %}
+                    {% set competition_name = game.competition_name or 'Unknown competition' %}
                     {% if league_link %}
                         <a class="league-link" href="{{ league_link }}">
-                            {{ game.competition_name or 'Unknown competition' }}
+                            {{ competition_name }}
                             {% if game.competition_is_major is not none %}
                                 <span class="league-chip">
                                     {% if game.competition_is_major %}Major{% else %}Minor{% endif %}
@@ -634,20 +919,203 @@
                             {% endif %}
                         </a>
                     {% else %}
-                        <span>{{ game.competition_name or 'Unknown competition' }}</span>
+                        <div class="league-name">
+                            {{ competition_name }}
+                            {% if game.competition_is_major is not none %}
+                                <span class="league-chip">
+                                    {% if game.competition_is_major %}Major{% else %}Minor{% endif %}
+                                </span>
+                            {% endif %}
+                        </div>
                     {% endif %}
-                    {% if game.season %}<span>Season {{ game.season }}</span>{% endif %}
+                    {% if game.competition_country %}
+                        <div class="game-sub">{{ game.competition_country }}</div>
+                    {% endif %}
+                </div>
+                <div class="game-cell season-col">{{ game.season or '-' }}</div>
+                <div class="game-cell table-col">
                     {% if game.home_club_position is not none and game.away_club_position is not none %}
-                        <span>Table: {{ game.home_club_position }} - {{ game.away_club_position }}</span>
+                        {{ game.home_club_position }} - {{ game.away_club_position }}
+                    {% else %}
+                        -
                     {% endif %}
+                </div>
+                <div class="game-cell diff-col">
                     {% if game.goal_difference is not none %}
-                        <span>Goal diff: {{ game.goal_difference }}</span>
+                        {{ game.goal_difference }}
+                    {% else %}
+                        -
                     {% endif %}
+                </div>
+                <div class="game-cell fav-col">
+                    <button
+                        type="button"
+                        class="favorite-btn {% if game.is_favorite %}active{% endif %}"
+                        data-game-id="{{ game.game_id }}"
+                        aria-label="Add this match to favorites"
+                    >
+                        {% if game.is_favorite %}♥{% else %}♡{% endif %}
+                    </button>
+                </div>
+                <div class="game-cell edit-col">
+                    <button
+                        type="button"
+                        class="edit-btn"
+                        data-game-id="{{ game.game_id }}"
+                        data-game-date="{{ game.game_date.strftime('%Y-%m-%d') if game.game_date else '' }}"
+                        data-home-club-id="{{ game.home_club_id or '' }}"
+                        data-away-club-id="{{ game.away_club_id or '' }}"
+                        data-competition-id="{{ game.competition_id or '' }}"
+                        data-home-goals="{{ game.home_club_goals if game.home_club_goals is not none else '' }}"
+                        data-away-goals="{{ game.away_club_goals if game.away_club_goals is not none else '' }}"
+                        data-home-position="{{ game.home_club_position if game.home_club_position is not none else '' }}"
+                        data-away-position="{{ game.away_club_position if game.away_club_position is not none else '' }}"
+                        data-season="{{ game.season or '' }}"
+                        data-is-favorite="{{ 1 if game.is_favorite else 0 }}"
+                        aria-label="Edit match"
+                    >
+                        ✏️
+                    </button>
                 </div>
             </div>
             {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="modal-overlay" id="game-edit-modal" aria-hidden="true">
+            <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="game-edit-title">
+                <div class="modal-header">
+                    <div class="modal-title" id="game-edit-title">Edit match</div>
+                    <button type="button" class="modal-close" id="game-edit-close">Close</button>
+                </div>
+                <form id="game-edit-form">
+                    <div class="modal-body">
+                        <div class="form-grid">
+                            <div class="modal-field">
+                                <label for="edit-date">Date</label>
+                                <input type="date" id="edit-date" name="date" />
+                            </div>
+                            <div class="modal-field">
+                                <label for="edit-season">Season</label>
+                                <input type="text" id="edit-season" name="season" placeholder="Season" />
+                            </div>
+                            <div class="modal-field">
+                                <label for="edit-home-club">Home club</label>
+                                <select id="edit-home-club" name="home_club_id">
+                                    <option value="">Select club</option>
+                                    {% for club in club_options %}
+                                        <option value="{{ club.club_id }}">{{ club.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="modal-field">
+                                <label for="edit-away-club">Away club</label>
+                                <select id="edit-away-club" name="away_club_id">
+                                    <option value="">Select club</option>
+                                    {% for club in club_options %}
+                                        <option value="{{ club.club_id }}">{{ club.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="modal-field">
+                                <label for="edit-home-goals">Home goals</label>
+                                <input type="number" id="edit-home-goals" name="home_club_goals" min="0" step="1" inputmode="numeric" />
+                            </div>
+                            <div class="modal-field">
+                                <label for="edit-away-goals">Away goals</label>
+                                <input type="number" id="edit-away-goals" name="away_club_goals" min="0" step="1" inputmode="numeric" />
+                            </div>
+                            <div class="modal-field">
+                                <label for="edit-competition">Competition</label>
+                                <select id="edit-competition" name="competition_id">
+                                    <option value="">Select competition</option>
+                                    {% for competition in competition_options %}
+                                        <option value="{{ competition.competition_id }}">
+                                            {{ competition.name }}{% if competition.country_name %} · {{ competition.country_name }}{% endif %}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="modal-field">
+                                <label for="edit-home-position">Home position</label>
+                                <input type="number" id="edit-home-position" name="home_club_position" min="0" step="1" inputmode="numeric" />
+                            </div>
+                            <div class="modal-field">
+                                <label for="edit-away-position">Away position</label>
+                                <input type="number" id="edit-away-position" name="away_club_position" min="0" step="1" inputmode="numeric" />
+                            </div>
+                            <div class="modal-field modal-inline">
+                                <input type="checkbox" id="edit-favorite" name="is_favorite" />
+                                <label for="edit-favorite">Favorite</label>
+                            </div>
+                        </div>
+                        <div id="edit-form-error" class="form-error" style="display:none;"></div>
+                        <div class="modal-actions">
+                            <button type="button" class="ghost" id="game-edit-cancel">Cancel</button>
+                            <button type="submit" class="primary" id="game-edit-save">
+                                Save
+                                <span class="spinner" aria-hidden="true"></span>
+                            </button>
+                        </div>
+                        <div class="modal-danger">
+                            <span class="modal-helper">Delete this match permanently.</span>
+                            <button type="button" class="delete-btn" id="game-delete-btn">
+                                Delete
+                                <span class="spinner" aria-hidden="true"></span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
         <div id="client-no-results" class="no-results" style="display:none;">No matches for this goal difference.</div>
+        {% if total_pages > 1 %}
+        <div class="pagination-container">
+            <div class="pagination">
+                {% if page > 1 %}
+                <a href="{{ url_for('games_page', page=page-1, year=selected_year or '', sort=sort_option, favorites=1 if favorite_only else '', club_a=club_a_id or '', club_b=club_b_id or '') }}" class="page-link arrow">←</a>
+                {% endif %}
+
+                {% set start_page = page - 2 %}
+                {% set end_page = page + 2 %}
+
+                {% if start_page < 1 %}
+                    {% set start_page = 1 %}
+                    {% set end_page = 5 %}
+                {% endif %}
+
+                {% if end_page > total_pages %}
+                    {% set end_page = total_pages %}
+                    {% set start_page = total_pages - 4 %}
+                    {% if start_page < 1 %}{% set start_page = 1 %}{% endif %}
+                {% endif %}
+
+                {% if start_page > 1 %}
+                    <a href="{{ url_for('games_page', page=1, year=selected_year or '', sort=sort_option, favorites=1 if favorite_only else '', club_a=club_a_id or '', club_b=club_b_id or '') }}" class="page-link">1</a>
+                    {% if start_page > 2 %}
+                        <span class="dots">...</span>
+                    {% endif %}
+                {% endif %}
+
+                {% for p in range(start_page, end_page + 1) %}
+                    <a href="{{ url_for('games_page', page=p, year=selected_year or '', sort=sort_option, favorites=1 if favorite_only else '', club_a=club_a_id or '', club_b=club_b_id or '') }}" class="page-link {% if p == page %}active{% endif %}">
+                        {{ p }}
+                    </a>
+                {% endfor %}
+
+                {% if end_page < total_pages %}
+                    {% if end_page < total_pages - 1 %}
+                        <span class="dots">...</span>
+                    {% endif %}
+                    <a href="{{ url_for('games_page', page=total_pages, year=selected_year or '', sort=sort_option, favorites=1 if favorite_only else '', club_a=club_a_id or '', club_b=club_b_id or '') }}" class="page-link">{{ total_pages }}</a>
+                {% endif %}
+
+                {% if page < total_pages %}
+                <a href="{{ url_for('games_page', page=page+1, year=selected_year or '', sort=sort_option, favorites=1 if favorite_only else '', club_a=club_a_id or '', club_b=club_b_id or '') }}" class="page-link arrow">→</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
     {% elif favorite_only %}
         <div class="no-results">No favorite matches yet.</div>
     {% elif selected_year %}
@@ -663,13 +1131,13 @@
         const averageInput = document.getElementById("average-filter");
         const applyBtn = document.getElementById("apply-average");
         const clearBtn = document.getElementById("clear-average");
-        const cards = Array.from(document.querySelectorAll(".game-card"));
+        const rows = Array.from(document.querySelectorAll(".game-item"));
         const errorBox = document.getElementById("average-error");
         const noResultsBox = document.getElementById("client-no-results");
         const favoriteButtons = Array.from(document.querySelectorAll(".favorite-btn"));
 
         const resetVisibility = () => {
-            cards.forEach(card => card.style.display = "");
+            rows.forEach(row => row.style.display = "");
             if (noResultsBox) noResultsBox.style.display = "none";
         };
 
@@ -699,11 +1167,11 @@
             }
 
             let visibleCount = 0;
-            cards.forEach(card => {
-                const diffAttr = card.dataset.goalDiff;
+            rows.forEach(row => {
+                const diffAttr = row.dataset.goalDiff;
                 const diff = diffAttr === "" ? null : Number(diffAttr);
                 const match = diff !== null && diff === parsed;
-                card.style.display = match ? "" : "none";
+                row.style.display = match ? "" : "none";
                 if (match) visibleCount += 1;
             });
 
@@ -760,6 +1228,159 @@
                     btn.disabled = false;
                 }
             });
+        });
+
+        const editModal = document.getElementById("game-edit-modal");
+        const editForm = document.getElementById("game-edit-form");
+        const editClose = document.getElementById("game-edit-close");
+        const editCancel = document.getElementById("game-edit-cancel");
+        const editError = document.getElementById("edit-form-error");
+        const deleteBtn = document.getElementById("game-delete-btn");
+        const saveBtn = document.getElementById("game-edit-save");
+        const editButtons = Array.from(document.querySelectorAll(".edit-btn"));
+
+        const editDate = document.getElementById("edit-date");
+        const editSeason = document.getElementById("edit-season");
+        const editHomeClub = document.getElementById("edit-home-club");
+        const editAwayClub = document.getElementById("edit-away-club");
+        const editHomeGoals = document.getElementById("edit-home-goals");
+        const editAwayGoals = document.getElementById("edit-away-goals");
+        const editCompetition = document.getElementById("edit-competition");
+        const editHomePosition = document.getElementById("edit-home-position");
+        const editAwayPosition = document.getElementById("edit-away-position");
+        const editFavorite = document.getElementById("edit-favorite");
+
+        let activeGameId = null;
+
+        const showEditError = (msg) => {
+            if (!editError) return;
+            if (msg) {
+                editError.textContent = msg;
+                editError.style.display = "block";
+            } else {
+                editError.textContent = "";
+                editError.style.display = "none";
+            }
+        };
+
+        const openEditModal = (btn) => {
+            if (!editModal || !editForm) return;
+            activeGameId = btn.dataset.gameId || null;
+            editDate.value = btn.dataset.gameDate || "";
+            editSeason.value = btn.dataset.season || "";
+            editHomeClub.value = btn.dataset.homeClubId || "";
+            editAwayClub.value = btn.dataset.awayClubId || "";
+            editCompetition.value = btn.dataset.competitionId || "";
+            editHomeGoals.value = btn.dataset.homeGoals || "";
+            editAwayGoals.value = btn.dataset.awayGoals || "";
+            editHomePosition.value = btn.dataset.homePosition || "";
+            editAwayPosition.value = btn.dataset.awayPosition || "";
+            editFavorite.checked = btn.dataset.isFavorite === "1";
+            showEditError("");
+            editModal.classList.add("active");
+            editModal.setAttribute("aria-hidden", "false");
+            document.body.style.overflow = "hidden";
+        };
+
+        const closeEditModal = () => {
+            if (!editModal) return;
+            editModal.classList.remove("active");
+            editModal.setAttribute("aria-hidden", "true");
+            document.body.style.overflow = "";
+            activeGameId = null;
+        };
+
+        editButtons.forEach((btn) => {
+            btn.addEventListener("click", () => openEditModal(btn));
+        });
+
+        editClose?.addEventListener("click", closeEditModal);
+        editCancel?.addEventListener("click", closeEditModal);
+        editModal?.addEventListener("click", (event) => {
+            if (event.target === editModal) closeEditModal();
+        });
+
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape" && editModal?.classList.contains("active")) {
+                closeEditModal();
+            }
+        });
+
+        const parseIntField = (input, label) => {
+            const raw = (input?.value || "").trim();
+            if (raw === "") return null;
+            const parsed = Number(raw);
+            if (!Number.isInteger(parsed) || parsed < 0) {
+                throw new Error(`${label} must be a positive whole number.`);
+            }
+            return parsed;
+        };
+
+        editForm?.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            if (!activeGameId) return;
+            showEditError("");
+
+            let payload = null;
+            try {
+                payload = {
+                    date: editDate.value || null,
+                    season: (editSeason.value || "").trim() || null,
+                    home_club_id: editHomeClub.value || null,
+                    away_club_id: editAwayClub.value || null,
+                    competition_id: editCompetition.value || null,
+                    home_club_goals: parseIntField(editHomeGoals, "Home goals"),
+                    away_club_goals: parseIntField(editAwayGoals, "Away goals"),
+                    home_club_position: parseIntField(editHomePosition, "Home position"),
+                    away_club_position: parseIntField(editAwayPosition, "Away position"),
+                    is_favorite: editFavorite.checked
+                };
+            } catch (err) {
+                showEditError(err.message || "Invalid input.");
+                return;
+            }
+
+            editForm.querySelectorAll("button").forEach((btn) => (btn.disabled = true));
+            saveBtn?.classList.add("loading");
+            try {
+                const res = await fetch(`/games/${activeGameId}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (!res.ok || !data.success) {
+                    throw new Error(data.message || "Update failed.");
+                }
+                window.location.reload();
+            } catch (err) {
+                showEditError(err.message || "Update failed.");
+            } finally {
+                editForm.querySelectorAll("button").forEach((btn) => (btn.disabled = false));
+                saveBtn?.classList.remove("loading");
+            }
+        });
+
+        deleteBtn?.addEventListener("click", async () => {
+            if (!activeGameId) return;
+            const confirmed = confirm("are you sure ?");
+            if (!confirmed) return;
+
+            deleteBtn.disabled = true;
+            deleteBtn.classList.add("loading");
+            try {
+                const res = await fetch(`/games/${activeGameId}`, { method: "DELETE" });
+                const data = await res.json();
+                if (!res.ok || !data.success) {
+                    throw new Error(data.message || "Delete failed.");
+                }
+                window.location.reload();
+            } catch (err) {
+                showEditError(err.message || "Delete failed.");
+            } finally {
+                deleteBtn.disabled = false;
+                deleteBtn.classList.remove("loading");
+            }
         });
     });
 </script>

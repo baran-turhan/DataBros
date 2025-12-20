@@ -192,13 +192,20 @@ def games_page():
     sort_option = request.args.get("sort", "date")
     if sort_option not in ("date", "goal_diff_desc", "goal_diff_asc"):
         sort_option = "date"
+    page = request.args.get("page", default=1, type=int)
+    per_page = 100
+    if page < 1:
+        page = 1
+
     games = []
     year_summary = None
+    total_results = 0
 
     # Kulüp listesi head-to-head formu için
     club_options = database.get_club_options()
     club_name_map = {c["club_id"]: c["name"] for c in club_options} if club_options else {}
     opponent_options = []
+    competition_options = database.get_competition_options()
 
     head_to_head_stats = None
     head_to_head_matches = []
@@ -206,12 +213,26 @@ def games_page():
 
     if favorite_only:
         if selected_year and 1900 <= selected_year <= current_year:
-            games = database.get_favorite_games(selected_year, sort_by=sort_option)
+            games, total_results = database.get_favorite_games(
+                selected_year,
+                sort_by=sort_option,
+                page=page,
+                per_page=per_page,
+            )
         else:
             selected_year = None
-            games = database.get_favorite_games(sort_by=sort_option)
+            games, total_results = database.get_favorite_games(
+                sort_by=sort_option,
+                page=page,
+                per_page=per_page,
+            )
     elif selected_year and 1900 <= selected_year <= current_year:
-        games = database.get_games_by_year(selected_year, sort_by=sort_option)
+        games, total_results = database.get_games_by_year(
+            selected_year,
+            sort_by=sort_option,
+            page=page,
+            per_page=per_page,
+        )
         year_summary = database.get_game_year_summary(selected_year)
 
     # Gol farkı bilgisini önden hesaplayıp front-end'de filtreleme için saklıyoruz
@@ -244,6 +265,10 @@ def games_page():
             if not stats:
                 head_to_head_error = "No matches found between these clubs."
 
+    total_pages = 0
+    if total_results:
+        total_pages = (total_results + per_page - 1) // per_page
+
     return render_template(
         'games.html',
         years=years,
@@ -252,6 +277,10 @@ def games_page():
         favorite_only=favorite_only,
         sort_option=sort_option,
         year_summary=year_summary,
+        page=page,
+        total_pages=total_pages,
+        total_results=total_results,
+        per_page=per_page,
         club_options=club_options,
         club_a_id=club_a_id,
         club_b_id=club_b_id,
@@ -260,6 +289,7 @@ def games_page():
         head_to_head_error=head_to_head_error,
         club_name_map=club_name_map,
         opponent_options=opponent_options,
+        competition_options=competition_options,
     )
 
 def get_opponents_for_club_api(club_id: int):
@@ -273,6 +303,56 @@ def update_game_favorite(game_id: int):
     if not success:
         return jsonify({"success": False, "message": "Güncelleme yapılamadı."}), 500
     return jsonify({"success": True, "is_favorite": True})
+
+
+def update_game(game_id: int):
+    """Maç verisini günceller."""
+    payload = request.get_json(silent=True) or {}
+
+    def _parse_int(val, field):
+        if val in (None, ""):
+            return None
+        try:
+            return int(val)
+        except (TypeError, ValueError):
+            raise ValueError(f"Invalid {field}.")
+
+    def _parse_date(val):
+        if val in (None, ""):
+            return None
+        try:
+            return datetime.strptime(val, "%Y-%m-%d").date()
+        except (TypeError, ValueError):
+            raise ValueError("Invalid date format.")
+
+    try:
+        parsed = {
+            "home_club_id": _parse_int(payload.get("home_club_id"), "home club"),
+            "away_club_id": _parse_int(payload.get("away_club_id"), "away club"),
+            "competition_id": (payload.get("competition_id") or None),
+            "home_club_goals": _parse_int(payload.get("home_club_goals"), "home goals"),
+            "away_club_goals": _parse_int(payload.get("away_club_goals"), "away goals"),
+            "date": _parse_date(payload.get("date")),
+            "home_club_position": _parse_int(payload.get("home_club_position"), "home position"),
+            "away_club_position": _parse_int(payload.get("away_club_position"), "away position"),
+            "season": (payload.get("season") or None),
+            "is_favorite": bool(payload.get("is_favorite")),
+        }
+    except ValueError as exc:
+        return jsonify({"success": False, "message": str(exc)}), 400
+
+    success = database.update_game(game_id, parsed)
+    if not success:
+        return jsonify({"success": False, "message": "Update failed."}), 500
+    return jsonify({"success": True})
+
+
+def delete_game(game_id: int):
+    """Maç kaydını siler."""
+    deleted = database.delete_game(game_id)
+    if not deleted:
+        return jsonify({"success": False, "message": "Delete failed."}), 404
+    return jsonify({"success": True})
 
 def competitions_page():
     """Mücadeleler sayfasını render eder ve veritabanından mücadele verilerini çeker."""
@@ -303,11 +383,29 @@ def competitions_page():
     )
 
 def admin_page():
+    admin_password = "1923"
+    submitted_password = (request.form.get("admin_password") or "").strip()
+    admin_authenticated = submitted_password == admin_password if submitted_password else False
+
+    if request.method == "POST" and not admin_authenticated:
+        return render_template(
+            'admin.html',
+            admin_authenticated=False,
+            login_error="Wrong password. Please try again.",
+        )
+
+    if not admin_authenticated:
+        return render_template(
+            'admin.html',
+            admin_authenticated=False,
+            login_error=None,
+        )
+
     tables = database.get_table_schemas()
     message = None
     error = None
 
-    if request.method == "POST":
+    if request.method == "POST" and request.form.get("table_name"):
         table_name = (request.form.get("table_name") or "").strip()
         target_table = next((t for t in tables if t["name"] == table_name), None)
         if not target_table:
@@ -330,6 +428,8 @@ def admin_page():
 
     return render_template(
         'admin.html',
+        admin_authenticated=True,
+        admin_password=admin_password,
         tables=tables,
         message=message,
         error=error,

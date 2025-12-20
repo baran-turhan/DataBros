@@ -96,6 +96,26 @@
 
 {% block content %}
 <div class="admin-container">
+  {% if not admin_authenticated %}
+  <div class="admin-header">
+    <h1>Administration</h1>
+    <p>Enter the password to continue.</p>
+  </div>
+
+  {% if login_error %}
+  <div class="message error">{{ login_error }}</div>
+  {% endif %}
+
+  <form class="admin-form" method="post" action="{{ url_for('admin_page') }}">
+    <div>
+      <label for="admin_password">Password</label>
+      <input id="admin_password" name="admin_password" type="password" required autofocus>
+    </div>
+    <div class="submit-row">
+      <button class="admin-button" type="submit">Enter</button>
+    </div>
+  </form>
+  {% else %}
   <div class="admin-header">
     <h1>Administration</h1>
     <p>Add new rows: pick a table, fill the fields you need, and save.</p>
@@ -109,6 +129,7 @@
   {% endif %}
 
   <form class="admin-form" method="post" action="{{ url_for('admin_page') }}">
+    <input type="hidden" name="admin_password" value="{{ admin_password }}">
     <div>
       <label for="table_name">Table</label>
       <select id="table_name" name="table_name" required>
@@ -126,8 +147,10 @@
       <span class="field-note">Fields left blank will use defaults or stay NULL.</span>
     </div>
   </form>
+  {% endif %}
 </div>
 
+{% if admin_authenticated %}
 <script>
   const tableSchemas = {{ tables | tojson }};
   const tableSelect = document.getElementById("table_name");
@@ -163,4 +186,5 @@
 
   tableSelect.addEventListener("change", (e) => renderColumns(e.target.value));
 </script>
+{% endif %}
 {% endblock %}

@@ -720,15 +720,18 @@ def insert_row(table_name: str, values: dict):
         if conn:
             conn.close()
 
-def get_games_by_year(year: int, sort_by: str = "date"):
-    """Belirli bir yıl için maçları getirir."""
+def get_games_by_year(year: int, sort_by: str = "date", page: int = 1, per_page: int = 100):
+    """Belirli bir yıl için maçları getirir (sayfalı)."""
     if not year:
-        return []
+        return [], 0
 
     conn = None
     try:
         conn = get_conn()
         cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        page = page if page and page > 0 else 1
+        per_page = per_page if per_page and per_page > 0 else 100
 
         goal_diff_expr = """
             CASE
@@ -739,9 +742,22 @@ def get_games_by_year(year: int, sort_by: str = "date"):
 
         order_clause = _game_sort_clause(sort_by)
 
+        count_query = """
+            SELECT COUNT(*) AS total
+            FROM games g
+            WHERE EXTRACT(YEAR FROM g.date) = %s
+        """
+        cur.execute(count_query, (year,))
+        total_count = cur.fetchone()["total"]
+
+        offset = (page - 1) * per_page
+
         query = """
             SELECT
                 g.game_id,
+                g.home_club_id,
+                g.away_club_id,
+                g.competition_id,
                 g.date AS game_date,
                 g.home_club_goals,
                 g.away_club_goals,
@@ -761,25 +777,34 @@ def get_games_by_year(year: int, sort_by: str = "date"):
             LEFT JOIN competitions comp ON g.competition_id = comp.competition_id
             WHERE EXTRACT(YEAR FROM g.date) = %s
             {order_clause}
+            LIMIT %s OFFSET %s
         """.format(goal_diff_expr=goal_diff_expr, order_clause=order_clause)
 
-        cur.execute(query, (year,))
+        cur.execute(query, (year, per_page, offset))
         games = cur.fetchall()
         cur.close()
-        return games
+        return games, total_count
     except Exception as e:
         print(f"Database error: {e}")
-        return []
+        return [], 0
     finally:
         if conn:
             conn.close()
 
-def get_favorite_games(year: Optional[int] = None, sort_by: str = "date"):
-    """Favori olarak işaretlenmiş maçları getirir. İsteğe bağlı yıl filtresi uygular."""
+def get_favorite_games(
+    year: Optional[int] = None,
+    sort_by: str = "date",
+    page: int = 1,
+    per_page: int = 100,
+):
+    """Favori olarak işaretlenmiş maçları getirir. İsteğe bağlı yıl filtresi uygular (sayfalı)."""
     conn = None
     try:
         conn = get_conn()
         cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        page = page if page and page > 0 else 1
+        per_page = per_page if per_page and per_page > 0 else 100
 
         goal_diff_expr = """
             CASE
@@ -790,9 +815,29 @@ def get_favorite_games(year: Optional[int] = None, sort_by: str = "date"):
 
         order_clause = _game_sort_clause(sort_by)
 
+        base_where = "WHERE g.is_favorite = TRUE"
+        params = []
+
+        if year is not None:
+            base_where += " AND EXTRACT(YEAR FROM g.date) = %s"
+            params.append(year)
+
+        count_query = f"""
+            SELECT COUNT(*) AS total
+            FROM games g
+            {base_where}
+        """
+        cur.execute(count_query, params)
+        total_count = cur.fetchone()["total"]
+
+        offset = (page - 1) * per_page
+
         query = """
             SELECT
                 g.game_id,
+                g.home_club_id,
+                g.away_club_id,
+                g.competition_id,
                 g.date AS game_date,
                 g.home_club_goals,
                 g.away_club_goals,
@@ -810,23 +855,20 @@ def get_favorite_games(year: Optional[int] = None, sort_by: str = "date"):
             LEFT JOIN clubs hc ON g.home_club_id = hc.club_id
             LEFT JOIN clubs ac ON g.away_club_id = ac.club_id
             LEFT JOIN competitions comp ON g.competition_id = comp.competition_id
-            WHERE g.is_favorite = TRUE
+            {base_where}
         """
-        params = []
+        query += f" {order_clause} LIMIT %s OFFSET %s"
 
-        if year is not None:
-            query += " AND EXTRACT(YEAR FROM g.date) = %s"
-            params.append(year)
-
-        query += f" {order_clause}"
-
-        cur.execute(query.format(goal_diff_expr=goal_diff_expr), params)
+        cur.execute(
+            query.format(goal_diff_expr=goal_diff_expr, base_where=base_where),
+            params + [per_page, offset],
+        )
         games = cur.fetchall()
         cur.close()
-        return games
+        return games, total_count
     except Exception as e:
         print(f"Database error: {e}")
-        return []
+        return [], 0
     finally:
         if conn:
             conn.close()
@@ -846,6 +888,99 @@ def set_game_favorite(game_id: int, is_favorite: bool = True) -> bool:
         return updated
     except Exception as e:
         print(f"Database error: {e}")
+        if conn:
+            conn.rollback()
+        return False
+    finally:
+        if conn:
+            conn.close()
+
+
+def get_competition_options():
+    """Maç düzenleme formu için basit competition listesi döner."""
+    conn = None
+    try:
+        conn = get_conn()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute(
+            """
+            SELECT competition_id, name, country_name
+            FROM competitions
+            ORDER BY name ASC
+            """
+        )
+        rows = cur.fetchall()
+        cur.close()
+        return rows
+    except Exception as e:
+        print(f"Database error (get_competition_options): {e}")
+        return []
+    finally:
+        if conn:
+            conn.close()
+
+
+def update_game(game_id: int, payload: dict) -> bool:
+    """Oyun kaydını günceller."""
+    conn = None
+    try:
+        conn = get_conn()
+        cur = conn.cursor()
+        query = """
+            UPDATE games
+            SET home_club_id = %s,
+                away_club_id = %s,
+                competition_id = %s,
+                home_club_goals = %s,
+                away_club_goals = %s,
+                date = %s,
+                home_club_position = %s,
+                away_club_position = %s,
+                season = %s,
+                is_favorite = %s
+            WHERE game_id = %s
+        """
+        params = (
+            payload.get("home_club_id"),
+            payload.get("away_club_id"),
+            payload.get("competition_id"),
+            payload.get("home_club_goals"),
+            payload.get("away_club_goals"),
+            payload.get("date"),
+            payload.get("home_club_position"),
+            payload.get("away_club_position"),
+            payload.get("season"),
+            payload.get("is_favorite"),
+            game_id,
+        )
+        cur.execute(query, params)
+        updated = cur.rowcount > 0
+        conn.commit()
+        cur.close()
+        return updated
+    except Exception as e:
+        print(f"Database error (update_game): {e}")
+        if conn:
+            conn.rollback()
+        return False
+    finally:
+        if conn:
+            conn.close()
+
+
+def delete_game(game_id: int) -> bool:
+    """Oyun kaydını siler."""
+    conn = None
+    try:
+        conn = get_conn()
+        cur = conn.cursor()
+        cur.execute("DELETE FROM games WHERE game_id = %s", (game_id,))
+        deleted = cur.rowcount > 0
+        conn.commit()
+        cur.close()
+        return deleted
+    except Exception as e:
+        print(f"Database error (delete_game): {e}")
         if conn:
             conn.rollback()
         return False
