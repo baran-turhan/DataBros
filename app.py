@@ -14,6 +14,16 @@ def create_app():
     app.add_url_rule("/players", view_func=router.players_page)
     app.add_url_rule("/players/<int:player_id>", view_func=router.player_profile_page)
     app.add_url_rule("/transfers", view_func=router.transfers_page)
+    app.add_url_rule(
+        "/transfers/<int:transfer_id>",
+        view_func=router.update_transfer,
+        methods=["PATCH"],
+    )
+    app.add_url_rule(
+        "/transfers/<int:transfer_id>",
+        view_func=router.delete_transfer,
+        methods=["DELETE"],
+    )
     app.add_url_rule("/games", view_func=router.games_page)
     app.add_url_rule(
         "/games/<int:game_id>/favorite",

@@ -158,5 +158,61 @@
             Fill the filters and hit <strong>Apply Filters</strong> to list transfers.
         </div>
     {% endif %}
+
+    <div class="modal-overlay" id="transfer-edit-modal" aria-hidden="true">
+        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="transfer-edit-title">
+            <div class="modal-header">
+                <div class="modal-title" id="transfer-edit-title">Edit transfer</div>
+                <button type="button" class="modal-close" id="transfer-edit-close">Close</button>
+            </div>
+            <form id="transfer-edit-form">
+                <div class="modal-body">
+                    <div class="form-grid">
+                        <div class="modal-field">
+                            <label for="transfer-from-club">From club</label>
+                            <select id="transfer-from-club" name="from_club_id">
+                                <option value="">Select club</option>
+                                {% for club in club_options %}
+                                    <option value="{{ club.club_id }}">{{ club.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="modal-field">
+                            <label for="transfer-to-club">To club</label>
+                            <select id="transfer-to-club" name="to_club_id">
+                                <option value="">Select club</option>
+                                {% for club in club_options %}
+                                    <option value="{{ club.club_id }}">{{ club.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="modal-field">
+                            <label for="transfer-fee">Transfer fee (€)</label>
+                            <input type="number" id="transfer-fee" name="transfer_fee" min="0" step="1" inputmode="numeric" />
+                        </div>
+                        <div class="modal-field">
+                            <label for="transfer-value">Market value (€)</label>
+                            <input type="number" id="transfer-value" name="market_value_in_eur" min="0" step="1" inputmode="numeric" />
+                        </div>
+                    </div>
+                    <div id="transfer-edit-error" class="form-error" style="display:none;"></div>
+                    <div class="modal-actions">
+                        <button type="button" class="ghost" id="transfer-edit-cancel">Cancel</button>
+                        <button type="submit" class="primary" id="transfer-edit-save">
+                            Save
+                            <span class="spinner" aria-hidden="true"></span>
+                        </button>
+                    </div>
+                    <div class="modal-danger">
+                        <span class="modal-helper">Delete this transfer permanently.</span>
+                        <button type="button" class="delete-btn" id="transfer-delete-btn">
+                            Delete
+                            <span class="spinner" aria-hidden="true"></span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 {% endblock %}

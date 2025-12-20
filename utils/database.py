@@ -40,6 +40,30 @@ def get_club_options():
         if conn:
             conn.close()
 
+def get_player_options():
+    """Transfer düzenleme formu için oyuncu listesini döner."""
+    conn = None
+    try:
+        conn = get_conn()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute(
+            """
+            SELECT player_id, name
+            FROM players
+            WHERE name IS NOT NULL
+            ORDER BY name ASC
+            """
+        )
+        rows = cur.fetchall()
+        cur.close()
+        return rows
+    except Exception as e:
+        print(f"Database error (get_player_options): {e}")
+        return []
+    finally:
+        if conn:
+            conn.close()
+
 def get_opponents_for_club(club_id: int):
     """Bir kulübün karşılaştığı rakipleri (id, isim) döner."""
     if not club_id:
@@ -587,6 +611,9 @@ def get_transfers(
         data_query = f"""
             SELECT 
                 t.transfer_id,
+                t.player_id,
+                t.from_club_id,
+                t.to_club_id,
                 t.transfer_season,
                 t.transfer_fee,
                 t.transfer_fee AS transfer_fee_value,
@@ -636,6 +663,9 @@ def get_transfers_by_player_name(player_name: str):
         query = """
             SELECT 
                 t.transfer_id,
+                t.player_id,
+                t.from_club_id,
+                t.to_club_id,
                 t.transfer_season,
                 t.transfer_fee,
                 t.transfer_fee AS transfer_fee_value,
@@ -667,6 +697,69 @@ def get_transfers_by_player_name(player_name: str):
     except Exception as e:
         print(f"Database error: {e}")
         return []
+    finally:
+        if conn:
+            conn.close()
+
+
+def update_transfer(transfer_id: int, payload: dict) -> bool:
+    """Transfer kaydını günceller."""
+    if not transfer_id:
+        return False
+
+    conn = None
+    try:
+        conn = get_conn()
+        cur = conn.cursor()
+        query = """
+            UPDATE transfers
+            SET from_club_id = %s,
+                to_club_id = %s,
+                transfer_fee = %s,
+                market_value_in_eur = %s
+            WHERE transfer_id = %s
+        """
+        params = (
+            payload.get("from_club_id"),
+            payload.get("to_club_id"),
+            payload.get("transfer_fee"),
+            payload.get("market_value_in_eur"),
+            transfer_id,
+        )
+        cur.execute(query, params)
+        updated = cur.rowcount > 0
+        conn.commit()
+        cur.close()
+        return updated
+    except Exception as e:
+        print(f"Database error (update_transfer): {e}")
+        if conn:
+            conn.rollback()
+        return False
+    finally:
+        if conn:
+            conn.close()
+
+
+def delete_transfer(transfer_id: int) -> bool:
+    """Transfer kaydını siler."""
+    if not transfer_id:
+        return False
+
+    conn = None
+    try:
+        conn = get_conn()
+        cur = conn.cursor()
+        cur.execute("DELETE FROM transfers WHERE transfer_id = %s", (transfer_id,))
+        deleted = cur.rowcount > 0
+        conn.commit()
+        cur.close()
+        return deleted
+    except Exception as e:
+        print(f"Database error (delete_transfer): {e}")
+        if conn:
+            conn.rollback()
+        return False
     finally:
         if conn:
             conn.close()

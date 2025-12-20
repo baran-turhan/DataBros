@@ -10,6 +10,7 @@
             <div class="transfer-cell value-col">Value</div>
             <div class="transfer-cell fee-col">Fee</div>
             <div class="transfer-cell date-col">Date</div>
+            <div class="transfer-cell edit-col text-center">Edit</div>
         </div>
         <div class="transfers-body">
             {% for transfer in transfers %}
@@ -85,6 +86,20 @@
                     {% else %}
                         —
                     {% endif %}
+                </div>
+                <div class="transfer-cell edit-col text-center">
+                    <button
+                        type="button"
+                        class="edit-btn"
+                        aria-label="Edit transfer"
+                        data-transfer-id="{{ transfer.transfer_id }}"
+                        data-from-club-id="{{ transfer.from_club_id or '' }}"
+                        data-to-club-id="{{ transfer.to_club_id or '' }}"
+                        data-transfer-fee="{{ transfer.transfer_fee if transfer.transfer_fee is not none else '' }}"
+                        data-market-value="{{ transfer.market_value_in_eur if transfer.market_value_in_eur is not none else '' }}"
+                    >
+                        ✏️
+                    </button>
                 </div>
             </div>
             {% endfor %}

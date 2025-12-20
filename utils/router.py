@@ -71,6 +71,8 @@ def transfers_page():
         today = datetime.utcnow().date()
         return today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
 
+    club_options = database.get_club_options()
+
     player_transfers = []
     if player_query:
         player_transfers_raw = database.get_transfers_by_player_name(player_query)
@@ -124,6 +126,7 @@ def transfers_page():
         player_query=player_query,
         player_search_applied=bool(player_query),
         player_transfers=player_transfers,
+        club_options=club_options,
     )
 
 
@@ -303,6 +306,41 @@ def update_game_favorite(game_id: int):
     if not success:
         return jsonify({"success": False, "message": "Güncelleme yapılamadı."}), 500
     return jsonify({"success": True, "is_favorite": True})
+
+def update_transfer(transfer_id: int):
+    """Transfer kaydını günceller."""
+    payload = request.get_json(silent=True) or {}
+
+    def _parse_int(val, field):
+        if val in (None, ""):
+            return None
+        try:
+            return int(val)
+        except (TypeError, ValueError):
+            raise ValueError(f"Invalid {field}.")
+
+    try:
+        parsed = {
+            "from_club_id": _parse_int(payload.get("from_club_id"), "from club"),
+            "to_club_id": _parse_int(payload.get("to_club_id"), "to club"),
+            "transfer_fee": _parse_int(payload.get("transfer_fee"), "transfer fee"),
+            "market_value_in_eur": _parse_int(payload.get("market_value_in_eur"), "market value"),
+        }
+    except ValueError as exc:
+        return jsonify({"success": False, "message": str(exc)}), 400
+
+    success = database.update_transfer(transfer_id, parsed)
+    if not success:
+        return jsonify({"success": False, "message": "Update failed."}), 500
+    return jsonify({"success": True})
+
+
+def delete_transfer(transfer_id: int):
+    """Transfer kaydını siler."""
+    deleted = database.delete_transfer(transfer_id)
+    if not deleted:
+        return jsonify({"success": False, "message": "Delete failed."}), 404
+    return jsonify({"success": True})
 
 
 def update_game(game_id: int):
