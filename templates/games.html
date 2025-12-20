@@ -1135,6 +1135,7 @@
         const errorBox = document.getElementById("average-error");
         const noResultsBox = document.getElementById("client-no-results");
         const favoriteButtons = Array.from(document.querySelectorAll(".favorite-btn"));
+        const UPDATE_PASSWORD = "1923";
 
         const resetVisibility = () => {
             rows.forEach(row => row.style.display = "");
@@ -1150,6 +1151,16 @@
                 errorBox.textContent = "";
                 errorBox.style.display = "none";
             }
+        };
+
+        const verifyUpdatePassword = () => {
+            const entered = window.prompt("Update password:");
+            if (entered === null) return false;
+            if (entered !== UPDATE_PASSWORD) {
+                window.alert("Incorrect password.");
+                return false;
+            }
+            return true;
         };
 
         const applyFilter = () => {
@@ -1291,7 +1302,10 @@
         };
 
         editButtons.forEach((btn) => {
-            btn.addEventListener("click", () => openEditModal(btn));
+            btn.addEventListener("click", () => {
+                if (!verifyUpdatePassword()) return;
+                openEditModal(btn);
+            });
         });
 
         editClose?.addEventListener("click", closeEditModal);

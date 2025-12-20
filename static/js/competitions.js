@@ -203,6 +203,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const editUrlInput = document.getElementById('edit-league-url');
 
     let activeCompetitionId = null;
+    const UPDATE_PASSWORD = '1923';
 
     const showEditError = (msg) => {
         if (!editError) return;
@@ -213,6 +214,16 @@ document.addEventListener('DOMContentLoaded', function() {
             editError.textContent = '';
             editError.style.display = 'none';
         }
+    };
+
+    const verifyUpdatePassword = () => {
+        const entered = window.prompt('Update password:');
+        if (entered === null) return false;
+        if (entered !== UPDATE_PASSWORD) {
+            window.alert('Incorrect password.');
+            return false;
+        }
+        return true;
     };
 
     const openEditModal = (btn) => {
@@ -240,6 +251,7 @@ document.addEventListener('DOMContentLoaded', function() {
     editButtons.forEach((btn) => {
         btn.addEventListener('click', (event) => {
             event.stopPropagation();
+            if (!verifyUpdatePassword()) return;
             openEditModal(btn);
         });
     });

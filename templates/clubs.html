@@ -1057,6 +1057,7 @@
 	        const deleteBtn = document.getElementById("clubEditDelete");
 
 	        let activeClubId = null;
+	        const UPDATE_PASSWORD = "1923";
 
 	        const showEditError = (msg) => {
 	            errorEl.textContent = msg || "Error";
@@ -1066,6 +1067,16 @@
 	        const clearEditError = () => {
 	            errorEl.textContent = "";
 	            errorEl.style.display = "none";
+	        };
+
+	        const verifyUpdatePassword = () => {
+	            const entered = window.prompt("Update password:");
+	            if (entered === null) return false;
+	            if (entered !== UPDATE_PASSWORD) {
+	                window.alert("Incorrect password.");
+	                return false;
+	            }
+	            return true;
 	        };
 
 	        const closeModal = () => {
@@ -1349,16 +1360,17 @@
             slotEl.appendChild(panel);
         };
 
-        cards.forEach((card) => {
-            const editBtn = card.querySelector(".club-edit-btn");
-            if (editBtn) {
-                editBtn.addEventListener("click", (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const clubId = card.dataset.clubId;
-                    if (clubId) openModal(clubId);
-                });
-            }
+	        cards.forEach((card) => {
+	            const editBtn = card.querySelector(".club-edit-btn");
+	            if (editBtn) {
+	                editBtn.addEventListener("click", (e) => {
+	                    e.preventDefault();
+	                    e.stopPropagation();
+	                    const clubId = card.dataset.clubId;
+	                    if (!verifyUpdatePassword()) return;
+	                    if (clubId) openModal(clubId);
+	                });
+	            }
 
             card.addEventListener("click", async (event) => {
                 if (event.target.closest(".club-edit-btn")) {

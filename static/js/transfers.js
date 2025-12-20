@@ -24,6 +24,17 @@ document.addEventListener("DOMContentLoaded", () => {
     attachMoneyFormatter("min_fee");
     attachMoneyFormatter("max_fee");
 
+    const UPDATE_PASSWORD = "1923";
+    const verifyUpdatePassword = () => {
+        const entered = window.prompt("Update password:");
+        if (entered === null) return false;
+        if (entered !== UPDATE_PASSWORD) {
+            window.alert("Incorrect password.");
+            return false;
+        }
+        return true;
+    };
+
     const modal = document.getElementById("transfer-edit-modal");
     const form = document.getElementById("transfer-edit-form");
     const closeBtn = document.getElementById("transfer-edit-close");
@@ -86,7 +97,10 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     editButtons.forEach((btn) => {
-        btn.addEventListener("click", () => openModal(btn));
+        btn.addEventListener("click", () => {
+            if (!verifyUpdatePassword()) return;
+            openModal(btn);
+        });
     });
 
     closeBtn?.addEventListener("click", closeModal);
