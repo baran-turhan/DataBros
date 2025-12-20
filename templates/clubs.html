@@ -121,21 +121,133 @@
 
     .clubs-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-        gap: 22px;
+        grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+        gap: 24px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    
+    .clubs-grid.list-view {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        max-width: 1400px;
+        margin: 0 auto;
     }
 
     .club-card {
         background: #fff;
         color: #1f2933;
         border-radius: 20px;
-        padding: 26px;
+        padding: 28px;
         box-shadow: 0 15px 35px rgba(0, 0, 0, 0.18);
         border: 1px solid rgba(255, 255, 255, 0.4);
         position: relative;
         overflow: hidden;
         cursor: pointer;
         transition: box-shadow 0.2s ease, transform 0.12s ease;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .clubs-grid.list-view .club-card {
+        flex-direction: row;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        padding: 18px 24px;
+        border-radius: 14px;
+        gap: 20px;
+        min-height: 100px;
+        position: relative;
+    }
+    
+    .clubs-grid.list-view .club-card.expanded {
+        align-items: flex-start;
+        padding-bottom: 20px;
+    }
+    
+    .clubs-grid.list-view .club-header {
+        flex-direction: row;
+        align-items: center;
+        margin-bottom: 0;
+        min-width: 260px;
+        max-width: 300px;
+        flex-shrink: 0;
+    }
+    
+    .clubs-grid.list-view .club-info {
+        display: flex;
+        flex-direction: row;
+        gap: 20px;
+        margin-bottom: 0;
+        flex: 1;
+        justify-content: flex-start;
+    }
+    
+    .clubs-grid.list-view .info-item {
+        min-width: 110px;
+        padding: 10px 12px;
+    }
+    
+    .clubs-grid.list-view .stadium-info {
+        margin-top: 0;
+        min-width: 180px;
+        max-width: 220px;
+        flex-shrink: 0;
+        padding: 12px 14px;
+    }
+    
+    .clubs-grid.list-view .stats-grid {
+        display: flex;
+        gap: 12px;
+        margin-top: 0;
+        min-width: 180px;
+        max-width: 220px;
+        flex-shrink: 0;
+    }
+    
+    .clubs-grid.list-view .stats-grid .stat-item {
+        padding: 10px 8px;
+    }
+    
+    .clubs-grid.list-view .stats-grid .stat-value {
+        font-size: 1.2rem;
+    }
+    
+    .clubs-grid.list-view .stats-grid .stat-label {
+        font-size: 0.65rem;
+    }
+    
+    .clubs-grid.list-view .stats-grid .stat-item {
+        flex: 1;
+        min-width: 60px;
+    }
+    
+    .clubs-grid.list-view .club-players-slot {
+        position: relative;
+        margin-top: 16px;
+        width: 100%;
+        flex-basis: 100%;
+        order: 999;
+    }
+    
+    .clubs-grid.list-view .club-card {
+        position: relative;
+        overflow: visible;
+    }
+    
+    .clubs-grid.list-view .club-card.expanded {
+        overflow: visible;
+    }
+    
+    .clubs-grid.list-view .club-card.expanded {
+        min-height: auto;
+        padding-bottom: 20px;
+        flex-wrap: wrap;
+    }
+    
+    .clubs-grid.list-view .club-card.expanded > *:not(.club-players-slot) {
+        flex-shrink: 0;
     }
 
     .club-card:hover {
@@ -160,6 +272,156 @@
         align-items: center;
         gap: 16px;
         margin-bottom: 18px;
+    }
+
+    .club-edit-btn {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        border: 1px solid rgba(15, 23, 42, 0.12);
+        background: rgba(255, 255, 255, 0.85);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 2;
+        transition: transform 120ms ease, background 120ms ease, box-shadow 120ms ease;
+    }
+
+    .club-edit-btn:hover {
+        transform: translateY(-1px);
+        background: #ffffff;
+        box-shadow: 0 10px 20px rgba(15, 23, 42, 0.12);
+    }
+
+    .club-edit-btn svg {
+        width: 18px;
+        height: 18px;
+        color: #1e3c72;
+    }
+
+    .club-edit-overlay[hidden] {
+        display: none;
+    }
+
+    .club-edit-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.55);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        z-index: 9999;
+    }
+
+    .club-edit-modal {
+        width: min(820px, 100%);
+        max-height: 86vh;
+        overflow: auto;
+        background: #ffffff;
+        border-radius: 18px;
+        box-shadow: 0 30px 70px rgba(0, 0, 0, 0.35);
+        padding: 18px 18px 16px;
+    }
+
+    .club-edit-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .club-edit-modal-title {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: #0f172a;
+    }
+
+    .club-edit-close {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        border: 1px solid rgba(15, 23, 42, 0.12);
+        background: #ffffff;
+        cursor: pointer;
+        font-size: 18px;
+        line-height: 1;
+    }
+
+    .club-edit-error {
+        background: rgba(239, 68, 68, 0.12);
+        color: #991b1b;
+        border: 1px solid rgba(239, 68, 68, 0.18);
+        border-radius: 12px;
+        padding: 10px 12px;
+        font-weight: 700;
+        margin-bottom: 12px;
+        display: none;
+    }
+
+    .club-edit-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .club-edit-field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .club-edit-field label {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #334155;
+    }
+
+    .club-edit-field input {
+        border: 1px solid rgba(15, 23, 42, 0.14);
+        border-radius: 12px;
+        padding: 10px 12px;
+        font-size: 0.95rem;
+        outline: none;
+    }
+
+    .club-edit-field input:focus {
+        border-color: rgba(30, 60, 114, 0.55);
+        box-shadow: 0 0 0 4px rgba(30, 60, 114, 0.12);
+    }
+
+    .club-edit-actions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 14px;
+    }
+
+    .club-edit-save {
+        padding: 10px 14px;
+        border-radius: 12px;
+        border: 0;
+        background: linear-gradient(135deg, #1e3c72, #2a5298);
+        color: white;
+        font-weight: 800;
+        cursor: pointer;
+    }
+
+    .club-edit-delete {
+        padding: 10px 14px;
+        border-radius: 12px;
+        border: 1px solid rgba(239, 68, 68, 0.25);
+        background: rgba(239, 68, 68, 0.1);
+        color: #b91c1c;
+        font-weight: 900;
+        cursor: pointer;
     }
 
     .club-logo {
@@ -202,8 +464,9 @@
 
     .club-info {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-        gap: 14px;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 16px;
+        margin-bottom: 4px;
     }
 
     .info-item {
@@ -283,16 +546,27 @@
     .club-players-panel {
         background: #f8fafc;
         border-radius: 14px;
-        padding: 14px;
+        padding: 28px 16px 16px;
         border: 1px solid rgba(0, 0, 0, 0.06);
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        margin-top: 8px;
+        overflow: visible;
+    }
+    
+    .clubs-grid.list-view .club-players-panel {
+        margin-top: 0;
+        width: 100%;
+        padding: 28px 16px 16px;
+        overflow: visible;
     }
 
     .players-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 10px;
+        margin-bottom: 16px;
+        margin-top: 0;
+        padding-bottom: 4px;
         color: #1e293b;
         font-weight: 800;
     }
@@ -302,11 +576,78 @@
         color: #475569;
         font-weight: 600;
     }
+    
+    .players-back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: linear-gradient(135deg, #1e3c72, #2a5298);
+        color: #fff;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(30, 60, 114, 0.3);
+        transition: all 0.2s ease;
+        margin-bottom: 16px;
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .players-back-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(30, 60, 114, 0.4);
+        background: linear-gradient(135deg, #2a5298, #3d6bb3);
+    }
+    
+    .players-back-btn:active {
+        transform: translateY(0);
+        box-shadow: 0 3px 8px rgba(30, 60, 114, 0.3);
+    }
+    
+    .players-back-btn::before {
+        content: "←";
+        font-size: 1.2rem;
+        font-weight: 800;
+        line-height: 1;
+    }
 
     .players-list {
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 10px;
+        max-height: 500px;
+        overflow-y: auto;
+        padding-top: 20px;
+        padding-bottom: 12px;
+        scroll-padding-top: 20px;
+        scroll-margin-top: 20px;
+    }
+    
+    .clubs-grid.list-view .players-list {
+        max-height: 400px;
+        padding-top: 20px;
+        padding-bottom: 12px;
+    }
+    
+    .players-list::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    .players-list::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 10px;
+    }
+    
+    .players-list::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+    }
+    
+    .players-list::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
     }
 
     .player-row {
@@ -320,6 +661,28 @@
         margin-bottom: 8px;
         position: relative;
         transition: all 0.2s ease;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    
+    .players-list .player-row:first-child {
+        margin-top: 0 !important;
+        margin-bottom: 8px;
+        padding-top: 16px !important;
+    }
+    
+    .players-list .player-row:first-child::before {
+        content: "";
+        display: block;
+        height: 0;
+        margin-top: 0;
+    }
+    
+    .players-list::before {
+        content: "";
+        display: block;
+        height: 0;
+        margin-top: 0;
     }
 
     .player-row:hover {
@@ -334,6 +697,7 @@
         gap: 6px;
         position: relative;
         flex: 1;
+        min-width: 200px;
         z-index: 10;
     }
 
@@ -378,18 +742,23 @@
 
     .player-tags {
         display: flex;
-        gap: 6px;
+        gap: 8px;
         align-items: center;
         flex-wrap: wrap;
+        flex-shrink: 0;
+        justify-content: flex-end;
     }
 
     .player-badge {
-        padding: 4px 8px;
+        padding: 6px 12px;
         border-radius: 999px;
-        background: #e2e8f0;
+        background: linear-gradient(135deg, #e2e8f0, #f1f5f9);
         color: #1e293b;
         font-weight: 700;
         font-size: 0.8rem;
+        white-space: nowrap;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(0, 0, 0, 0.05);
     }
 
     .players-empty,
@@ -431,6 +800,62 @@
 
         .page-hero h1 {
             font-size: 2.1rem;
+        }
+        
+        .clubs-grid.list-view .club-card {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .clubs-grid.list-view .club-header {
+            min-width: 100%;
+            width: 100%;
+        }
+        
+        .clubs-grid.list-view .club-info {
+            flex-direction: column;
+            width: 100%;
+            gap: 12px;
+        }
+        
+        .clubs-grid.list-view .stadium-info {
+            width: 100%;
+        }
+        
+        .clubs-grid.list-view .stats-grid {
+            width: 100%;
+            flex-direction: row;
+        }
+        
+        .clubs-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        
+        .player-row {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .player-tags {
+            justify-content: flex-start;
+            width: 100%;
+        }
+        
+        .player-main {
+            min-width: 100%;
+        }
+    }
+    
+    @media (min-width: 769px) and (max-width: 1200px) {
+        .clubs-grid {
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        }
+    }
+    
+    @media (min-width: 1400px) {
+        .clubs-grid {
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
         }
     }
 </style>
@@ -489,7 +914,7 @@
     </form>
 
     {% if clubs %}
-        <div id="clubsContainer" class="clubs-grid">
+        <div id="clubsContainer" class="clubs-grid list-view">
             {% for club in clubs %}
             <div 
                 class="club-card fade-in" 
@@ -499,6 +924,12 @@
                 data-average-age="{{ club.average_age if club.average_age is not none else '' }}"
                 data-stadium-capacity="{{ club.stadium_capacity if club.stadium_capacity is not none else '' }}"
             >
+                <button type="button" class="club-edit-btn" aria-label="Edit club">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 20h9" />
+                        <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+                    </svg>
+                </button>
                 <div class="club-header">
                     <div class="club-logo">
                         {% if club.name and club.name|length > 0 %}
@@ -578,10 +1009,112 @@
     {% endif %}
 </div>
 
+<div id="clubEditOverlay" class="club-edit-overlay" hidden>
+    <div class="club-edit-modal" role="dialog" aria-modal="true" aria-labelledby="clubEditTitle">
+        <div class="club-edit-modal-header">
+            <h3 id="clubEditTitle" class="club-edit-modal-title">Edit Club</h3>
+            <button type="button" class="club-edit-close" id="clubEditClose" aria-label="Close">×</button>
+        </div>
+        <div id="clubEditError" class="club-edit-error"></div>
+        <form id="clubEditForm">
+            <div id="clubEditFields" class="club-edit-grid"></div>
+            <div class="club-edit-actions">
+                <button type="button" class="club-edit-delete" id="clubEditDelete">Delete</button>
+                <button type="submit" class="club-edit-save" id="clubEditSave">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
-    document.addEventListener("DOMContentLoaded", () => {
-        const cards = document.querySelectorAll(".club-card[data-club-id]");
-        const cache = new Map();
+	    document.addEventListener("DOMContentLoaded", () => {
+	        const cards = document.querySelectorAll(".club-card[data-club-id]");
+	        const cache = new Map();
+
+	        const overlay = document.getElementById("clubEditOverlay");
+	        const closeBtn = document.getElementById("clubEditClose");
+	        const titleEl = document.getElementById("clubEditTitle");
+	        const errorEl = document.getElementById("clubEditError");
+	        const formEl = document.getElementById("clubEditForm");
+	        const fieldsEl = document.getElementById("clubEditFields");
+	        const deleteBtn = document.getElementById("clubEditDelete");
+
+	        let activeClubId = null;
+
+	        const showEditError = (msg) => {
+	            errorEl.textContent = msg || "Error";
+	            errorEl.style.display = "block";
+	        };
+
+	        const clearEditError = () => {
+	            errorEl.textContent = "";
+	            errorEl.style.display = "none";
+	        };
+
+	        const closeModal = () => {
+	            overlay.hidden = true;
+	            activeClubId = null;
+	            fieldsEl.innerHTML = "";
+	            clearEditError();
+	        };
+
+	        const inferInput = (colType) => {
+	            const t = (colType || "").toLowerCase();
+	            if (t.includes("integer")) return { type: "number", step: "1" };
+	            if (t.includes("real") || t.includes("double") || t.includes("numeric") || t.includes("decimal")) {
+	                return { type: "number", step: "any" };
+	            }
+	            if (t.includes("date")) return { type: "date" };
+	            return { type: "text" };
+	        };
+
+	        const openModal = async (clubId) => {
+	            activeClubId = clubId;
+	            overlay.hidden = false;
+	            fieldsEl.innerHTML = "";
+	            clearEditError();
+	            titleEl.textContent = `Edit Club #${clubId}`;
+
+	            try {
+	                const res = await fetch(`/api/clubs/${encodeURIComponent(clubId)}`);
+	                if (!res.ok) throw new Error("Detay alinmadi");
+	                const data = await res.json();
+
+	                const club = data.club || {};
+	                const schema = data.schema || {};
+	                const cols = schema.columns || [];
+	                const editable = new Set(["name", "stadium_name", "stadium_seats"]);
+
+	                cols.forEach((c) => {
+	                    const name = c.name;
+	                    if (!editable.has(name)) return;
+	                    const field = document.createElement("div");
+	                    field.className = "club-edit-field";
+
+	                    const label = document.createElement("label");
+	                    if (name === "name") label.textContent = "name";
+	                    else if (name === "stadium_name") label.textContent = "stadium_name";
+	                    else if (name === "stadium_seats") label.textContent = "stadium_seats";
+	                    else label.textContent = name;
+	                    label.htmlFor = `club-edit-${name}`;
+	                    field.appendChild(label);
+
+	                    const meta = inferInput(c.type);
+	                    const input = document.createElement("input");
+	                    input.id = `club-edit-${name}`;
+	                    input.name = name;
+	                    input.type = meta.type;
+	                    if (meta.step) input.step = meta.step;
+	                    input.value = club[name] == null ? "" : String(club[name]);
+
+	                    field.appendChild(input);
+	                    fieldsEl.appendChild(field);
+	                });
+	            } catch (e) {
+	                console.error("Edit modal load failed:", e);
+	                showEditError("Kulup bilgisi yuklenemedi.");
+	            }
+	        };
 
         // Tüm oyuncu linklerini document seviyesinde yakala (event delegation) - EN ÜSTTE ÇALIŞSIN
         document.addEventListener("click", (event) => {
@@ -600,19 +1133,48 @@
             }
         }, true); // Capture fazında - EN ÖNCE ÇALIŞIR
 
+        const createBackButton = (slotEl) => {
+            const backBtn = document.createElement("button");
+            backBtn.className = "players-back-btn";
+            backBtn.textContent = "Listeye Dön";
+            backBtn.type = "button";
+            backBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                const card = slotEl.closest(".club-card");
+                if (card) {
+                    slotEl.innerHTML = "";
+                    slotEl.dataset.open = "false";
+                    card.classList.remove("expanded");
+                }
+            });
+            return backBtn;
+        };
+
         const renderPlayers = (slotEl, players) => {
             if (!players || players.length === 0) {
-                slotEl.innerHTML = `
-                    <div class="club-players-panel">
-                        <div class="players-empty">Bu kulup icin oyuncu bulunamadi.</div>
-                    </div>
-                `;
+                const panel = document.createElement("div");
+                panel.className = "club-players-panel";
+                
+                const backBtn = createBackButton(slotEl);
+                panel.appendChild(backBtn);
+                
+                const emptyMsg = document.createElement("div");
+                emptyMsg.className = "players-empty";
+                emptyMsg.textContent = "Bu kulup icin oyuncu bulunamadi.";
+                panel.appendChild(emptyMsg);
+                
+                slotEl.innerHTML = "";
+                slotEl.appendChild(panel);
                 return;
             }
 
             // DOM API kullanarak oyuncuları oluştur (innerHTML yerine)
             const panel = document.createElement("div");
             panel.className = "club-players-panel";
+
+                // Geri butonu
+            const backBtn = createBackButton(slotEl);
+            panel.appendChild(backBtn);
 
             const header = document.createElement("div");
             header.className = "players-header";
@@ -622,7 +1184,7 @@
             const playersList = document.createElement("div");
             playersList.className = "players-list";
 
-            players.forEach((p) => {
+            players.forEach((p, index) => {
                 const metaParts = [];
                 if (p.age) metaParts.push(`${p.age} yas`);
                 if (p.sub_position) metaParts.push(p.sub_position);
@@ -634,6 +1196,10 @@
                 // Player row oluştur
                 const playerRow = document.createElement("div");
                 playerRow.className = "player-row";
+                if (index === 0) {
+                    playerRow.style.marginTop = "0";
+                    playerRow.style.paddingTop = "16px";
+                }
 
                 // Player main
                 const playerMain = document.createElement("div");
@@ -688,31 +1254,82 @@
             slotEl.appendChild(panel);
         };
 
+        const createBackButton_DUPLICATE = (slotEl) => {
+            const backBtn = document.createElement("button");
+            backBtn.className = "players-back-btn";
+            backBtn.textContent = "Listeye Dön";
+            backBtn.type = "button";
+            backBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                const card = slotEl.closest(".club-card");
+                if (card) {
+                    slotEl.innerHTML = "";
+                    slotEl.dataset.open = "false";
+                    card.classList.remove("expanded");
+                }
+            });
+            return backBtn;
+        };
+
         const showLoading = (slotEl) => {
-            slotEl.innerHTML = `
-                <div class="club-players-panel">
-                    <div class="players-loading">Kadro yukleniyor</div>
-                </div>
-            `;
+            const panel = document.createElement("div");
+            panel.className = "club-players-panel";
+            
+            const backBtn = createBackButton(slotEl);
+            panel.appendChild(backBtn);
+            
+            const loadingMsg = document.createElement("div");
+            loadingMsg.className = "players-loading";
+            loadingMsg.textContent = "Kadro yukleniyor";
+            panel.appendChild(loadingMsg);
+            
+            slotEl.innerHTML = "";
+            slotEl.appendChild(panel);
         };
 
         const showError = (slotEl) => {
-            slotEl.innerHTML = `
-                <div class="club-players-panel">
-                    <div class="players-error">Kadro yuklenirken hata olustu.</div>
-                </div>
-            `;
+            const panel = document.createElement("div");
+            panel.className = "club-players-panel";
+            
+            const backBtn = createBackButton(slotEl);
+            panel.appendChild(backBtn);
+            
+            const errorMsg = document.createElement("div");
+            errorMsg.className = "players-error";
+            errorMsg.textContent = "Kadro yuklenirken hata olustu.";
+            panel.appendChild(errorMsg);
+            
+            slotEl.innerHTML = "";
+            slotEl.appendChild(panel);
         };
 
         cards.forEach((card) => {
+            const editBtn = card.querySelector(".club-edit-btn");
+            if (editBtn) {
+                editBtn.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const clubId = card.dataset.clubId;
+                    if (clubId) openModal(clubId);
+                });
+            }
+
             card.addEventListener("click", async (event) => {
+                if (event.target.closest(".club-edit-btn")) {
+                    return;
+                }
                 // ÖNCE: Oyuncu linkine tıklanırsa HİÇBİR ŞEY YAPMA
                 if (event.target.closest("a.player-name-link") || event.target.closest(".player-name-link")) {
                     return; // Event delegation zaten hallediyor
                 }
 
-                // Oyuncular panelindeki diğer tıklamaları yoksay
-                if (event.target.closest(".club-players-panel")) {
+                // Oyuncular panelindeki diğer tıklamaları yoksay (geri butonu hariç)
+                if (event.target.closest(".club-players-panel") && !event.target.closest(".players-back-btn")) {
+                    return;
+                }
+                
+                // Geri butonuna tıklanırsa zaten kendi handler'ı var
+                if (event.target.closest(".players-back-btn")) {
                     return;
                 }
 
@@ -751,6 +1368,69 @@
                     showError(slotEl);
                 }
             });
+        });
+
+        overlay.addEventListener("click", (e) => {
+            if (e.target === overlay) closeModal();
+        });
+
+        closeBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            closeModal();
+        });
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape" && !overlay.hidden) closeModal();
+        });
+
+        formEl.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            if (!activeClubId) return;
+            clearEditError();
+
+            const values = {};
+            const inputs = fieldsEl.querySelectorAll("input[name]");
+            inputs.forEach((inp) => {
+                if (inp.disabled) return;
+                values[inp.name] = inp.value;
+            });
+
+            try {
+                const res = await fetch(`/api/clubs/${encodeURIComponent(activeClubId)}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ values }),
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(data.error || "Update failed");
+                window.location.reload();
+            } catch (err) {
+                console.error("Club update failed:", err);
+                showEditError("Guncelleme basarisiz: " + (err.message || ""));
+            }
+        });
+
+        deleteBtn.addEventListener("click", async (e) => {
+            e.preventDefault();
+            if (!activeClubId) return;
+            clearEditError();
+
+            const ok = confirm("Are you sure ?");
+            if (!ok) return;
+
+            try {
+                const res = await fetch(`/api/clubs/${encodeURIComponent(activeClubId)}`, { method: "DELETE" });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(data.error || "Delete failed");
+
+                const selector = `.club-card[data-club-id="${CSS.escape(String(activeClubId))}"]`;
+                const card = document.querySelector(selector);
+                if (card) card.remove();
+                closeModal();
+            } catch (err) {
+                console.error("Club delete failed:", err);
+                showEditError("Silme basarisiz: " + (err.message || ""));
+            }
         });
     });
 </script>

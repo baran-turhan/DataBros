@@ -1,6 +1,15 @@
-from datetime import datetime
+from datetime import datetime, date
+from decimal import Decimal
 from flask import render_template, request, jsonify, abort
 import utils.database as database
+
+
+def _json_safe(value):
+    if isinstance(value, (datetime, date)):
+        return value.isoformat()
+    if isinstance(value, Decimal):
+        return float(value)
+    return value
 
 def base_page():
     """Ana sayfa için verileri çeker ve render eder."""
@@ -550,4 +559,70 @@ def clubs_page():
 def club_players_api(club_id: int):
     """Secilen kulup icin oyuncu listesini JSON olarak doner."""
     players = database.get_players_by_club(club_id)
+    players = [{k: _json_safe(v) for k, v in row.items()} for row in (players or [])]
     return jsonify({"players": players, "count": len(players)})
+
+
+def club_detail_api(club_id: int):
+    """Tek bir kulüp satırını ve kolon şemasını JSON olarak döner (modal için)."""
+    club = database.get_club_by_id(club_id)
+    if not club:
+        return jsonify({"error": "Club not found."}), 404
+
+    schema = database.get_table_schema("clubs") or {"name": "clubs", "columns": []}
+    club = {k: _json_safe(v) for k, v in club.items()}
+    return jsonify({"club": club, "schema": schema})
+
+
+def club_update_api(club_id: int):
+    """Kulüp satırını günceller."""
+    payload = request.get_json(silent=True) or {}
+    values = payload.get("values") or {}
+    if not isinstance(values, dict):
+        return jsonify({"error": "Invalid payload."}), 400
+
+    schema = database.get_table_schema("clubs")
+    if not schema:
+        return jsonify({"error": "Schema not available."}), 500
+
+    type_map = {c["name"]: (c.get("type") or "") for c in schema.get("columns", [])}
+    # Allow updates only for a limited set of columns (UI enforces too, but backend is source of truth)
+    allowed_cols = {"name", "stadium_name", "stadium_seats"}
+
+    cleaned = {}
+    for key, val in values.items():
+        if key not in allowed_cols:
+            continue
+
+        if val is None or val == "":
+            cleaned[key] = None
+            continue
+
+        col_type = (type_map.get(key) or "").lower()
+        try:
+            if "integer" in col_type:
+                cleaned[key] = int(val)
+            elif any(t in col_type for t in ["real", "double", "numeric", "decimal"]):
+                cleaned[key] = float(val)
+            else:
+                cleaned[key] = str(val)
+        except Exception:
+            return jsonify({"error": f"Invalid value for {key}."}), 400
+
+    updated = database.update_club(club_id, cleaned)
+    if not updated:
+        return jsonify({"error": "Update failed."}), 400
+
+    updated = {k: _json_safe(v) for k, v in updated.items()}
+    return jsonify({"club": updated})
+
+
+def club_delete_api(club_id: int):
+    """Kulüp satırını siler."""
+    ok, err = database.delete_club(club_id)
+    if not ok:
+        msg = err or "Delete failed."
+        # FK ihlali gibi durumlarda 409 daha uygun
+        status = 409 if "foreign key" in msg.lower() else 400
+        return jsonify({"error": msg}), status
+    return jsonify({"success": True})
