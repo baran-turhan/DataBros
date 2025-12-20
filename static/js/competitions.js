@@ -78,5 +78,111 @@ document.addEventListener('DOMContentLoaded', function() {
             majorLeagueDropdown.classList.remove('show');
         }
     });
-});
 
+    // League row click -> fetch clubs for that competition
+    const leagueRows = document.querySelectorAll('.league-row-trigger');
+    const createLoadingRow = (leagueName) => {
+        return `
+            <div class="league-clubs-card">
+                <div class="clubs-header">
+                    <div class="clubs-title">Clubs in ${leagueName}</div>
+                    <div class="clubs-subtitle">Fetching squads and stadium info…</div>
+                </div>
+                <div class="clubs-body">
+                    <div class="clubs-loading">Loading clubs…</div>
+                </div>
+            </div>
+        `;
+    };
+
+    const formatNumber = (value) => {
+        const num = Number(value);
+        return Number.isFinite(num) ? num : null;
+    };
+
+    const renderClubs = (clubs) => {
+        if (!clubs || clubs.length === 0) {
+            return `
+                <div class="club-empty">
+                    <div class="club-empty-title">No clubs found</div>
+                    <div class="club-empty-subtitle">This league has no clubs in the database yet.</div>
+                </div>
+            `;
+        }
+
+        const clubRows = clubs.map((club) => {
+            const capacityNum = formatNumber(club.stadium_capacity);
+            const avgAgeNum = formatNumber(club.average_age);
+            const squadNum = formatNumber(club.squad_size);
+            const foreignNum = formatNumber(club.foreign_number);
+            const nationalNum = formatNumber(club.national_number);
+
+            const capacity = capacityNum !== null ? `${capacityNum.toLocaleString()} seats` : '—';
+            const averageAge = avgAgeNum !== null ? `${avgAgeNum.toFixed(1)} avg age` : '—';
+            const squadSize = squadNum !== null ? `${squadNum} squad` : '—';
+            return `
+                <div class="club-row">
+                    <div class="club-name">${club.name || 'Unknown Club'}</div>
+                    <div class="club-meta">
+                        <span>${club.stadium_name || 'Stadium N/A'}</span>
+                        <span class="dot">•</span>
+                        <span>${capacity}</span>
+                    </div>
+                    <div class="club-tags">
+                        <span class="chip">Squad: ${squadSize}</span>
+                        <span class="chip">Foreigners: ${foreignNum !== null ? foreignNum : 0}</span>
+                        <span class="chip">National Team: ${nationalNum !== null ? nationalNum : 0}</span>
+                        <span class="chip">Age: ${averageAge}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        return `<div class="clubs-list">${clubRows}</div>`;
+    };
+
+    const toggleLeagueRow = async (row) => {
+        const existingDetail = row.nextElementSibling;
+        if (existingDetail && existingDetail.classList.contains('league-clubs-row')) {
+            existingDetail.remove();
+            row.classList.remove('clubs-open');
+            return;
+        }
+
+        const competitionId = row.getAttribute('data-competition-id');
+        const leagueName = row.getAttribute('data-league-name') || 'League';
+        if (!competitionId) return;
+
+        const detailRow = document.createElement('div');
+        detailRow.className = 'league-clubs-row';
+        detailRow.innerHTML = createLoadingRow(leagueName);
+        row.insertAdjacentElement('afterend', detailRow);
+        row.classList.add('clubs-open');
+
+        const bodyEl = detailRow.querySelector('.clubs-body');
+
+        try {
+            const response = await fetch(`/competitions/${encodeURIComponent(competitionId)}/clubs`);
+            if (!response.ok) {
+                throw new Error('Failed to fetch clubs');
+            }
+            const data = await response.json();
+            bodyEl.innerHTML = renderClubs(data.clubs || []);
+        } catch (err) {
+            bodyEl.innerHTML = `
+                <div class="club-empty error">
+                    <div class="club-empty-title">Could not load clubs</div>
+                    <div class="club-empty-subtitle">${err.message || 'Something went wrong.'}</div>
+                </div>
+            `;
+            row.classList.remove('clubs-open');
+        }
+    };
+
+    leagueRows.forEach((row) => {
+        row.addEventListener('click', (event) => {
+            if (event.target.closest('a')) return; // let the link behave normally
+            toggleLeagueRow(row);
+        });
+    });
+});

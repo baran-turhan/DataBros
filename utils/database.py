@@ -402,6 +402,39 @@ def get_clubs_filtered(search=None, league=None, min_age=None, max_age=None, min
         if conn:
             conn.close()
 
+def get_clubs_by_competition(competition_id: str):
+    """Seçilen ligdeki kulüpleri döner."""
+    conn = None
+    try:
+        conn = get_conn()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute(
+            """
+            SELECT 
+                c.club_id,
+                c.name,
+                c.stadium_name,
+                c.stadium_seats AS stadium_capacity,
+                c.squad_size,
+                c.average_age,
+                c.foreigners_number AS foreign_number,
+                c.national_team_players AS national_number
+            FROM clubs c
+            WHERE c.domestic_competition_id = %s
+            ORDER BY c.name ASC
+            """,
+            (competition_id,),
+        )
+        clubs = cur.fetchall()
+        cur.close()
+        return clubs
+    except Exception as e:
+        print(f"Database error (get_clubs_by_competition): {e}")
+        return []
+    finally:
+        if conn:
+            conn.close()
+
 def get_all_competitions(country_name=None, is_major_league=None):
     """Tüm mücadeleleri veritabanından çeker. İsteğe bağlı olarak ülke adına ve major league durumuna göre filtreler."""
     conn = None
@@ -429,7 +462,7 @@ def get_all_competitions(country_name=None, is_major_league=None):
             query += " AND c.is_major_national_league = %s"
             params.append(is_major_league)
         
-        query += " ORDER BY c.name ASC"
+        query += " ORDER BY c.is_major_national_league DESC, c.name ASC"
         
         cur.execute(query, params)
         competitions = cur.fetchall()

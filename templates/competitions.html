@@ -65,57 +65,54 @@
 
     {% if selected_country %}
         {% if competitions %}
-            <div id="competitionsContainer" class="leagues-grid">
-                {% for comp in competitions %}
-                <div class="league-card fade-in">
-                    <!-- Avatar + Title -->
-                    <div class="league-header">
-                        <div class="league-avatar">
-                            {{ comp.name[0]|upper if comp.name else '🏆' }}
-                        </div>
-                        <h2 class="league-name">
-                            <a href="{{ url_for('clubs_page', league=comp.name|lower, submitted=1) }}" class="league-name-link">
-                                {{ comp.name or 'Unknown League' }}
-                            </a>
-                        </h2>
+            <div class="leagues-table-wrapper">
+                <div class="leagues-list">
+                    <div class="leagues-header leagues-row">
+                        <div class="league-cell name-col">League</div>
+                        <div class="league-cell country-col">Country</div>
+                        <div class="league-cell id-col">League ID</div>
+                        <div class="league-cell major-col">Major League?</div>
+                        <div class="league-cell url-col">URL</div>
                     </div>
-
-                    <!-- Info Section -->
-                    <div class="league-info">
-                        <div class="info-item">
-                            <span class="info-label">🌍 Country</span>
-                            <span class="info-value">{{ comp.country_name or 'N/A' }}</span>
-                        </div>
-
-                        <div class="info-item">
-                            <span class="info-label">🏷️ League ID</span>
-                            <span class="info-value">{{ comp.competition_id or 'N/A' }}</span>
-                        </div>
-
-                        <div class="info-item">
-                            <span class="info-label">📌 Major League?</span>
-                            <span class="info-value">
+                    <div class="leagues-body">
+                        {% for comp in competitions %}
+                        {% set league_name = comp.name or 'Unknown League' %}
+                        <div class="leagues-row fade-in league-row-trigger" 
+                             data-competition-id="{{ comp.competition_id }}" 
+                             data-league-name="{{ league_name }}">
+                            <div class="league-cell name-col">
+                                <div class="league-item">
+                                    <div class="league-mini-avatar">
+                                        {{ comp.name[0]|upper if comp.name else '🏆' }}
+                                    </div>
+                                    <div class="league-meta">
+                                        <a class="league-name league-name-link" href="{{ url_for('clubs_page', league=comp.name|lower, submitted=1) }}">
+                                            {{ league_name }}
+                                        </a>
+                                        <span class="league-sub">Click row to preview clubs</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="league-cell country-col text-center">{{ comp.country_name or '—' }}</div>
+                            <div class="league-cell id-col text-center">{{ comp.competition_id or '—' }}</div>
+                            <div class="league-cell major-col text-center">
                                 {% if comp.is_major_league %}
                                     <span class="value-highlight">Yes</span>
                                 {% else %}
                                     No
                                 {% endif %}
-                            </span>
-                        </div>
-
-                        <div class="info-item">
-                            <span class="info-label">🔗 URL</span>
-                            <span class="info-value">
+                            </div>
+                            <div class="league-cell url-col text-center">
                                 {% if comp.url %}
-                                    <a href="{{ comp.url }}" target="_blank">Visit</a>
+                                    <a href="{{ comp.url }}" target="_blank" class="url-link">Visit</a>
                                 {% else %}
-                                    N/A
+                                    —
                                 {% endif %}
-                            </span>
+                            </div>
                         </div>
+                        {% endfor %}
                     </div>
                 </div>
-                {% endfor %}
             </div>
         {% else %}
             <div class="no-results">No leagues found for the selected country.</div>

@@ -28,6 +28,7 @@ def create_app():
     app.add_url_rule("/clubs", view_func=router.clubs_page)
     app.add_url_rule("/clubs/<int:club_id>/players", view_func=router.club_players_api)
     app.add_url_rule("/competitions", view_func=router.competitions_page)
+    app.add_url_rule("/competitions/<competition_id>/clubs", view_func=router.competition_clubs_api)
     app.add_url_rule("/admin", view_func=router.admin_page, methods=["GET", "POST"])
 
     return app

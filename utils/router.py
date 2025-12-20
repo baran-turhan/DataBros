@@ -302,6 +302,11 @@ def competitions_page():
         selected_is_major_league=is_major_league_param,
     )
 
+def competition_clubs_api(competition_id: str):
+    """Belirli bir ligdeki kulüpleri JSON olarak döner."""
+    clubs = database.get_clubs_by_competition(competition_id)
+    return jsonify({"clubs": clubs or []})
+
 def admin_page():
     tables = database.get_table_schemas()
     message = None
