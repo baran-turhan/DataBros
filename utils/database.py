@@ -2,6 +2,7 @@ import psycopg2
 import os
 from typing import Optional
 from psycopg2.extras import RealDictCursor
+from psycopg2 import sql
 
 from dotenv import load_dotenv
 
@@ -402,6 +403,93 @@ def get_clubs_filtered(search=None, league=None, min_age=None, max_age=None, min
         if conn:
             conn.close()
 
+def get_club_by_id(club_id: int):
+    """Tek bir kulüp satırını (clubs tablosu) döner."""
+    if not club_id:
+        return None
+
+    conn = None
+    try:
+        conn = get_conn()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute("SELECT * FROM clubs WHERE club_id = %s", (club_id,))
+        row = cur.fetchone()
+        cur.close()
+        return row
+    except Exception as e:
+        print(f"Database error (get_club_by_id): {e}")
+        return None
+    finally:
+        if conn:
+            conn.close()
+
+
+def update_club(club_id: int, values: dict):
+    """clubs tablosunda tek bir satırı günceller ve güncellenmiş satırı döner."""
+    if not club_id or not values:
+        return None
+
+    values = {k: v for k, v in values.items() if k and k != "club_id"}
+    if not values:
+        return get_club_by_id(club_id)
+
+    conn = None
+    try:
+        conn = get_conn()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        set_parts = []
+        params = []
+        for col, val in values.items():
+            set_parts.append(sql.SQL("{} = %s").format(sql.Identifier(col)))
+            params.append(val)
+
+        query = sql.SQL("UPDATE clubs SET {} WHERE club_id = %s RETURNING *").format(
+            sql.SQL(", ").join(set_parts)
+        )
+        params.append(club_id)
+
+        cur.execute(query, params)
+        updated = cur.fetchone()
+        conn.commit()
+        cur.close()
+        return updated
+    except Exception as e:
+        print(f"Database error (update_club): {e}")
+        if conn:
+            conn.rollback()
+        return None
+    finally:
+        if conn:
+            conn.close()
+
+
+def delete_club(club_id: int):
+    """clubs tablosundan tek bir satırı siler."""
+    if not club_id:
+        return False, "Invalid club id."
+
+    conn = None
+    try:
+        conn = get_conn()
+        cur = conn.cursor()
+        cur.execute("DELETE FROM clubs WHERE club_id = %s", (club_id,))
+        deleted = cur.rowcount or 0
+        conn.commit()
+        cur.close()
+        if deleted == 0:
+            return False, "Club not found."
+        return True, None
+    except Exception as e:
+        print(f"Database error (delete_club): {e}")
+        if conn:
+            conn.rollback()
+        return False, str(e)
+    finally:
+        if conn:
+            conn.close()
+
+
 def get_clubs_by_competition(competition_id: str):
     """Seçilen ligdeki kulüpleri döner."""
     conn = None
@@ -719,6 +807,50 @@ def get_table_schemas():
     except Exception as e:
         print(f"Database error: {e}")
         return []
+    finally:
+        if conn:
+            conn.close()
+
+
+def get_table_schema(table_name: str):
+    """Tek bir tablo için kolon şemasını döner."""
+    if not table_name:
+        return None
+
+    conn = None
+    try:
+        conn = get_conn()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute(
+            """
+            SELECT column_name, data_type, is_nullable, column_default
+            FROM information_schema.columns
+            WHERE table_schema = 'public' AND table_name = %s
+            ORDER BY ordinal_position
+            """,
+            (table_name,),
+        )
+        cols = cur.fetchall()
+        cur.close()
+
+        if not cols:
+            return None
+
+        return {
+            "name": table_name,
+            "columns": [
+                {
+                    "name": c["column_name"],
+                    "type": c["data_type"],
+                    "nullable": c["is_nullable"] == "YES",
+                    "default": c["column_default"],
+                }
+                for c in cols
+            ],
+        }
+    except Exception as e:
+        print(f"Database error (get_table_schema): {e}")
+        return None
     finally:
         if conn:
             conn.close()
@@ -1132,7 +1264,6 @@ def get_players_by_club(club_id: int):
             SELECT
                 p.player_id,
                 p.name,
-                p.date_of_birth,
                 DATE_PART('year', AGE(CURRENT_DATE, p.date_of_birth))::INTEGER AS age,
                 p.sub_position,
                 p.foot,
