@@ -289,15 +289,34 @@ def get_all_clubs():
                 c.stadium_name,
                 c.stadium_seats AS stadium_capacity,
                 c.squad_size,
+                roster.player_count AS roster_player_count,
                 c.average_age,
                 c.foreigners_number AS foreign_number,
                 c.national_team_players AS national_number,
                 c.domestic_competition_id,
                 comp.name AS league_name,
                 comp.country_name AS league_country,
-                comp.is_major_national_league AS is_major_league
+                comp.is_major_national_league AS is_major_league,
+                mv.player_name AS most_valuable_player_name,
+                mv.market_value_in_eur AS most_valuable_player_value
             FROM clubs c
             LEFT JOIN competitions comp ON c.domestic_competition_id = comp.competition_id
+            LEFT JOIN LATERAL (
+                SELECT COUNT(*)::INTEGER AS player_count
+                FROM players p
+                WHERE p.current_club_id = c.club_id
+            ) roster ON TRUE
+            LEFT JOIN LATERAL (
+                SELECT
+                    p.name AS player_name,
+                    MAX(t.market_value_in_eur) AS market_value_in_eur
+                FROM players p
+                LEFT JOIN transfers t ON t.player_id = p.player_id
+                WHERE p.current_club_id = c.club_id
+                GROUP BY p.player_id, p.name
+                ORDER BY MAX(t.market_value_in_eur) DESC NULLS LAST, p.player_id ASC
+                LIMIT 1
+            ) mv ON TRUE
             ORDER BY c.name ASC
         """
 
@@ -377,15 +396,34 @@ def get_clubs_filtered(search=None, league=None, min_age=None, max_age=None, min
                 c.stadium_name,
                 c.stadium_seats AS stadium_capacity,
                 c.squad_size,
+                roster.player_count AS roster_player_count,
                 c.average_age,
                 c.foreigners_number AS foreign_number,
                 c.national_team_players AS national_number,
                 c.domestic_competition_id,
                 comp.name AS league_name,
                 comp.country_name AS league_country,
-                comp.is_major_national_league AS is_major_league
+                comp.is_major_national_league AS is_major_league,
+                mv.player_name AS most_valuable_player_name,
+                mv.market_value_in_eur AS most_valuable_player_value
             FROM clubs c
             LEFT JOIN competitions comp ON c.domestic_competition_id = comp.competition_id
+            LEFT JOIN LATERAL (
+                SELECT COUNT(*)::INTEGER AS player_count
+                FROM players p
+                WHERE p.current_club_id = c.club_id
+            ) roster ON TRUE
+            LEFT JOIN LATERAL (
+                SELECT
+                    p.name AS player_name,
+                    MAX(t.market_value_in_eur) AS market_value_in_eur
+                FROM players p
+                LEFT JOIN transfers t ON t.player_id = p.player_id
+                WHERE p.current_club_id = c.club_id
+                GROUP BY p.player_id, p.name
+                ORDER BY MAX(t.market_value_in_eur) DESC NULLS LAST, p.player_id ASC
+                LIMIT 1
+            ) mv ON TRUE
             WHERE 1=1
         """
         params = []
@@ -1424,9 +1462,19 @@ def get_players_by_club(club_id: int):
                 p.sub_position,
                 p.foot,
                 p.height_in_cm,
-                p.country_of_citizenship
+                p.country_of_citizenship,
+                MAX(t.market_value_in_eur) AS market_value_in_eur
             FROM players p
+            LEFT JOIN transfers t ON t.player_id = p.player_id
             WHERE p.current_club_id = %s
+            GROUP BY
+                p.player_id,
+                p.name,
+                p.date_of_birth,
+                p.sub_position,
+                p.foot,
+                p.height_in_cm,
+                p.country_of_citizenship
             ORDER BY p.name ASC
         """
         cur.execute(query, (club_id,))

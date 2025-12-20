@@ -1,4 +1,4 @@
-{% extends 'layout.html' %}
+﻿{% extends 'layout.html' %}
 
 {% block title %}Kulüpler{% endblock %}
 
@@ -923,6 +923,8 @@
                 data-league="{{ (club.league_name or 'bilinmeyen lig')|lower }}"
                 data-average-age="{{ club.average_age if club.average_age is not none else '' }}"
                 data-stadium-capacity="{{ club.stadium_capacity if club.stadium_capacity is not none else '' }}"
+                data-squad-size="{{ club.squad_size if club.squad_size is not none else '' }}"
+                data-roster-player-count="{{ club.roster_player_count if club.roster_player_count is not none else '' }}"
             >
                 <button type="button" class="club-edit-btn" aria-label="Edit club">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -952,7 +954,7 @@
                 <div class="club-info">
                     <div class="info-item">
                         <span class="info-label">Kadro Büyüklüğü</span>
-                        <span class="info-value">{{ club.squad_size if club.squad_size else 'N/A' }}</span>
+                        <span class="info-value">{{ club.roster_player_count if club.roster_player_count is not none else (club.squad_size if club.squad_size else 'N/A') }}</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Ortalama Yaş</span>
@@ -980,19 +982,34 @@
                         <div class="stat-value">{{ club.foreign_number if club.foreign_number else 0 }}</div>
                         <div class="stat-label">Yabancı</div>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-value">{{ club.national_number if club.national_number else 0 }}</div>
-                        <div class="stat-label">Yerli</div>
-                    </div>
+	                    <div class="stat-item">
+	                        <div class="stat-value">{{ club.national_number if club.national_number else 0 }}</div>
+	                        <div class="stat-label">Milli</div>
+	                    </div>
+	                    <div class="stat-item">
+	                        <div class="stat-value">
+	                            {{ club.roster_player_count if club.roster_player_count is not none else (club.squad_size if club.squad_size else 'N/A') }}
+	                        </div>
+	                        <div class="stat-label">Kadro</div>
+	                    </div>
                     <div class="stat-item">
                         <div class="stat-value">
-                            {% set foreign = club.foreign_number if club.foreign_number else 0 %}
-                            {% set national = club.national_number if club.national_number else 0 %}
-                            {{ foreign + national }}
+                            {% if club.most_valuable_player_value is not none %}
+                                {% set mv_str = "{:,.0f}".format(club.most_valuable_player_value) %}
+                                {{ mv_str }} EUR
+                            {% else %}
+                                N/A
+                            {% endif %}
                         </div>
-                        <div class="stat-label">Toplam</div>
+                        <div class="stat-label">En Degerli</div>
                     </div>
                 </div>
+
+                {% if club.most_valuable_player_name %}
+                <div class="stadium-info" style="margin-top: 10px;">
+                    <div class="stadium-name">En Degerli Oyuncu: {{ club.most_valuable_player_name }}</div>
+                </div>
+                {% endif %}
 
                 <div class="club-players-slot"></div>
             </div>
@@ -1184,6 +1201,20 @@
             const playersList = document.createElement("div");
             playersList.className = "players-list";
 
+            const topValue = Math.max(
+                0,
+                ...players.map((p) => {
+                    const v = Number(p.market_value_in_eur);
+                    return Number.isFinite(v) ? v : 0;
+                })
+            );
+
+            const formatEur = (val) => {
+                const n = Number(val);
+                if (!Number.isFinite(n) || n <= 0) return null;
+                return `${new Intl.NumberFormat("tr-TR").format(Math.round(n))} EUR`;
+            };
+
             players.forEach((p, index) => {
                 const metaParts = [];
                 if (p.age) metaParts.push(`${p.age} yas`);
@@ -1243,6 +1274,21 @@
                     footBadge.className = "player-badge";
                     footBadge.textContent = p.foot;
                     playerTags.appendChild(footBadge);
+                }
+                const mvLabel = formatEur(p.market_value_in_eur);
+                if (mvLabel) {
+                    const mvBadge = document.createElement("span");
+                    mvBadge.className = "player-badge";
+                    mvBadge.textContent = mvLabel;
+                    playerTags.appendChild(mvBadge);
+
+                    const mvNum = Number(p.market_value_in_eur);
+                    if (topValue > 0 && Number.isFinite(mvNum) && mvNum === topValue) {
+                        const topBadge = document.createElement("span");
+                        topBadge.className = "player-badge";
+                        topBadge.textContent = "En Degerli";
+                        playerTags.appendChild(topBadge);
+                    }
                 }
                 playerRow.appendChild(playerTags);
 
@@ -1362,6 +1408,18 @@
                         players = data.players || [];
                         cache.set(clubId, players);
                     }
+
+                    const rosterCountRaw = card.dataset.rosterPlayerCount;
+                    const squadSizeRaw = card.dataset.squadSize;
+                    const rosterCount = rosterCountRaw === "" ? null : Number(rosterCountRaw);
+                    const squadSize = squadSizeRaw === "" ? null : Number(squadSizeRaw);
+                    if (Number.isFinite(rosterCount) && rosterCount !== players.length) {
+                        console.warn(
+                            "Roster count mismatch for club",
+                            clubId,
+                            { rosterCount, apiPlayers: players.length, squadSize }
+                        );
+                    }
                     renderPlayers(slotEl, players);
                 } catch (error) {
                     console.error("Kulup kadrosu yuklenemedi:", error);
@@ -1436,3 +1494,4 @@
 </script>
 
 {% endblock %}
+
