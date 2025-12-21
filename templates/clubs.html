@@ -42,12 +42,12 @@
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
         gap: 14px;
-        align-items: center;
+        align-items: start;
     }
 
     .filter-group {
-        display: flex;
-        flex-direction: column;
+        display: grid;
+        grid-template-rows: minmax(22px, auto) auto minmax(18px, auto);
         gap: 8px;
     }
 
@@ -89,6 +89,11 @@
     .filter-note {
         font-size: 0.85rem;
         color: #d1d5db;
+        min-height: 18px;
+    }
+
+    .filter-note.filter-note-spacer {
+        visibility: hidden;
     }
 
     .filter-actions {
@@ -189,11 +194,14 @@
         padding: 10px 12px;
     }
     
-    .clubs-grid.list-view .stadium-info {
+    .clubs-grid.list-view .club-meta {
         margin-top: 0;
         min-width: 180px;
         max-width: 220px;
         flex-shrink: 0;
+    }
+
+    .clubs-grid.list-view .stadium-info {
         padding: 12px 14px;
     }
     
@@ -257,6 +265,10 @@
 
     .club-card.expanded {
         box-shadow: 0 20px 42px rgba(0, 0, 0, 0.25);
+    }
+
+    .club-card.expanded .mvp-info {
+        display: none;
     }
 
     .club-card::before {
@@ -490,8 +502,13 @@
         color: #111827;
     }
 
-    .stadium-info {
+    .club-meta {
         margin-top: 18px;
+        display: grid;
+        gap: 12px;
+    }
+
+    .stadium-info {
         padding: 16px;
         border-radius: 14px;
         background: linear-gradient(120deg, rgba(30, 60, 114, 0.08), rgba(42, 82, 152, 0.15));
@@ -501,8 +518,37 @@
     .stadium-name {
         font-weight: 700;
         font-size: 1.05rem;
+        line-height: 1.25;
         margin-bottom: 6px;
         color: #111827;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .mvp-row {
+        margin-bottom: 0;
+        line-height: 1.25;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: baseline;
+    }
+
+    .mvp-label {
+        color: #111827;
+        font-weight: 800;
+    }
+
+    .mvp-sep {
+        color: #6b7280;
+        font-weight: 700;
+    }
+
+    .mvp-value {
+        color: #111827;
+        font-weight: 700;
+        overflow-wrap: anywhere;
+        word-break: break-word;
     }
 
     .stadium-capacity {
@@ -512,7 +558,7 @@
 
     .stats-grid {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 12px;
         margin-top: 20px;
     }
@@ -575,6 +621,73 @@
         font-size: 0.95rem;
         color: #475569;
         font-weight: 600;
+    }
+
+    .players-search {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0 0 14px 0;
+    }
+
+    .players-search input {
+        flex: 1;
+        border: 1px solid rgba(15, 23, 42, 0.12);
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 10px 12px;
+        font-size: 0.95rem;
+        outline: none;
+    }
+
+    .players-search input:focus {
+        border-color: rgba(30, 60, 114, 0.55);
+        box-shadow: 0 0 0 4px rgba(30, 60, 114, 0.12);
+    }
+
+    .players-search button {
+        border: 1px solid rgba(15, 23, 42, 0.12);
+        background: rgba(248, 250, 252, 0.95);
+        color: #0f172a;
+        border-radius: 12px;
+        padding: 10px 12px;
+        font-weight: 800;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+    .players-search button:hover {
+        background: #ffffff;
+    }
+
+    .players-mvp {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: baseline;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: rgba(226, 232, 240, 0.7);
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        margin: 0 0 14px 0;
+    }
+
+    .players-mvp-label {
+        color: #0f172a;
+        font-weight: 800;
+    }
+
+    .players-mvp-name {
+        color: #0f172a;
+        font-weight: 700;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .players-mvp-value {
+        color: #475569;
+        font-weight: 700;
+        white-space: nowrap;
     }
     
     .players-back-btn {
@@ -818,8 +931,10 @@
             gap: 12px;
         }
         
-        .clubs-grid.list-view .stadium-info {
+        .clubs-grid.list-view .club-meta {
             width: 100%;
+            min-width: 0;
+            max-width: none;
         }
         
         .clubs-grid.list-view .stats-grid {
@@ -879,6 +994,7 @@
             <div class="filter-group">
                 <label for="searchInput">Search Clubs</label>
                 <input type="text" id="searchInput" name="search" placeholder="e.g., Barcelona, Galatasaray, Arsenal..." value="{{ search_query or '' }}">
+                <div class="filter-note filter-note-spacer" aria-hidden="true"></div>
             </div>
             <div class="filter-group">
                 <label for="leagueFilter">League</label>
@@ -888,6 +1004,7 @@
                         <option value="{{ league|lower }}" {% if selected_league and selected_league|lower == league|lower %}selected{% endif %}>{{ league }}</option>
                     {% endfor %}
                 </select>
+                <div class="filter-note filter-note-spacer" aria-hidden="true"></div>
             </div>
             <div class="filter-group">
                 <label>Average Age</label>
@@ -969,11 +1086,16 @@
                 </div>
 
                 {% if club.stadium_name %}
-                <div class="stadium-info">
-                    <div class="stadium-name">🏟️ {{ club.stadium_name }}</div>
-                    {% if club.stadium_capacity %}
-                    <div class="stadium-capacity">Capacity: {{ '{:,}'.format(club.stadium_capacity) }} seats</div>
+                <div class="club-meta">
+                    {% if club.stadium_name %}
+                    <div class="stadium-info">
+                        <div class="stadium-name">🏟️ {{ club.stadium_name }}</div>
+                        {% if club.stadium_capacity %}
+                        <div class="stadium-capacity">Capacity: {{ '{:,}'.format(club.stadium_capacity) }} seats</div>
+                        {% endif %}
+                    </div>
                     {% endif %}
+
                 </div>
                 {% endif %}
 
@@ -986,30 +1108,7 @@
 	                        <div class="stat-value">{{ club.national_number if club.national_number else 0 }}</div>
 	                        <div class="stat-label">Domestic</div>
 	                    </div>
-	                    <div class="stat-item">
-	                        <div class="stat-value">
-	                            {{ club.roster_player_count if club.roster_player_count is not none else (club.squad_size if club.squad_size else 'N/A') }}
-	                        </div>
-	                        <div class="stat-label">Squad</div>
-	                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value">
-                            {% if club.most_valuable_player_value is not none %}
-                                {% set mv_str = "{:,.0f}".format(club.most_valuable_player_value) %}
-                                {{ mv_str }} EUR
-                            {% else %}
-                                N/A
-                            {% endif %}
-                        </div>
-                        <div class="stat-label">Top Value</div>
-                    </div>
                 </div>
-
-                {% if club.most_valuable_player_name %}
-                <div class="stadium-info" style="margin-top: 10px;">
-                    <div class="stadium-name">Most Valuable Player: {{ club.most_valuable_player_name }}</div>
-                </div>
-                {% endif %}
 
                 <div class="club-players-slot"></div>
             </div>
@@ -1206,19 +1305,45 @@
 
             const header = document.createElement("div");
             header.className = "players-header";
-            header.innerHTML = `<div>Squad</div><span>${players.length} players</span>`;
+            const headerTitle = document.createElement("div");
+            headerTitle.textContent = "Squad";
+            const headerCount = document.createElement("span");
+            headerCount.textContent = `${players.length} players`;
+            header.appendChild(headerTitle);
+            header.appendChild(headerCount);
             panel.appendChild(header);
+
+            const searchRow = document.createElement("div");
+            searchRow.className = "players-search";
+
+            const searchInput = document.createElement("input");
+            searchInput.type = "search";
+            searchInput.placeholder = "Oyuncu ara (isim, pozisyon, ülke)...";
+            searchInput.autocomplete = "off";
+            searchInput.spellcheck = false;
+            searchRow.appendChild(searchInput);
+
+            const clearBtn = document.createElement("button");
+            clearBtn.type = "button";
+            clearBtn.textContent = "Temizle";
+            clearBtn.disabled = true;
+            searchRow.appendChild(clearBtn);
+
+            panel.appendChild(searchRow);
 
             const playersList = document.createElement("div");
             playersList.className = "players-list";
 
-            const topValue = Math.max(
-                0,
-                ...players.map((p) => {
-                    const v = Number(p.market_value_in_eur);
-                    return Number.isFinite(v) ? v : 0;
-                })
-            );
+            let topValue = 0;
+            let topPlayerName = null;
+            players.forEach((p) => {
+                const v = Number(p.market_value_in_eur);
+                if (!Number.isFinite(v) || v <= 0) return;
+                if (v > topValue) {
+                    topValue = v;
+                    topPlayerName = p && p.name ? String(p.name) : null;
+                }
+            });
 
             const formatEur = (val) => {
                 const n = Number(val);
@@ -1226,7 +1351,32 @@
                 return `${new Intl.NumberFormat("en-US").format(Math.round(n))} EUR`;
             };
 
-            players.forEach((p, index) => {
+            if (topPlayerName && topValue > 0) {
+                const mvpRow = document.createElement("div");
+                mvpRow.className = "players-mvp";
+
+                const label = document.createElement("span");
+                label.className = "players-mvp-label";
+                label.textContent = "Most Valuable Player:";
+                mvpRow.appendChild(label);
+
+                const nameEl = document.createElement("span");
+                nameEl.className = "players-mvp-name";
+                nameEl.textContent = topPlayerName;
+                mvpRow.appendChild(nameEl);
+
+                const valueLabel = formatEur(topValue);
+                if (valueLabel) {
+                    const valueEl = document.createElement("span");
+                    valueEl.className = "players-mvp-value";
+                    valueEl.textContent = `(${valueLabel})`;
+                    mvpRow.appendChild(valueEl);
+                }
+
+                panel.insertBefore(mvpRow, header);
+            }
+
+            const appendPlayerRow = (listEl, p, index) => {
                 const metaParts = [];
                 if (p.age) metaParts.push(`${p.age} yrs`);
                 if (p.sub_position) metaParts.push(p.sub_position);
@@ -1235,7 +1385,6 @@
 
                 const heightVal = typeof p.height_in_cm === "number" ? Math.round(p.height_in_cm) : null;
 
-                // Build player row
                 const playerRow = document.createElement("div");
                 playerRow.className = "player-row";
                 if (index === 0) {
@@ -1243,17 +1392,14 @@
                     playerRow.style.paddingTop = "16px";
                 }
 
-                // Player main
                 const playerMain = document.createElement("div");
                 playerMain.className = "player-main";
 
-                // Player name - build link with DOM API
                 if (p.name) {
                     const playerLink = document.createElement("a");
                     playerLink.className = "player-name player-name-link";
                     playerLink.href = `/players?search=${encodeURIComponent(p.name)}`;
                     playerLink.textContent = p.name;
-                    // Listener is attached at the document level
                     playerMain.appendChild(playerLink);
                 } else {
                     const playerSpan = document.createElement("span");
@@ -1263,7 +1409,6 @@
                     playerMain.appendChild(playerSpan);
                 }
 
-                // Meta info
                 const playerMeta = document.createElement("div");
                 playerMeta.className = "player-meta";
                 playerMeta.textContent = meta;
@@ -1271,7 +1416,6 @@
 
                 playerRow.appendChild(playerMain);
 
-                // Player tags
                 const playerTags = document.createElement("div");
                 playerTags.className = "player-tags";
                 if (heightVal) {
@@ -1303,8 +1447,60 @@
                 }
                 playerRow.appendChild(playerTags);
 
-                playersList.appendChild(playerRow);
+                listEl.appendChild(playerRow);
+            };
+
+            const updateHeaderCount = (filteredCount) => {
+                if (filteredCount === players.length) {
+                    headerCount.textContent = `${players.length} players`;
+                } else {
+                    headerCount.textContent = `${filteredCount} / ${players.length} players`;
+                }
+            };
+
+            const renderList = (filtered) => {
+                playersList.innerHTML = "";
+                updateHeaderCount(filtered.length);
+
+                if (!filtered || filtered.length === 0) {
+                    const empty = document.createElement("div");
+                    empty.className = "players-empty";
+                    empty.textContent = "Aramanıza uygun oyuncu bulunamadı.";
+                    playersList.appendChild(empty);
+                    return;
+                }
+
+                filtered.forEach((p, index) => appendPlayerRow(playersList, p, index));
+            };
+
+            const normalize = (v) => (v == null ? "" : String(v)).toLowerCase();
+            const filterPlayers = (query) => {
+                const q = normalize(query).trim();
+                if (!q) return players;
+                return players.filter((p) => {
+                    const hay = [
+                        normalize(p && p.name),
+                        normalize(p && p.sub_position),
+                        normalize(p && p.country_of_citizenship),
+                    ].join(" ");
+                    return hay.includes(q);
+                });
+            };
+
+            const applySearch = () => {
+                const q = searchInput.value || "";
+                clearBtn.disabled = q.trim().length === 0;
+                renderList(filterPlayers(q));
+            };
+
+            searchInput.addEventListener("input", applySearch);
+            clearBtn.addEventListener("click", () => {
+                searchInput.value = "";
+                searchInput.focus();
+                applySearch();
             });
+
+            renderList(players);
 
             panel.appendChild(playersList);
             slotEl.innerHTML = "";
