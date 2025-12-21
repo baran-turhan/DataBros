@@ -520,7 +520,10 @@
 
       if (mode === 'add') {
           addContainer.style.display = 'block';
-          if (table && columnsContainer.innerHTML === "") renderAddColumns(table);
+          // DÜZELTME BURADA: Eskiden "columnsContainer.innerHTML === ''" kontrolü vardı.
+          // Şimdi sadece tablo seçiliyse renderAddColumns çağrılıyor. 
+          // renderAddColumns fonksiyonu zaten ilk satırında içeriği temizliyor.
+          if (table) renderAddColumns(table);
       } 
       else if (mode === 'update') {
           if (table) setupUpdateView();
