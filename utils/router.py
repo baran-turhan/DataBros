@@ -463,6 +463,9 @@ def competitions_page():
     is_major_league_param = request.args.get("is_major_league")
     countries = database.get_all_countries()
     competitions = []
+    latest_seasons = database.get_latest_season_values()
+    latest_game_season = latest_seasons.get("games")
+    latest_transfer_season = latest_seasons.get("transfers")
     
     # Parse is_major_league parameter (can be "true", "false", or None)
     is_major_league = None
@@ -472,9 +475,11 @@ def competitions_page():
         is_major_league = False
     
     if selected_country:
-        competitions = database.get_all_competitions(
+        competitions = database.get_competition_overview(
             country_name=selected_country,
-            is_major_league=is_major_league
+            is_major_league=is_major_league,
+            games_season=latest_game_season,
+            transfers_season=latest_transfer_season,
         )
     
     return render_template(
@@ -483,6 +488,8 @@ def competitions_page():
         countries=countries,
         selected_country=selected_country,
         selected_is_major_league=is_major_league_param,
+        latest_game_season=latest_game_season,
+        latest_transfer_season=latest_transfer_season,
     )
 
 def competition_clubs_api(competition_id: str):

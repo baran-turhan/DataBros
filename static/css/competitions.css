@@ -5,18 +5,18 @@
     margin-left: 20px;
     margin-right: 20px;
     margin-bottom: 20px;
-    overflow-x: auto;
+    overflow-x: hidden;
 }
 
 .leagues-list {
-    min-width: 1040px;
+    min-width: 0;
 }
 
 .leagues-header,
 .leagues-row {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
 }
 
 .leagues-header {
@@ -54,24 +54,46 @@
 
 .league-cell {
     flex: 1;
+    min-width: 0;
 }
 
 .name-col {
-    flex: 2.5;
-    min-width: 280px;
+    flex: 2.2;
+    min-width: 0;
 }
 
 .country-col,
+.clubs-col,
+.avg-age-col,
+.players-col,
+.avg-mv-col,
+.goals-col,
+.net-col,
 .id-col,
 .major-col,
 .url-col {
-    flex: 1;
+    flex: 0.9;
 }
 
 .edit-col {
-    flex: 0.5;
-    min-width: 70px;
+    flex: 0.4;
+    min-width: 50px;
     text-align: center;
+}
+
+.clubs-col,
+.avg-age-col,
+.players-col,
+.avg-mv-col,
+.goals-col,
+.net-col {
+    min-width: 0;
+}
+
+.avg-mv-col,
+.net-col {
+    flex: 1.1;
+    min-width: 0;
 }
 
 .league-item {
@@ -139,6 +161,16 @@
     font-weight: 600;
 }
 
+.leagues-body .league-cell:not(.name-col) {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.leagues-header .league-cell {
+    white-space: normal;
+}
+
 .url-link {
     color: #2a5298;
     font-weight: 700;
@@ -184,6 +216,17 @@
     backdrop-filter: blur(10px);
 }
 
+.season-hint {
+    margin: 10px 20px 0;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    backdrop-filter: blur(8px);
+}
+
 /* Active state for dropdown items */
 .sort-item.active {
     background-color: #eef5ff;
@@ -195,6 +238,18 @@
 .filter-btn span {
     margin-left: 5px;
     color: #2a5298;
+}
+
+/* Competitions page filter bar tweaks */
+.competitions-filter-bar {
+    justify-content: center;
+    gap: 16px;
+    max-width: 760px;
+    min-width: 0;
+}
+
+.competitions-filter-bar .apply-btn {
+    margin-left: 0;
 }
 
 /* Dropdown width overrides */

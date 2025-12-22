@@ -14,7 +14,7 @@
         <p>All leagues, cups and special tournaments in world football</p>
     </div>
 
-    <form method="get" class="filter-bar fade-in">
+    <form method="get" class="filter-bar competitions-filter-bar fade-in">
         <div class="filter-group">
             <button type="button" class="filter-btn" id="countryDropdownBtn">
                 Country: <span id="countryButtonLabel">
@@ -65,11 +65,24 @@
 
     {% if selected_country %}
         {% if competitions %}
+            {% if latest_game_season or latest_transfer_season %}
+            <div class="season-hint">
+                Latest season used —
+                Games: {{ latest_game_season or 'All time' }},
+                Transfers: {{ latest_transfer_season or 'All time' }}
+            </div>
+            {% endif %}
             <div class="leagues-table-wrapper">
                 <div class="leagues-list">
                     <div class="leagues-header leagues-row">
                         <div class="league-cell name-col">League</div>
                         <div class="league-cell country-col">Country</div>
+                        <div class="league-cell clubs-col">Clubs</div>
+                        <div class="league-cell avg-age-col">Avg Age</div>
+                        <div class="league-cell players-col">Players</div>
+                        <div class="league-cell avg-mv-col">Avg MV (€)</div>
+                        <div class="league-cell goals-col">Goals/G</div>
+                        <div class="league-cell net-col">Net Spend (€)</div>
                         <div class="league-cell id-col">League ID</div>
                         <div class="league-cell major-col">Major League?</div>
                         <div class="league-cell url-col">URL</div>
@@ -96,6 +109,50 @@
                                 </div>
                             </div>
                             <div class="league-cell country-col text-center">{{ comp.country_name or '—' }}</div>
+                            <div class="league-cell clubs-col text-center">
+                                {% if comp.club_count is not none %}
+                                    {{ comp.club_count }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </div>
+                            <div class="league-cell avg-age-col text-center">
+                                {% if comp.avg_age is not none %}
+                                    {{ "%.1f"|format(comp.avg_age) }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </div>
+                            <div class="league-cell players-col text-center">
+                                {% if comp.player_count is not none %}
+                                    {{ comp.player_count }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </div>
+                            <div class="league-cell avg-mv-col text-center">
+                                {% if comp.avg_market_value is not none %}
+                                    {% set mv_str = "{:,.0f}".format(comp.avg_market_value) %}
+                                    {{ mv_str.replace(",", ".") }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </div>
+                            <div class="league-cell goals-col text-center">
+                                {% if comp.goals_per_game is not none %}
+                                    {{ "%.2f"|format(comp.goals_per_game) }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </div>
+                            <div class="league-cell net-col text-center">
+                                {% if comp.net_spend is not none %}
+                                    {% set net_str = "{:,.0f}".format(comp.net_spend) %}
+                                    {{ net_str.replace(",", ".") }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </div>
                             <div class="league-cell id-col text-center">{{ comp.competition_id or '—' }}</div>
                             <div class="league-cell major-col text-center">
                                 {% if comp.is_major_league %}

@@ -1,5 +1,6 @@
 import psycopg2
 import os
+import re
 from typing import Optional
 from psycopg2.extras import RealDictCursor
 from psycopg2 import sql
@@ -620,6 +621,192 @@ def get_all_competitions(country_name=None, is_major_league=None):
         return competitions
     except Exception as e:
         print(f"Database error: {e}")
+        return []
+    finally:
+        if conn:
+            conn.close()
+
+def _parse_season_value(season: str):
+    if not season:
+        return None
+    digits = re.findall(r"\d+", str(season))
+    if not digits:
+        return None
+    start_raw = digits[0]
+    try:
+        start = int(start_raw)
+    except ValueError:
+        return None
+    if len(start_raw) == 2:
+        start += 2000
+    end = start
+    if len(digits) > 1:
+        end_raw = digits[1]
+        try:
+            end = int(end_raw)
+        except ValueError:
+            end = start
+        if len(end_raw) == 2:
+            end += 2000
+        if end < start:
+            end = start
+    return (start, end)
+
+def _pick_latest_season(seasons):
+    best = None
+    best_key = None
+    for season in seasons or []:
+        key = _parse_season_value(season)
+        if key is None:
+            continue
+        if best_key is None or key > best_key:
+            best_key = key
+            best = season
+    return best
+
+def get_latest_season_values():
+    """Returns latest seasons for games and transfers."""
+    conn = None
+    try:
+        conn = get_conn()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute("SELECT DISTINCT season FROM games WHERE season IS NOT NULL")
+        game_seasons = [row["season"] for row in cur.fetchall()]
+        cur.execute(
+            """
+            SELECT DISTINCT transfer_season AS season
+            FROM transfers
+            WHERE transfer_season IS NOT NULL
+            """
+        )
+        transfer_seasons = [row["season"] for row in cur.fetchall()]
+        cur.close()
+        return {
+            "games": _pick_latest_season(game_seasons),
+            "transfers": _pick_latest_season(transfer_seasons),
+        }
+    except Exception as e:
+        print(f"Database error (get_latest_season_values): {e}")
+        return {"games": None, "transfers": None}
+    finally:
+        if conn:
+            conn.close()
+
+def get_competition_overview(
+    country_name=None,
+    is_major_league=None,
+    games_season=None,
+    transfers_season=None,
+):
+    """Returns competitions with aggregated club/player/game/transfer stats."""
+    conn = None
+    try:
+        conn = get_conn()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        query = """
+            WITH club_stats AS (
+                SELECT
+                    domestic_competition_id AS competition_id,
+                    COUNT(*) AS club_count,
+                    AVG(squad_size) AS avg_squad_size,
+                    AVG(average_age) AS avg_age,
+                    SUM(stadium_seats) AS total_capacity
+                FROM clubs
+                GROUP BY domestic_competition_id
+            ),
+            player_stats AS (
+                SELECT
+                    c.domestic_competition_id AS competition_id,
+                    COUNT(p.player_id) AS player_count,
+                    AVG(p.market_value_in_eur) AS avg_market_value
+                FROM players p
+                JOIN clubs c ON p.current_club_id = c.club_id
+                GROUP BY c.domestic_competition_id
+            ),
+            game_stats AS (
+                SELECT
+                    competition_id,
+                    COUNT(*) AS matches,
+                    AVG(home_club_goals + away_club_goals) AS goals_per_game
+                FROM games
+                WHERE 1=1
+        """
+        params = []
+        if games_season:
+            query += " AND season = %s"
+            params.append(games_season)
+        query += """
+                GROUP BY competition_id
+            ),
+            transfer_in AS (
+                SELECT
+                    tc.domestic_competition_id AS competition_id,
+                    SUM(t.transfer_fee) AS inbound_fees
+                FROM transfers t
+                JOIN clubs tc ON t.to_club_id = tc.club_id
+                WHERE 1=1
+        """
+        if transfers_season:
+            query += " AND t.transfer_season = %s"
+            params.append(transfers_season)
+        query += """
+                GROUP BY tc.domestic_competition_id
+            ),
+            transfer_out AS (
+                SELECT
+                    fc.domestic_competition_id AS competition_id,
+                    SUM(t.transfer_fee) AS outbound_fees
+                FROM transfers t
+                JOIN clubs fc ON t.from_club_id = fc.club_id
+                WHERE 1=1
+        """
+        if transfers_season:
+            query += " AND t.transfer_season = %s"
+            params.append(transfers_season)
+        query += """
+                GROUP BY fc.domestic_competition_id
+            )
+            SELECT
+                c.competition_id,
+                c.name,
+                c.is_major_national_league AS is_major_league,
+                c.url,
+                c.country_name,
+                cs.club_count,
+                cs.avg_squad_size,
+                cs.avg_age,
+                cs.total_capacity,
+                ps.player_count,
+                ps.avg_market_value,
+                gs.matches,
+                gs.goals_per_game,
+                ti.inbound_fees,
+                tout.outbound_fees,
+                CASE
+                    WHEN ti.inbound_fees IS NULL AND tout.outbound_fees IS NULL THEN NULL
+                    ELSE COALESCE(ti.inbound_fees, 0) - COALESCE(tout.outbound_fees, 0)
+                END AS net_spend
+            FROM competitions c
+            LEFT JOIN club_stats cs ON cs.competition_id = c.competition_id
+            LEFT JOIN player_stats ps ON ps.competition_id = c.competition_id
+            LEFT JOIN game_stats gs ON gs.competition_id = c.competition_id
+            LEFT JOIN transfer_in ti ON ti.competition_id = c.competition_id
+            LEFT JOIN transfer_out tout ON tout.competition_id = c.competition_id
+            WHERE 1=1
+        """
+        if country_name:
+            query += " AND c.country_name = %s"
+            params.append(country_name)
+        if is_major_league is not None:
+            query += " AND c.is_major_national_league = %s"
+            params.append(is_major_league)
+        query += " ORDER BY c.is_major_national_league DESC, c.name ASC"
+        cur.execute(query, params)
+        competitions = cur.fetchall()
+        cur.close()
+        return competitions
+    except Exception as e:
+        print(f"Database error (get_competition_overview): {e}")
         return []
     finally:
         if conn:
